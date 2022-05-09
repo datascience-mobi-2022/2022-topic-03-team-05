@@ -1,0 +1,99 @@
+---
+title: "RDeep HeLa Interphase Analysis"
+author: "Laura Herrfurth"
+date: "8 5 2022"
+output: html_document
+---
+
+```{r}
+#Load data RDeep_HeLa_Interphase 
+data = read.table("C:/Users/Laura Herrfurth/Documents/Data Analysis Projekt/RDeeP_HeLa_Interphase.csv",header = TRUE, row.names = 1, sep = ";")
+
+
+#First survey
+head(data)
+summary(data)
+dim(data)
+colnames(data)
+rownames(data)
+
+sapply(data,mode)
+
+```
+
+The data contains 7086 proteins and 25 fractions which were each repeated three times as a control sample and three times with RNAse.
+
+After the first survey we have to find a way to deal with the missing values in the data.The options are to remove rows (proteins) with a very high count or to replace all missing values with the mean of the general count of a specific protein of the control or the RNAse sample.
+
+
+```{r}
+
+# missing values have the value 0 -> delete these values or replace them directly
+#First option: deleting rows with NA (questionable!)
+which(data == 0)
+data_rm = data[-which(data == 0),]
+dim(data_rm)
+head(data_rm)
+
+#Sum missing values in each row -> no NA 
+na = apply(data_rm,1,function(x){sum(is.na(x))})
+na
+summary(na)
+
+#Second option: replacing missing values
+colRep1ctrl = seq(1, 150, 6) ##alle Columns die rep1 ctrl enthalten
+colRep2ctrl = seq(2, 150, 6) ##alle Columns die rep2 ctrl enthalten
+colRep3ctrl = seq(3, 150, 6) ##alle Columns die rep3 ctrl enthalten
+
+colRep1RNAse = seq(4, 150, 6) ##alle Columns die rep1 RNAse enthalten
+colRep2RNAse = seq(5, 150, 6) ##alle Columns die rep2 RNAse enthalten
+colRep3RNAse = seq(6, 150, 6) ##alle Columns die rep3 RNAse enthalten
+
+
+#Irgendwie mean der Reps berechnen ?? for schleife? 
+# Irgendwie noch weird und funktioniert nicht
+# Idee war immer die Werte eines Reps zu addieren und den mean davon zu bilden
+y = 1:25
+
+meanRep=0
+for (i in y){
+  i
+  c(meanRep,(data(colRep1ctrl[y]) + data(colRep2ctrl[y]) + data(colRep3ctrl[y]))/ 3)
+}
+  
+meanRep = (data(colRep1ctrl[y]) + data(colRep2ctrl[y]) + data(colRep3ctrl[y]) )/ 3
+
+
+
+#Argument weder numerisch noch boolesch? hä? warum? Gibt nur NA an
+apply(data[,1:3],1,mean) #mean for first fractions
+
+#mean in general
+a = y + 3
+b = y + 3
+apply(data[,a:b], 1, mean)
+
+
+
+#replacing missing values for first fraction
+mean_1 = apply(data[1:3,],2,mean)
+data[is.na(data[])== TRUE]
+apply(data[1:3],2,function(x){(is.na(x)== TRUE) = mean_1})
+
+
+```
+After deleting values or replacing values we have to examine differences in the different samples and to illustrate them.
+
+```{r}
+#Plot values of repetitions of samples
+plot(y, data[1,colRep1ctrl], col = "magenta") ##plot des Rep1 ctrl sample für protein 1
+plot(y, data[1,colRep2ctrl], col = "green") ##plot des Rep2 ctrl sample für protein 1
+plot(y, data[1,colRep3ctrl], col = "black") ##plot des Rep3 ctrl sample für protein 1
+
+#Plot all values for one sample together
+# Funktioniert nicht
+plot(y, c(data[1,colRep1ctrl],data[1,colRep2ctrl], data[1,colRep3ctrl]), col = ("magenta" "green""black"))
+
+
+
+```
