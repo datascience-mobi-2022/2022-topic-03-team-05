@@ -25,6 +25,7 @@ The data contains 7086 proteins and 25 fractions which were each repeated three 
 
 After the first survey we have to find a way to deal with the missing values in the data.The options are to remove rows (proteins) with a very high count or to replace all missing values with the mean of the general count of a specific protein of the control or the RNAse sample.
 
+
 ```{r}
 
 # missing values have the value 0 -> delete these values or replace them directly
@@ -81,19 +82,32 @@ apply(data[1:3],2,function(x){(is.na(x)== TRUE) = mean_1})
 
 
 ```
-
-After deleting values or replacing values we have to examine differences in the different samples and to illustrate them.
+After deleting values or replacing values we have to examine differences in the different samples and to illustrate them. We are looking at the plots of single proteins and compare the lines and maxima of the control and the RNAse group. 
 
 ```{r}
-#Plot values of repetitions of samples
-plot(y, data[1,colRep1ctrl], col = "magenta") ##plot des Rep1 ctrl sample für protein 1
-plot(y, data[1,colRep2ctrl], col = "green") ##plot des Rep2 ctrl sample für protein 1
-plot(y, data[1,colRep3ctrl], col = "black") ##plot des Rep3 ctrl sample für protein 1
+#Plots for fractions of each gene
+# Warning for 'NAs introduced by coercion' (?)
+for (i in 4200:4300){
+plot(y, data[i,colRep1ctrl], col = "blue", xlab = i) ##plot des Rep1 ctrl sample für protein 1
+lines(y, data[i,colRep2ctrl], col = "blue") ##plot des Rep2 ctrl sample für protein 1
+lines(y, data[i,colRep3ctrl], col = "blue") ##plot des Rep3 ctrl sample für protein 1
 
-#Plot all values for one sample together
-# Funktioniert nicht
-plot(y, c(data[1,colRep1ctrl],data[1,colRep2ctrl], data[1,colRep3ctrl]), col = ("magenta" "green""black"))
+lines(y, data[i,colRep1rnase], col = "pink")
+lines(y, data[i,colRep2rnase], col = "pink")
+lines(y, data[i,colRep3rnase], col = "pink")
+}
 
+##examples of shifts or differences in maxima; abnormalities
+for (i in c(4148,4150:4154, 4189,4190, 4293 )){
+plot(y, data[i,colRep1ctrl], col = "blue", xlab = i) ##plot des Rep1 ctrl sample für protein 1
+lines(y, data[i,colRep2ctrl], col = "blue") ##plot des Rep2 ctrl sample für protein 1
+lines(y, data[i,colRep3ctrl], col = "blue") ##plot des Rep3 ctrl sample für protein 1
+
+lines(y, data[i,colRep1rnase], col = "pink")
+lines(y, data[i,colRep2rnase], col = "pink")
+lines(y, data[i,colRep3rnase], col = "pink")
+}
 
 
 ```
+These are some proteins that were selected from the interval of protein 4000 until protein 4300. Their maxima of the plot of the control and RNAse group show differences to each other. These differences of these examples have to get examined further.
