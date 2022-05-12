@@ -47,14 +47,14 @@ meanRep2ctrl = sapply(FullData[,colRep2ctrl], mean)
 meanRep3ctrl = sapply(FullData[,colRep3ctrl], mean)
 
 plot(y, FullData[1,colRep1ctrl], col = "magenta") ##plot des Rep1 ctrl sample für protein 1
-plot(y, FullData[1,colRep2ctrl], col = "green") ##plot des Rep2 ctrl sample für protein 1
 plot(y, FullData[1,colRep3ctrl], col = "black") ##plot des Rep3 ctrl sample für protein 1
+points(y, FullData[1,colRep2ctrl], col = "green") ##plot des Rep2 ctrl sample für protein 1
 ##points(x, y) wenn man die in einem Koordinatensystem haben will
 
 
-plot(y, FullData[1,colRep1rnase], col = "orange")
-plot(y, FullData[1,colRep2rnase], col = "violet")
-plot(y, FullData[1,colRep3rnase], col = "pink")
+points(y, FullData[1,colRep1rnase], col = "orange")
+points(y, FullData[1,colRep2rnase], col = "violet")
+points(y, FullData[1,colRep3rnase], col = "pink")
 
 ```
 Protein 1 hat keinen Shift? (Data noch nicht normalisiert!)

@@ -25,7 +25,6 @@ The data contains 7086 proteins and 25 fractions which were each repeated three 
 
 After the first survey we have to find a way to deal with the missing values in the data.The options are to remove rows (proteins) with a very high count or to replace all missing values with the mean of the general count of a specific protein of the control or the RNAse sample.
 
-
 ```{r}
 
 # missing values have the value 0 -> delete these values or replace them directly
@@ -82,6 +81,7 @@ apply(data[1:3],2,function(x){(is.na(x)== TRUE) = mean_1})
 
 
 ```
+
 After deleting values or replacing values we have to examine differences in the different samples and to illustrate them.
 
 ```{r}
