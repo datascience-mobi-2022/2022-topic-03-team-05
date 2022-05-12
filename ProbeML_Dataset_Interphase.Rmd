@@ -46,16 +46,16 @@ meanRep1ctrl = sapply(FullData[,colRep1ctrl], mean) ##falsch!!! berechnet die me
 meanRep2ctrl = sapply(FullData[,colRep2ctrl], mean) 
 meanRep3ctrl = sapply(FullData[,colRep3ctrl], mean)
 
-plot(y, FullData[1,colRep1ctrl], col = "magenta") ##plot des Rep1 ctrl sample für protein 1
-points(y, FullData[1,colRep2ctrl], col = "green") ##plot des Rep2 ctrl sample für protein 1
-points(y, FullData[1,colRep3ctrl], col = "black") ##plot des Rep3 ctrl sample für protein 1
+for (i in 1398:1427) {plot(y, FullData[i,colRep1ctrl], col = "black") ##plot des Rep1 ctrl sample für protein 1
+points(y, FullData[i,colRep2ctrl], col = "black") ##plot des Rep2 ctrl sample für protein 1
+points(y, FullData[i,colRep3ctrl], col = "black") ##plot des Rep3 ctrl sample für protein 1
 ##points(x, y) wenn man die in einem Koordinatensystem haben will
 
 
-points(y, FullData[1,colRep1rnase], col = "orange")
-points(y, FullData[1,colRep2rnase], col = "violet")
-points(y, FullData[1,colRep3rnase], col = "pink")
-
+points(y, FullData[i,colRep1rnase], col = "magenta")
+points(y, FullData[i,colRep2rnase], col = "magenta")
+points(y, FullData[i,colRep3rnase], col = "magenta")
+}
 ```
 Protein 1 hat keinen Shift? (Data noch nicht normalisiert!)
 
@@ -135,4 +135,55 @@ nameanFrac2Repctrl = apply(naData[,7:9],1,mean) ##mean for each protein in tripl
 
 ```
 
+Versuch der Normalisierung auf 100, in welcher Einheit sind eigentlich unsere Daten???
+```{r}
+
+##eigenen Data frame für jedes Replikat (also 6 data frames), jeweils für alle Proteine und auf 100 normalisiert
+
+rep1ctrlnormData = t(apply(naData[, colRep1ctrl], 1, function(x) x/(sum(x, na.rm = TRUE)/100))) ##mit FullData
+repvgl = t(apply(FullData[, colRep1ctrl], 1, function(x) x/(sum(x)/100))) ##mit naData: was genau ist hier der Vorteil? und Unterschied (werte sehen soweit gleich aus, außer,dass bei oberem NA Werte auftreten, die in repvgl 0 sind)
+rep2ctrlnormData = t(apply(FullData[, colRep2ctrl], 1, function(x) x/(sum(x)/100)))
+rep3ctrlnormData = t(apply(FullData[, colRep3ctrl], 1, function(x) x/(sum(x)/100)))
+rep1rnasenormData = t(apply(FullData[, colRep1rnase], 1, function(x) x/(sum(x)/100)))
+rep2rnasenormData = t(apply(FullData[, colRep2rnase], 1, function(x) x/(sum(x)/100)))
+rep3rnasenormData = t(apply(FullData[, colRep3rnase], 1, function(x) x/(sum(x)/100)))
+
+for (i in 3927:3929) {plot(y, rep1ctrlnormData[i,], col = "black") ##plot aller samples für protein 900-930 normalisiert auf 100 (wenn es geklappt hat)
+lines(y, rep2ctrlnormData[i,], col = "black") ##plot des Rep2 ctrl sample für protein 1
+lines(y, rep3ctrlnormData[i,], col = "black") ##plot des Rep3 ctrl sample für protein 1
+##points(x, y) wenn man die in einem Koordinatensystem haben will
+
+
+lines(y, rep1rnasenormData[i,], col = "magenta")
+lines(y, rep2rnasenormData[i,], col = "magenta")
+lines(y, rep3rnasenormData[i,], col = "magenta")
+
+lines
+}
+
+
+apply(rep1ctrlnormData[1:30,],1, function(x) plot(1:25, x)) ## plotten der ersten 30 auf 100 normalisierten Proteine vom rep1 ctrl
+
+rowSums(is.na(rep1ctrlnormData)) ##wie viele NAs sind im ersten Rep ctrl von jedem Protein
+
+## überprüfen der normalisierung mit rowSums(rep1ctrlnormData)
+library(pheatmap)
+pheatmap(repvgl[1:20,]) 
+
+
+
+```
+```{r}
+dat = data.frame(c(30, 70, 80, 0), c(0, 0, 50, 50), c(100, 270, 30, 90))
+rowsu = rowSums(dat)
+dat1 = t(apply(dat, 1, function(x)x/(sum(x)/10)))
+dat1
+heatmap(dat1)
+
+```
+eigenen data frame für jedes Replikat von allen Proteinen
+```{r}
+rep1ctrldat = FullData[,colRep1ctrl] 
+rep2ctrldat = FullData[,colRep2ctrl]
+```
 
