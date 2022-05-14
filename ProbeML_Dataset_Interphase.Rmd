@@ -174,13 +174,13 @@ for (i in 1:25){
   datprot1[i] = (rep1ctrlnormData[1,i] + rep2ctrlnormData[1,i] + rep3ctrlnormData[1,i])/3
 }
 datprot1[is.na(datprot1)] = 0
-plot(datprot1, main = "amount of 1433B_HUMAN in mean of control sample replicates", xlab = "fractions on sucrose gradient", ylab = "percentage of protein amount", col = "blue"); lines(datprot1, lwd=2, col = "blue"); lines(x, l, col = "magenta", lwd=2)
+plot(datprot1, main = "amount of 1433B_HUMAN in mean of control sample replicates", xlab = "fractions of sucrose density gradient", ylab = "percentage of protein amount", col = "blue"); lines(datprot1, lwd=2, col = "blue"); lines(x, l, col = "magenta", lwd=2)
 ```
 
 plot suchen und gefunden für mit shift
 ```{r}
 for (i in 3927:3927) {
-  plot(y, rep1ctrlnormData[i,], col = "black", type = "n", main = "amount of NOP9_HUMAN (all 6 replicates)", xlab = "fractions of sucrose gradient", ylab = "percentage of protein amount") ##plot aller samples für protein 900-930 normalisiert auf 100 (wenn es geklappt hat)
+  plot(y, rep1ctrlnormData[i,], col = "black", type = "n", main = "amount of NOP9_HUMAN (all 6 replicates)", xlab = "fractions of sucrose density gradient", ylab = "percentage of protein amount") ##plot aller samples für protein 900-930 normalisiert auf 100 (wenn es geklappt hat)
   lines(y,rep1ctrlnormData[i,], col = "black")
   lines(y, rep2ctrlnormData[i,], col = "black") ##plot des Rep2 ctrl sample für protein 1
   lines(y, rep3ctrlnormData[i,], col = "black") ##plot des Rep3 ctrl sample für protein 1
@@ -194,9 +194,9 @@ for (i in 3927:3927) {
 apply(rep1ctrlnormData[1:3,],1, function(x) plot(1:25, x)) ## plotten der ersten 30 auf 100 normalisierten Proteine vom rep1 ctrl
 
 countnas = rowSums(is.na(rep1ctrlnormData)) ##wie viele NAs sind im ersten Rep ctrl von jedem Protein
+hist(countnas[1:100], main = "NAs in Replicate 1 of control sample", xlab = "number of NAs", breaks = seq(0,25,1))
 
 
-## überprüfen der normalisierung mit rowSums(rep1ctrlnormData)
 library(pheatmap)
 pheatmap(repvgl[1:20,]) 
 
@@ -204,7 +204,7 @@ pheatmap(repvgl[1:20,])
 plot suchen und gefunden für ohne shift:
 ```{r}
 for (i in 413:415) {
-  plot(y, rep1ctrlnormData[i,], col = "black", type = "n", main = "amount of ARI1A_HUMAN (all 6 replicates)", xlab = "fractions of sucrose gradient", ylab = "percentage of protein amount") ##plot aller samples für protein 900-930 normalisiert auf 100 (wenn es geklappt hat)
+  plot(y, rep1ctrlnormData[i,], col = "black", type = "n", main = "amount of ARI1A_HUMAN (all 6 replicates)", xlab = "fractions of sucrose density gradient", ylab = "percentage of protein amount") ##plot aller samples für protein 900-930 normalisiert auf 100 (wenn es geklappt hat)
   lines(y,rep1ctrlnormData[i,], col = "black")
   lines(y, rep2ctrlnormData[i,], col = "black") ##plot des Rep2 ctrl sample für protein 1
   lines(y, rep3ctrlnormData[i,], col = "black") ##plot des Rep3 ctrl sample für protein 1
