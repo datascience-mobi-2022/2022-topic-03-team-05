@@ -34,12 +34,12 @@ There are different amounts of protein in each replicate. This is shown for the 
 
 ```{r}
 
-colRep1ctrl = seq(1, 150, 6) ##all columns with measurements from rep1 control sample 
-colRep2ctrl = seq(2, 150, 6) ##all columns with measurements from rep2 control sample
-colRep3ctrl = seq(3, 150, 6) ##all columns with measurements from rep3 control sample
-colRep1rnase = seq(4, 150, 6) ##all columns with measurements from rep1 rnase sample
-colRep2rnase = seq(5, 150, 6) ##all columns with measurements from rep2 rnase sample
-colRep3rnase = seq(6, 150, 6) ##all columns with measurements from rep3 rnase sample
+tcolRep1ctrl = seq(1, 150, 6) ##all columns with measurements from rep1 control sample 
+tcolRep2ctrl = seq(2, 150, 6) ##all columns with measurements from rep2 control sample
+tcolRep3ctrl = seq(3, 150, 6) ##all columns with measurements from rep3 control sample
+tcolRep1rnase = seq(4, 150, 6) ##all columns with measurements from rep1 rnase sample
+tcolRep2rnase = seq(5, 150, 6) ##all columns with measurements from rep2 rnase sample
+tcolRep3rnase = seq(6, 150, 6) ##all columns with measurements from rep3 rnase sample
 
 all_colrep = matrix(c(colRep1ctrl, colRep2ctrl, colRep3ctrl, colRep1rnase, colRep2rnase, colRep3rnase), byrow = TRUE, nrow = 6)
 
