@@ -7,107 +7,173 @@ output: html_document
 
 ```{r}
 #Load data RDeep_HeLa_Interphase 
-data = read.table("C:/Users/Laura Herrfurth/Documents/Data Analysis Projekt/RDeeP_HeLa_Interphase.csv",header = TRUE, row.names = 1, sep = ";")
+FullData = read.table("C:/Users/Laura Herrfurth/Documents/Data Analysis Projekt/RDeeP_HeLa_Interphase.csv",header = TRUE, row.names = 1, sep = ";")
 
 
 #First survey
-head(data)
-summary(data)
-dim(data)
-colnames(data)
-rownames(data)
+head(FullData)
+summary(FullData)
+dim(FullData)
+colnames(FullData)
+rownames(FullData)
 
-sapply(data,mode)
+sapply(FullData,mode)
+sapply(FullData,class)
+
+sum(sapply(FullData[,2], is.numeric)) 
+
+
 
 ```
 
-The data contains 7086 proteins and 25 fractions which were each repeated three times as a control sample and three times with RNAse.
+The data contains 7086 proteins and 25 fractions which were each repeated three times as a control sample and three times with RNase.
 
-After the first survey we have to find a way to deal with the missing values in the data.The options are to remove rows (proteins) with a very high count or to replace all missing values with the mean of the general count of a specific protein of the control or the RNAse sample.
+After the first survey we have to find a way to deal with the missing values in the data.The options are to remove rows (proteins) with a very high count or to replace all missing values with the mean of the general count of a specific protein of the control or the RNase sample. We will delete row with all zeros and with all zeros in either all Ctrl replicates or in all RNase replicates.
 
 
 ```{r}
 
-# missing values have the value 0 -> delete these values or replace them directly
-#First option: deleting rows with NA (questionable!)
-which(data == 0)
-data_rm = data[-which(data == 0),]
-dim(data_rm)
-head(data_rm)
+# missing values have the value 0; delete these values -> NA
+which(FullData == 0)
+data_rm = FullData[-which(FullData == 0),] #deleted complete rows!
+dim(data_rm) #huge number of zeros!
 
-#Sum missing values in each row -> no NA 
-na = apply(data_rm,1,function(x){sum(is.na(x))})
-na
-summary(na)
+#Reduce data set into smaller data sets 
+colRep1ctrl = seq(1, 150, 6) ##all columns with rep1 ctrl 
+colRep2ctrl = seq(2, 150, 6) ##all columns with rep2 ctrl 
+colRep3ctrl = seq(3, 150, 6) ##all columns with rep3 ctrl 
 
-#Second option: replacing missing values
-colRep1ctrl = seq(1, 150, 6) ##alle Columns die rep1 ctrl enthalten
-colRep2ctrl = seq(2, 150, 6) ##alle Columns die rep2 ctrl enthalten
-colRep3ctrl = seq(3, 150, 6) ##alle Columns die rep3 ctrl enthalten
+colRep1RNAse = seq(4, 150, 6) ##all columns with rep1 RNAse 
+colRep2RNAse = seq(5, 150, 6) ##all columns with rep2 RNAse 
+colRep3RNAse = seq(6, 150, 6) ##all columns with rep3 RNAse 
 
-colRep1RNAse = seq(4, 150, 6) ##alle Columns die rep1 RNAse enthalten
-colRep2RNAse = seq(5, 150, 6) ##alle Columns die rep2 RNAse enthalten
-colRep3RNAse = seq(6, 150, 6) ##alle Columns die rep3 RNAse enthalten
+# delete rows with only zeros or proteins with only zeros in the Ctrl or RNase samples
+a = which(rowSums(FullData==0)==150)
+b = which(rowSums(FullData[,c(colRep1ctrl, colRep2ctrl, colRep3ctrl)]== 0) ==75)
+c = which(rowSums(FullData[,c(colRep1RNAse, colRep2RNAse, colRep3RNAse)]== 0) ==75)
 
 
-#Irgendwie mean der Reps berechnen ?? for schleife? 
-# Irgendwie noch weird und funktioniert nicht
-# Idee war immer die Werte eines Reps zu addieren und den mean davon zu bilden
-y = 1:25
+FullData = FullData[-c(2089,2993, 4123,4405, 6216),]
 
-meanRep=0
-for (i in y){
-  i
-  c(meanRep,(data(colRep1ctrl[y]) + data(colRep2ctrl[y]) + data(colRep3ctrl[y]))/ 3)
+
+# data sets for each replicate; normalization 
+rep1ctrlnormData = t(apply(FullData[, colRep1ctrl], 1, function(x) x/(sum(x)/100)))
+rep2ctrlnormData = t(apply(FullData[, colRep2ctrl], 1, function(x) x/(sum(x)/100)))
+rep3ctrlnormData = t(apply(FullData[, colRep3ctrl], 1, function(x) x/(sum(x)/100)))
+rep1rnasenormData = t(apply(FullData[, colRep1rnase], 1, function(x) x/(sum(x)/100)))
+rep2rnasenormData = t(apply(FullData[, colRep2rnase], 1, function(x) x/(sum(x)/100)))
+rep3rnasenormData = t(apply(FullData[, colRep3rnase], 1, function(x) x/(sum(x)/100)))
+
+rep1ctrlnormDataframe = as.data.frame(rep1ctrlnormData)
+rep2ctrlnormDataframe = as.data.frame(rep2ctrlnormData)
+rep3ctrlnormDataframe = as.data.frame(rep3ctrlnormData)
+rep1rnasenormDataframe = as.data.frame(rep1rnasenormData)
+rep2rnasenormDataframe = as.data.frame(rep2rnasenormData)
+rep3rnasenormDataframe = as.data.frame(rep3rnasenormData)
+
+
+sum(rep1ctrlnormData[1,]) # == 100
+
+
+#mean of replicates of first column 
+meanRepctrl = vector()
+for (i in 1:25){
+  meanRepctrl[i] = (rep1ctrlnormData[1,i] + rep2ctrlnormData[1,i] + rep3ctrlnormData[1,i])/3}
+
+meanRepRNase = vector()
+for (i in 1:25){
+  meanRepRNase[i] = (rep1rnasenormData[1,i] + rep2rnasenormData[1,i] + rep3rnasenormData[1,i])/3}
+
+
+#Mean aller Reps aller Zeilen berechnen ?? 
+##Um Plots der Reps zu fusionieren
+#Gibt nur leeren Datensatz
+u = vector()
+for (i in nrow(FullData)){
+  for (j in 1:25){
+    u[i,j] = as.data.frame((rep1ctrlnormDataframe[i,j] + rep2ctrlnormDataframe[i,j] + rep3ctrlnormDataframe[i,j])/3)
+  }
 }
-  
-meanRep = (data(colRep1ctrl[y]) + data(colRep2ctrl[y]) + data(colRep3ctrl[y]) )/ 3
-
-
-
-#Argument weder numerisch noch boolesch? hä? warum? Gibt nur NA an
-apply(data[,1:3],1,mean) #mean for first fractions
-
-#mean in general
-a = y + 3
-b = y + 3
-apply(data[,a:b], 1, mean)
-
-
-
-#replacing missing values for first fraction
-mean_1 = apply(data[1:3,],2,mean)
-data[is.na(data[])== TRUE]
-apply(data[1:3],2,function(x){(is.na(x)== TRUE) = mean_1})
-
 
 ```
-After deleting values or replacing values we have to examine differences in the different samples and to illustrate them. We are looking at the plots of single proteins and compare the lines and maxima of the control and the RNAse group. 
+After deleting proteins we have to examine differences in the different samples and to illustrate them. That's why we normalized our data to compare the different replicates.We normalized the amount of one replicate to 100 to be able to assign protein amounts to percentages/relations. We are looking at the plots of single proteins and compare the lines and maxima of the control and the RNase group. 
 
 ```{r}
 #Plots for fractions of each gene
-# Warning for 'NAs introduced by coercion' (?)
+#not normalized
 for (i in 4200:4300){
-plot(y, data[i,colRep1ctrl], col = "blue", xlab = i) ##plot des Rep1 ctrl sample für protein 1
-lines(y, data[i,colRep2ctrl], col = "blue") ##plot des Rep2 ctrl sample für protein 1
-lines(y, data[i,colRep3ctrl], col = "blue") ##plot des Rep3 ctrl sample für protein 1
+plot(y, FullData[i,colRep1ctrl], col = "blue", xlab = i) ##plot of Rep1 ctrl sample for some proteins
+lines(y, FullData[i,colRep2ctrl], col = "blue") ##plot of Rep2 ctrl sample for some proteins
+lines(y, FullData[i,colRep3ctrl], col = "blue") ##plot of Rep3 ctrl sample for some proteins
 
-lines(y, data[i,colRep1rnase], col = "pink")
-lines(y, data[i,colRep2rnase], col = "pink")
-lines(y, data[i,colRep3rnase], col = "pink")
+lines(y, FullData[i,colRep1rnase], col = "pink")
+lines(y, FullData[i,colRep2rnase], col = "pink")
+lines(y, FullData[i,colRep3rnase], col = "pink")
 }
 
-##examples of shifts or differences in maxima; abnormalities
+##examples of shifts or differences in maxima; abnormalities (not normalized)
 for (i in c(4148,4150:4154, 4189,4190, 4293 )){
-plot(y, data[i,colRep1ctrl], col = "blue", xlab = i) ##plot des Rep1 ctrl sample für protein 1
-lines(y, data[i,colRep2ctrl], col = "blue") ##plot des Rep2 ctrl sample für protein 1
-lines(y, data[i,colRep3ctrl], col = "blue") ##plot des Rep3 ctrl sample für protein 1
+plot(y, FullData[i,colRep1ctrl], col = "blue", xlab = i) 
+lines(y, FullData[i,colRep2ctrl], col = "blue") 
+lines(y, FullData[i,colRep3ctrl], col = "blue") 
 
-lines(y, data[i,colRep1rnase], col = "pink")
-lines(y, data[i,colRep2rnase], col = "pink")
-lines(y, data[i,colRep3rnase], col = "pink")
+lines(y, FullData[i,colRep1rnase], col = "pink")
+lines(y, FullData[i,colRep2rnase], col = "pink")
+lines(y, FullData[i,colRep3rnase], col = "pink")
+}
+
+
+#Normalized plots
+y = 1:25
+
+for (i in 4200:4300){
+plot(y, rep1ctrlnormDataframe[i,], col = "blue", xlab = i) 
+lines(y, rep2ctrlnormDataframe[i,], col = "blue") 
+lines(y, rep3ctrlnormDataframe[i,], col = "blue") 
+
+lines(y, rep1rnasenormDataframe[i,], col = "pink")
+lines(y, rep2rnasenormDataframe[i,], col = "pink")
+lines(y, rep3rnasenormDataframe[i,], col = "pink")
+}
+
+#Comparison normalized plot and not normalized plot
+## 
+for (i in c(4150, 4000)){
+plot(y, FullData[i,colRep1ctrl], col = "blue", xlab = i) 
+lines(y, FullData[i,colRep2ctrl], col = "blue") 
+lines(y, FullData[i,colRep3ctrl], col = "blue") 
+
+plot(y, rep1ctrlnormDataframe[i,], col = "green", xlab = i) 
+lines(y, rep2ctrlnormDataframe[i,], col = "green") 
+lines(y, rep3ctrlnormDataframe[i,], col = "green")
+
+plot(y, FullData[i,colRep1rnase], col = "pink", xlab = i)
+lines(y, FullData[i,colRep2rnase], col = "pink")
+lines(y, FullData[i,colRep3rnase], col = "pink")
+
+plot(y, rep1rnasenormDataframe[i,], col = "orange", xlab = i)
+lines(y, rep2rnasenormDataframe[i,], col = "orange")
+lines(y, rep3rnasenormDataframe[i,], col = "orange")
+}
+## Bei 4000 shift zwischen normalisiert und nicht normalisiert?! Etwas falsch gemacht? Aber bei 4150 stimmt polt überein! Bedeutung?
+
+
+ ## Max. for some proteins for Rep1 ctrl sample and  the fraction the maximum is in
+maxRep1ctrl = apply(FullData[1:40,colRep1ctrl],1,max)
+for(i in 1:40){
+    for (j in 1:150){
+        if(FullData[i,j]== maxRep1ctrl[i]){
+           print(names(FullData)[j])
+        }
+    }
 }
 
 
 ```
-These are some proteins that were selected from the interval of protein 4000 until protein 4300. Their maxima of the plot of the control and RNAse group show differences to each other. These differences of these examples have to get examined further.
+These are some proteins that were selected from the interval of protein 4000 until protein 4300. Their maxima of the plot of the control and RNase group show differences to each other. These differences of these examples have to get examined further. These are only examples for the kind of proteins we are looking for. To further examine those we want to fuse all three curves of the replicates.
+```{r}
+
+
+
+
+```
