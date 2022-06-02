@@ -1,0 +1,241 @@
+---
+title: "RDeeP_HeLa_Interphase"
+author: "MSalein"
+date: "23 5 2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+
+
+We are starting our project by analyzing the HeLa Interphase data set. The goal is to identify both RNA-binding and RNA-dependent proteins, properties they have in common and compare our results to data bases. In order to work with the data set, we have to load it first. 
+
+```{r}
+FullDat <- read.table("C:/Dokumente/Uni/FS 4/Data Analysis/RDeeP_HeLa_Interphase.csv", header = TRUE, row.names=1, sep = ";") 
+save(FullDat, file = "FullDat.Rdata")
+
+load("FullDat.Rdata") ##nur den ausführen bei R-Datei von jemand anderem
+dim(FullDat)
+```
+
+The data set has 7086 rows representing the proteins and 150 columns (3 replicates with 25 fractions for both control and RNase samples).
+
+It is important that all of the values are stored as numerics. If not, this will cause problems in calculations and further analysis. As the data set contains doubles, we checked every value for being stored as a double. 
+
+```{r}
+apply(FullDat, 2, is.double)
+##könnte man auch mit sum(apply(FullDat, 2, is.double)), weil TRUE wird in 1 umgewandelt und dann müsste sum = 150 sein oder?
+```
+As we can see, all values are stored as doubles.
+
+
+Our data clean-up consists of two parts: removing all rows containing all zeros and removing rows where all of the Control or the RNase values are zero. In the first step of data cleaning, we searched for rows (proteins) that had only zeros. We deleted this row (FHOD3_HUMAN) because it does not contain any information. Thereby, the data set is reduced to 7085 rows. NExt, we transformed all zeros to NA.
+
+```{r}
+which(rowSums(FullDat==0)==150) ##welche Proteine haben nur 0 in der Zeile?
+FullDat = FullDat[-(which(rowSums(FullDat==0)==150)),]
+
+FullDat[FullDat==0] = NA ##würde ich rausnehmen und nur für mean und co vllt einbauen (aplly hat kein rm.na!!!)
+
+```
+
+The data set is very large. To prepare the data for our normalization, we split the data set into smaller data frames, one data frame for each replicate resulting in 6 different data frames.
+
+```{r}
+colRep1ctrl = seq(1, 150, 6) ##all columns with measurements from rep1 control sample 
+colRep2ctrl = seq(2, 150, 6) ##all columns with measurements from rep2 control sample
+colRep3ctrl = seq(3, 150, 6) ##all columns with measurements from rep3 control sample
+colRep1rnase = seq(4, 150, 6) ##all columns with measurements from rep1 rnase sample
+colRep2rnase = seq(5, 150, 6) ##all columns with measurements from rep2 rnase sample
+colRep3rnase = seq(6, 150, 6) ##all columns with measurements from rep3 rnase sample
+
+
+rep1ctrldat = FullDat[,colRep1ctrl] 
+rep2ctrldat = FullDat[,colRep2ctrl]
+rep3ctrldat = FullDat[,colRep3ctrl]
+rep1rnasedat = FullDat[,colRep1rnase]
+rep2rnasedat = FullDat[,colRep2rnase]
+rep3rnasedat = FullDat[,colRep3rnase]
+```
+
+Three of the six data frames are part of the Control and the RNase experiments respectively. We combined them in order to get one data set for each condition by joining them per column.
+
+```{r}
+TripCtrldat = cbind(rep1ctrldat, rep2ctrldat, rep3ctrldat)
+TripRnasedat = cbind(rep1rnasedat, rep2rnasedat, rep3rnasedat)
+```
+
+
+
+Now, we could continue with the second step of data cleaning. A protein without any values in either the control or the RNase tests cannot be compared the other condition, thus giving us no information and can be deleted. As all zeros were turned to NA in a previous step, we used is.na to look for rows in both the control and the RNase data frame containing all zeros (NAs). As the data sets have 75 columns, the NAs in a row without a value must sum up to 75. This step results in a data set with 7081 rows (4 proteins less). 
+
+```{r} 
+FullDat = FullDat[-which(rowSums(is.na(TripCtrldat))==75),]
+FullDat = FullDat[-which(rowSums(is.na(TripRnasedat))==75),]
+rTripCtrldat = TripCtrldat[-which(rowSums(is.na(TripCtrldat))==75),]
+rTripCtrldat = rTripCtrldat[-which(rowSums(is.na(TripRnasedat))==75),]
+rTripRnasedat = TripRnasedat[-which(rowSums(is.na(TripCtrldat))==75),]
+rTripRnasedat = rTripRnasedat[-which(rowSums(is.na(TripRnasedat))==75),]
+
+rrep1ctrldat = rTripCtrldat[,1:25]
+rrep2ctrldat = rTripCtrldat[,26:50]
+rrep3ctrldat = rTripCtrldat[,51:75]
+
+rrep1rnasedat = rTripRnasedat[,1:25]
+rrep2rnasedat = rTripRnasedat[,26:50]
+rrep3rnasedat = rTripRnasedat[,51:75]
+
+##warum funktioniet das nicht
+##remo = function(x){x = x[-which(rowSums(is.na(TripCtrldat))==75),]}
+##remo(FullDat)
+
+```
+
+```{r}
+##Varianz
+var_rep = data.frame()
+for (j in 1:2){
+  for (i in 1:25){
+    z = c(rep1ctrldat[j, i], rep2ctrldat[j, i], rep3ctrldat[j, i ])
+    var_rep[1,i] = var(z)
+  }}
+
+##Correlation
+cor_rep = data.frame()
+c1 = vector()
+c2 = vector()
+c3 = vector()
+for (j in 1:100){
+    c1 = c(as.numeric(rep1ctrldat[j,])) 
+    c2 = c(as.numeric(rep2ctrldat[j,]))
+    c3 = c(as.numeric(rep3ctrldat[j,]))
+    cor_rep[j,1] = cor(c1, c2)
+    cor_rep[j,2] = cor(c2, c3)
+    cor_rep[j,3] = cor(c3, c1)
+    bad_cor = cor_rep[cor_rep < 0.8]
+}
+plot(1:100, cor_rep[,1])
+
+
+```
+
+For the analysis, it is crucial that the replicates for each condition are comparable. When we looked at the data set, we noticed that all replicates were performed with different amounts of protein. Therefore, we normalized the protein amount to 100 for every replicate using the apply function and save the resulting values in six different data frames.  
+
+```{r} 
+FullDat[is.na(FullDat)] = 0
+rep1ctrlnormData = t(apply(FullDat[, colRep1ctrl], 1, function(x) x/(sum(x)/100)))
+rep2ctrlnormData = t(apply(FullDat[, colRep2ctrl], 1, function(x) x/(sum(x)/100)))
+rep3ctrlnormData = t(apply(FullDat[, colRep3ctrl], 1, function(x) x/(sum(x)/100)))
+rep1rnasenormData = t(apply(FullDat[, colRep1rnase], 1, function(x) x/(sum(x)/100)))
+rep2rnasenormData = t(apply(FullDat[, colRep2rnase], 1, function(x) x/(sum(x)/100)))
+rep3rnasenormData = t(apply(FullDat[, colRep3rnase], 1, function(x) x/(sum(x)/100)))
+
+rep1ctrlnormDataframe = as.data.frame(rep1ctrlnormData)
+rep2ctrlnormDataframe = as.data.frame(rep2ctrlnormData)
+rep3ctrlnormDataframe = as.data.frame(rep3ctrlnormData)
+rep1rnasenormDataframe = as.data.frame(rep1rnasenormData)
+rep2rnasenormDataframe = as.data.frame(rep2rnasenormData)
+rep3rnasenormDataframe = as.data.frame(rep3rnasenormData)
+
+tripCtrlnormdat = cbind(rep1ctrlnormDataframe, rep2ctrlnormDataframe, rep3ctrlnormDataframe)
+tripRnasenormdat = cbind(rep1rnasenormDataframe, rep2rnasenormDataframe, rep3rnasenormDataframe)
+
+sum(rep1ctrlnormData[1,]) # == 100
+
+```
+
+batch effect freie data frames
+```{r}
+
+tripRnasenormdat[tripRnasenormdat==0] = NA
+tripCtrlnormdat[tripCtrlnormdat==0] = NA
+for(i in 1:nrow(tripCtrlnormdat)){
+  for (j in 1:25){
+    testctrl = c(tripCtrlnormdat[i,j],tripCtrlnormdat[i,j+25], tripCtrlnormdat[i,j+50])
+    if(sum(is.na(testctrl))==2) {
+      cat("\n", i, j)
+      tripCtrlnormdat[i, j] = NA
+      tripCtrlnormdat[i, j+25] = NA
+      tripCtrlnormdat[i, j+50] = NA
+    }
+    if(sum(is.na(testctrl))==1){
+      cat("\n", i, j)
+      tripCtrlnormdat[i, j] = mean(testctrl, na.rm = TRUE)
+      tripCtrlnormdat[i, j+25] = mean(testctrl, na.rm = TRUE)
+      tripCtrlnormdat[i, j+50] = mean(testctrl, na.rm = TRUE)
+    }
+  }
+}
+
+for(i in 1:nrow(tripRnasenormdat)){
+  for (j in 1:25){
+    testrnase = c(tripRnasenormdat[i,j],tripRnasenormdat[i,j+25], tripRnasenormdat[i,j+50])
+    if(sum(is.na(testrnase))==2) {
+      tripRnasenormdat[i, j] = NA
+      tripRnasenormdat[i, j+25] = NA
+      tripRnasenormdat[i, j+50] = NA
+    }
+    if(sum(is.na(testctrl))==1){
+      tripRnasenormdat[i, j] = mean(testrnase, na.rm = TRUE)
+      tripRnasenormdat[i, j+25] = mean(testrnase, na.rm = TRUE)
+      tripRnasenormdat[i, j+50] = mean(testrnase, na.rm = TRUE)
+    }
+  }
+}
+
+
+
+# es gibt sowohl welche mit ==2 als auch ==1 (habe ich einzeln getestet)
+#was genau machen wir mit denen? nur beim mean berechnung verändern? bzw rauslas
+
+```
+There are 23 proteins that have a replicate value being a batch effect. 
+
+The next step is taking the mean of all three replicates for each condition to receive an average curve of the protein's distribution with and without RNase. Our normalization has the advantage that all values of the resulting curve will sum up to 100. Thus, they are interpretable as percentages.  
+
+```{r}
+#mean of control replicates of all proteins  
+meanRepctrl = matrix(nrow= nrow(FullDat), ncol = 25)
+for (j in 1:nrow(FullDat)){ 
+  for (i in 1:25){
+    meanRepctrl[j,i] = (rep1ctrlnormDataframe[j,i] + rep2ctrlnormDataframe[j,i] + rep3ctrlnormDataframe[j,i])/3}}
+
+#mean of rnase replicates of all proteins 
+meanRepRNase = matrix(nrow= nrow(FullDat), ncol = 25)
+for (j in 1:nrow(FullDat)){ 
+  for (i in 1:25){
+    meanRepRNase[j,i] = (rep1rnasenormDataframe[j,i] + rep2rnasenormDataframe[j,i] + rep3rnasenormDataframe[j,i])/3}}
+
+##sum(meanRepctrl[1,]) überprüfen, ob 100 insgesamt pro Zeile
+##sum(meanRepRNase[1,])
+
+```
+
+BRAUCHEN WIR DAS?: 
+Now that we have two curve for the two conditions, we plot them separately.
+
+```{r}
+y = 1:25
+f = (function(x)plot(y,x, type ="o", pch = 20))
+plot_ctrl = apply(meanRepctrl[1:10,],1,f)
+plot_rnase = apply(meanRepRNase[1:10,],1,f)
+
+```
+
+Our goal is to determine the maxima and find out which proteins are shifting. This is why we plot the two curves of RNase (pink) and control (blue) in one graph. The graphs of the first 10 proteins does not show a shift. 
+
+```{r} 
+for (i in 1:10){
+  plot(y, meanRepctrl[i,], type ="o", pch = 20, ylab = "percentage of protein amount", xlab = "fractions of sucrose density gradient", col = "cyan")
+  lines(y,meanRepRNase[i,], type = "o", pch = 20, col = "magenta")
+}
+
+```
+
