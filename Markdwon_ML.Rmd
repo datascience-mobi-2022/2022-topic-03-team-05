@@ -98,7 +98,6 @@ rrep3rnasedat = rTripRnasedat[,51:75]
 
 ```
 
-```{r}
 ##Varianz
 var_rep = data.frame()
 for (j in 1:2){
@@ -123,8 +122,6 @@ for (j in 1:100){
 }
 plot(1:100, cor_rep[,1])
 
-
-```
 
 For the analysis, it is crucial that the replicates for each condition are comparable. When we looked at the data set, we noticed that all replicates were performed with different amounts of protein. Therefore, we normalized the protein amount to 100 for every replicate using the apply function and save the resulting values in six different data frames.  
 
@@ -203,33 +200,77 @@ rep3rnasenormDataframe = tripRnasenormdat[,51:75]
 # es gibt sowohl welche mit ==2 als auch ==1 (habe ich einzeln getestet)
 #was genau machen wir mit denen? nur beim mean berechnung verändern? bzw rauslas
 
+y = 1:25
+plot(y, rep1ctrlnormDataframe[1,], type = "o")
+plot(y, rep2ctrlnormDataframe[1,], type = "o")
+plot(y, rep3ctrlnormDataframe[1,], type = "o")
 ```
 There are 23 proteins that have a replicate value being a batch effect. 
 
 reproducibility
 ```{r}
-#ohne Randwerte
-maxctrl1 = matrix(, nrow=10, ncol=23)
-maxctrl2 = matrix(, nrow=10,ncol=23)
-maxctrl3 = matrix(, nrow=10, ncol=23)
-for (i in 1:10){
-  for (j in 2:24){
-    if(rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i,(j-1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)]) {
-    maxctrl1[i,j] = j
+
+# Hauptmaxima
+fraction_abs_max = matrix(, ncol = 6, nrow = nrow(rep1ctrlnormDataframe)) 
+for (i in 1:nrow(rep1ctrlnormDataframe)){
+  fraction_abs_max[i,1] = which.max(rep1ctrlnormDataframe[i,])
+  fraction_abs_max[i,2] = which.max(rep2ctrlnormDataframe[i,])
+  fraction_abs_max[i,3] = which.max(rep3ctrlnormDataframe[i,])
+  fraction_abs_max[i,4] = which.max(rep1rnasenormDataframe[i,])
+  fraction_abs_max[i,5] = which.max(rep2rnasenormDataframe[i,])
+  fraction_abs_max[i,6] = which.max(rep3rnasenormDataframe[i,])
+}
+
+isTRUE(all.equal(fraction_abs_max[,1], fraction_abs_max[,2], tolerance = 1.1))
+isTRUE(all.equal(fraction_abs_max[,2], fraction_abs_max[,3], tolerance = 1.1))
+isTRUE(all.equal(fraction_abs_max[,1], fraction_abs_max[,3], tolerance = 1.1))
+isTRUE(all.equal(fraction_abs_max[,4], fraction_abs_max[,5], tolerance = 1.1))
+isTRUE(all.equal(fraction_abs_max[,5], fraction_abs_max[,6], tolerance = 1.1))
+isTRUE(all.equal(fraction_abs_max[,4], fraction_abs_max[,6], tolerance = 1.1))
+
+
+
+#lokale Maxima ohne Randwerte
+#wenn die Werte jeweils zwei Fraktionen daneben kleiner sind, der wert selbst mind. 3 % der gesamtproteinmenge ausmacht
+## warum geht
+maxctrl1 = matrix(0, nrow=30, ncol=23)
+maxctrl2 = matrix(0, nrow=30,ncol=23)
+maxctrl3 = matrix(0, nrow=30, ncol=23)
+for (i in 1:30){
+  for (j in 3:23){
+    if(rep1ctrlnormDataframe[i,j] > 3 && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+2)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-2)]) {
+      maxctrl1[i,j] = j
     }
-    if(rep2ctrlnormDataframe[i,j]> rep2ctrlnormDataframe[i,(j-1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)]) {
-    maxctrl2[i,j] = j
+    if(rep2ctrlnormDataframe[i,j] > 3 && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+2)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-2)]){
+      maxctrl2[i,j] = j
     }
-    if(rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i,(j-1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+1)]) {
-    maxctrl3[i,j] = j
+    if(rep3ctrlnormDataframe[i, j] > 3 &&  rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+2)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-2)]) {
+      maxctrl3[i,j] = j
     }
   }
 }
 
-isTRUE(all.equal(maxctrl1,maxctrl2)) 
-isTRUE(all.equal(maxctrl1,maxctrl3))
-isTRUE(all.equal(maxctrl2,maxctrl3))
+
+
+isTRUE(all.equal(maxctrl1,maxctrl2, tolerance = 6.1))
+isTRUE(all.equal(maxctrl1,maxctrl3, tolerance = 2.1))
+isTRUE(all.equal(maxctrl2,maxctrl3, tolerance = 1.1))
+
 ##alle false also gibt es verschiebungen
+
+maxctrl1[is.na(maxctrl1)] = 0
+maxctrl2[is.na(maxctrl2)] = 0
+maxctrl3[is.na(maxctrl3)] = 0
+
+mat12 = matrix(, nrow = 0, ncol = 23)
+for (i in 1:nrow(maxctrl1)){
+  for (j in 1:ncol(maxctrl1)){
+     mat12[i,j] = abs(maxctrl1[i,j]-maxctrl2[i,j])
+  }
+ 
+}
+   
+
 ```
 
 
