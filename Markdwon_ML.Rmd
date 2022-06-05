@@ -200,10 +200,6 @@ rep3rnasenormDataframe = tripRnasenormdat[,51:75]
 # es gibt sowohl welche mit ==2 als auch ==1 (habe ich einzeln getestet)
 #was genau machen wir mit denen? nur beim mean berechnung verändern? bzw rauslas
 
-y = 1:25
-plot(y, rep1ctrlnormDataframe[1,], type = "o")
-plot(y, rep2ctrlnormDataframe[1,], type = "o")
-plot(y, rep3ctrlnormDataframe[1,], type = "o")
 ```
 There are 23 proteins that have a replicate value being a batch effect. 
 
@@ -316,6 +312,22 @@ for (i in 1:10){
   plot(y, meanRepctrl[i,], type ="o", pch = 20, ylab = "percentage of protein amount", xlab = "fractions of sucrose density gradient", col = "cyan")
   lines(y,meanRepRNase[i,], type = "o", pch = 20, col = "magenta")
 }
+
+```
+
+calculating maxima for mean Ctrl and mean Rnase
+
+```{r}
+abs_max = matrix(, ncol = 2, nrow = nrow(rep1ctrlnormDataframe)) 
+for (i in 1:nrow(rep1ctrlnormDataframe)){
+  abs_max[i,1] = which.max(meanRepctrl[i,])
+  abs_max[i,2] = which.max(meanRepRNase[i,])
+  
+}
+
+isTRUE(all.equal(abs_max[,1], abs_max[,2]))
+
+isTRUE(all.equal(abs_max[,1], abs_max[,2], tolerance = 2.1)) ## das dürfte nicht TRUE ausgeben...?? zum Beispiel Protein 127 hat als Hauptmaximum bei Ctrl 15 und mit RNase 8
 
 ```
 
