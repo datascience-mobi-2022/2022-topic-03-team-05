@@ -348,16 +348,18 @@ for (i in 1:10){
 calculating maxima for mean Ctrl and mean Rnase
 
 ```{r}
-abs_max = matrix(, ncol = 2, nrow = nrow(rep1ctrlnormDataframe)) 
+abs_max = data.frame()
+
 for (i in 1:nrow(rep1ctrlnormDataframe)){
   abs_max[i,1] = which.max(meanRepctrl[i,])
   abs_max[i,2] = which.max(meanRepRNase[i,])
   
 }
 
-isTRUE(all.equal(abs_max[,1], abs_max[,2]))
+abs_max$compare = ifelse(abs(abs_max$V1-abs_max$V2) > 1, TRUE, FALSE)
+sum(abs_max$compare)
+##bei 1216 Proteinen sind die Hauptmaxima nicht mindestens 2 Fraktionen verschoben
 
-isTRUE(all.equal(abs_max[,1], abs_max[,2], tolerance = 2.1)) ## das dürfte nicht TRUE ausgeben...?? zum Beispiel Protein 127 hat als Hauptmaximum bei Ctrl 15 und mit RNase 8
 
 ```
 
