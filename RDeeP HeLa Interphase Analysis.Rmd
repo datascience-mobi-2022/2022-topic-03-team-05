@@ -73,18 +73,18 @@ rep1rnasenormDataframe = as.data.frame(rep1rnasenormData)
 rep2rnasenormDataframe = as.data.frame(rep2rnasenormData)
 rep3rnasenormDataframe = as.data.frame(rep3rnasenormData)
 
-
 sum(rep1ctrlnormData[1,]) # == 100
 
+## Versuch alternative Normalisierung, Test
+# Normalisierung Spaltenweise
+copy = FullDat
+copy1ctrlnorm = apply(copy[,colRep1ctrl],2, function(x) x/(sum(x)/100))
+sum(copy1ctrlnorm[,1]) # == 100
 
-#mean of replicates of first column 
-meanRepctrl = vector()
-for (i in 1:25){
-  meanRepctrl[i] = (rep1ctrlnormData[1,i] + rep2ctrlnormData[1,i] + rep3ctrlnormData[1,i])/3}
+# Ok und dann des mit den Replikaten, wenn wir des verstanden haben
+#mean von ctrl und RNase, Ausreißer anpassen
 
-meanRepRNase = vector()
-for (i in 1:25){
-  meanRepRNase[i] = (rep1rnasenormData[1,i] + rep2rnasenormData[1,i] + rep3rnasenormData[1,i])/3}
+
 
 
 #mean of control replicates of all proteins  
