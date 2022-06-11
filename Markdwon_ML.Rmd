@@ -84,14 +84,6 @@ rTripCtrldat = rTripCtrldat[-which(rowSums(is.na(TripRnasedat))==75),]
 rTripRnasedat = TripRnasedat[-which(rowSums(is.na(TripCtrldat))==75),]
 rTripRnasedat = rTripRnasedat[-which(rowSums(is.na(TripRnasedat))==75),]
 
-rrep1ctrldat = rTripCtrldat[,1:25]
-rrep2ctrldat = rTripCtrldat[,26:50]
-rrep3ctrldat = rTripCtrldat[,51:75]
-
-rrep1rnasedat = rTripRnasedat[,1:25]
-rrep2rnasedat = rTripRnasedat[,26:50]
-rrep3rnasedat = rTripRnasedat[,51:75]
-
 ##warum funktioniet das nicht
 ##remo = function(x){x = x[-which(rowSums(is.na(TripCtrldat))==75),]}
 ##remo(FullDat)
@@ -122,10 +114,73 @@ for (j in 1:100){
 }
 plot(1:100, cor_rep[,1])
 
+# normalization fraction-wise
+```{r}
+FullDat[is.na(FullDat)] = 0
+rep_sum = apply(FullDat, 2, sum)
+#Ctrl sum fraction-wise before normalization
+for (i in colRep1ctrl){
+  barplot(rep_sum[i:(i+2)])}
+
+#RNase sum fraction-wise before normalization
+for (i in colRep1rnase){
+  barplot(rep_sum[i:(i+2)])
+}
+
+#vector with mean for each fraction, each condition and each replicate (= 150 values)
+mean_frac_rep = apply(FullDat, 2, mean)
+
+#normalization fraction-wise
+col_frac_per_condition = sort(c(colRep1ctrl, colRep1rnase))
+mean_rep = vector() ##vector with mean value of two mean values that are closest to each other in each fraction of each condition (comparing mean values of triplicates)
+for (i in 1:50){
+  a = mean_frac_rep[col_frac_per_condition[i]]
+  b = mean_frac_rep[col_frac_per_condition[i]+1]
+  c = mean_frac_rep[col_frac_per_condition[i]+2]
+  if(abs(a-b) <= abs(b-c) && abs(a-b) <= abs(a-c)){ mean_rep[i] = mean(c(a,b))}
+    else if(abs(b-c) < abs(a-b) && abs(b-c) <= abs(a-c)){mean_rep[i] = mean(c(b,c))}
+      else{mean_rep[i] = mean(c(a,c))}
+}
+
+#normalization to mean values stored in mean_rep
+FullDat_fracnorm = data.frame(FullDat)
+for (i in 1:50) {
+  for (j in col_frac_per_condition[i]:(col_frac_per_condition[i]+2)){
+    x = mean_rep[i]/mean_frac_rep[j]
+    FullDat_fracnorm[,j] = FullDat[,j]*x
+    
+  }
+}
+
+
+
+```
+#testing if all fraction-wise sums/means are equal after normalizations
+```{r}
+rep_sum_norm = apply(FullDat_fracnorm, 2, sum)
+#Ctrl sum fraction-wise before normalization
+for (i in colRep1ctrl){
+  barplot(rep_sum_norm[i:(i+2)])}
+
+#RNase sum fraction-wise before normalization
+for (i in colRep1rnase){
+  barplot(rep_sum_norm[i:(i+2)])
+}
+
+rep_mean_norm = apply(FullDat_fracnorm, 2, mean)
+for (i in colRep1ctrl){
+  barplot(rep_mean_norm[i:(i+2)])}
+
+for (i in colRep1rnase) {
+  barplot(rep_mean_norm[i:(i+2)])
+}
+```
+
 
 For the analysis, it is crucial that the replicates for each condition are comparable. When we looked at the data set, we noticed that all replicates were performed with different amounts of protein. Therefore, we normalized the protein amount to 100 for every replicate using the apply function and save the resulting values in six different data frames.  
 
 ```{r} 
+FullDat = FullDat_fracnorm
 FullDat[is.na(FullDat)] = 0
 rep1ctrlnormData = t(apply(FullDat[, colRep1ctrl], 1, function(x) x/(sum(x)/100)))
 rep2ctrlnormData = t(apply(FullDat[, colRep2ctrl], 1, function(x) x/(sum(x)/100)))
@@ -203,11 +258,45 @@ rep3rnasenormDataframe = tripRnasenormdat[,51:75]
 ```
 There are 23 proteins that have a replicate value being a batch effect. 
 
+```{r}
+
+
+##Correlation
+cor(rep1ctrlnormDataframe,rep2ctrlnormDataframe)
+
+
+
+cor_rep = data.frame()
+c1 = vector()
+c2 = vector()
+c3 = vector()
+for (j in 1:nrow(rep1ctrlnormDataframe)){
+    c1 = c(as.numeric(rep1ctrlnormDataframe[j,])) 
+    c2 = c(as.numeric(rep2ctrlnormDataframe[j,]))
+    c3 = c(as.numeric(rep3ctrlnormDataframe[j,]))
+    cor_rep[j,1] = cor(c1, c2)
+    cor_rep[j,2] = cor(c2, c3)
+    cor_rep[j,3] = cor(c3, c1)
+    
+}
+sum(is.na(cor_rep))
+which(is.na(cor_rep))
+#Problem: es gibt 6 Proteine, die eine Varianz von 0 haben, d.h. es kann keine Cor berechnet werden
+
+
+cor_rep_mean = apply(cor_rep, 1, mean)
+cor_rep_bad = which(cor_rep_mean<0.85)
+length(cor_rep_bad)
+## 3,9% der Proteine wären nicht reproduzierbar und müssten rausgeschmissen werden (entspricht 257 Proteinen)
+
+```
+
+
 reproducibility
 ```{r}
 
 # Hauptmaxima
-fraction_abs_max = matrix(, ncol = 6, nrow = nrow(rep1ctrlnormDataframe)) 
+fraction_abs_max = data.frame(row.names = rownames(rep1ctrlnormDataframe))
 for (i in 1:nrow(rep1ctrlnormDataframe)){
   fraction_abs_max[i,1] = which.max(rep1ctrlnormDataframe[i,])
   fraction_abs_max[i,2] = which.max(rep2ctrlnormDataframe[i,])
@@ -225,10 +314,7 @@ isTRUE(all.equal(fraction_abs_max[,5], fraction_abs_max[,6], tolerance = 1.1))
 isTRUE(all.equal(fraction_abs_max[,4], fraction_abs_max[,6], tolerance = 1.1))
 
 # lokale Maxima
-library(ggplot2)
-library(ggpmisc)
 
-library(splus2R)
 
 loc_max = function(dat1, dat2){
 a1 = which(peaks(t(dat1), span = 5)==TRUE)
@@ -271,12 +357,15 @@ for (i in 1:7081){
 }
 return(sum(logf))
 }
+## wenns ungleich ist und eine matrix 0, dann links und rechts gucken ob zahl
 
 compare_max(maxctrl1,maxctrl2)
 
 # 2861 sind nicht gleich (auch nicht in der Nachbarfraktion...)
 
 plot(y, rep1ctrlnormDataframe[1,], type = "o", col = "blue"); lines(y,rep2ctrlnormDataframe[1,], col = "green"); lines(y, rep3ctrlnormDataframe[1,], col="purple")
+cor(as.numeric(rep1ctrlnormDataframe[1,]),as.numeric(rep2ctrlnormDataframe[1,]))
+head(rep1ctrlnormDataframe[])
 
 isTRUE(all.equal(maxctrl1,maxctrl2, tolerance = 1.1))
 isTRUE(all.equal(maxctrl1,maxctrl3, tolerance = 1.1))
@@ -284,11 +373,8 @@ isTRUE(all.equal(maxctrl2,maxctrl3, tolerance = 1.1))
 
 ##alle false also gibt es verschiebungen
 
-maxctrl1[is.na(maxctrl1)] = 0
-maxctrl2[is.na(maxctrl2)] = 0
-maxctrl3[is.na(maxctrl3)] = 0
 
-mat12 = matrix(, nrow = 0, ncol = 23)
+mat12 = data.frame()
 for (i in 1:nrow(maxctrl1)){
   for (j in 1:ncol(maxctrl1)){
      mat12[i,j] = abs(maxctrl1[i,j]-maxctrl2[i,j])
@@ -308,13 +394,13 @@ The next step is taking the mean of all three replicates for each condition to r
 
 ```{r}
 #mean of control replicates of all proteins  
-meanRepctrl = matrix(nrow= nrow(tripCtrlnormdat), ncol = 25)
+meanRepctrl = data.frame(row.names = rownames(rep1ctrlnormDataframe))
 for (j in 1:nrow(tripCtrlnormdat)){ 
   for (i in 1:25){
     meanRepctrl[j,i] = (rep1ctrlnormDataframe[j,i] + rep2ctrlnormDataframe[j,i] + rep3ctrlnormDataframe[j,i])/3}}
 
 #mean of rnase replicates of all proteins 
-meanRepRNase = matrix(nrow= nrow(FullDat), ncol = 25)
+meanRepRNase = data.frame(row.names = rownames(rep1ctrlnormDataframe))
 for (j in 1:nrow(tripCtrlnormdat)){ 
   for (i in 1:25){
     meanRepRNase[j,i] = (rep1rnasenormDataframe[j,i] + rep2rnasenormDataframe[j,i] + rep3rnasenormDataframe[j,i])/3}}
@@ -348,7 +434,7 @@ for (i in 1:10){
 calculating maxima for mean Ctrl and mean Rnase
 
 ```{r}
-abs_max = data.frame()
+abs_max = data.frame(row.names = rownames(rep1ctrlnormDataframe))
 
 for (i in 1:nrow(rep1ctrlnormDataframe)){
   abs_max[i,1] = which.max(meanRepctrl[i,])
@@ -358,8 +444,8 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
 
 abs_max$compare = ifelse(abs(abs_max$V1-abs_max$V2) > 1, TRUE, FALSE)
 sum(abs_max$compare)
-##bei 1216 Proteinen sind die Hauptmaxima nicht mindestens 2 Fraktionen verschoben
-
+##bei 1216 Proteinen sind die Hauptmaxima mindestens 2 Fraktionen verschoben
+rownames(abs_max$compare==TRUE)
 
 ```
 
