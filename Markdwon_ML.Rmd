@@ -259,7 +259,8 @@ rep3rnasenormDataframe = tripRnasenormdat[,51:75]
 There are 23 proteins that have a replicate value being a batch effect. 
 
 ```{r}
-
+plot(FullDat_fracnorm$Fraction1_Ctrl_Rep1, FullDat_fracnorm$Fraction1_Ctrl_Rep2)
+plot(FullDat_fracnorm$Fraction10_Ctrl_Rep2, FullDat_fracnorm$Fraction1_Ctrl_Rep3)
 
 ##Correlation
 cor(rep1ctrlnormDataframe,rep2ctrlnormDataframe)
@@ -313,16 +314,7 @@ isTRUE(all.equal(fraction_abs_max[,4], fraction_abs_max[,5], tolerance = 1.1))
 isTRUE(all.equal(fraction_abs_max[,5], fraction_abs_max[,6], tolerance = 1.1))
 isTRUE(all.equal(fraction_abs_max[,4], fraction_abs_max[,6], tolerance = 1.1))
 
-# lokale Maxima
-
-
-loc_max = function(dat1, dat2){
-a1 = which(peaks(t(dat1), span = 5)==TRUE)
-a2 = which(peaks(t(dat2), span = 5)==TRUE)
-all.equal(a1,a2, tolerance = 1)
-}
-
-
+#lokale Maxima
 #lokale Maxima ohne Randwerte
 #wenn die Werte jeweils zwei Fraktionen daneben kleiner sind, der wert selbst mind. 3 % der gesamtproteinmenge ausmacht
 
@@ -444,7 +436,7 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
 
 abs_max$compare = ifelse(abs(abs_max$V1-abs_max$V2) > 1, TRUE, FALSE)
 sum(abs_max$compare)
-##bei 1216 Proteinen sind die Hauptmaxima mindestens 2 Fraktionen verschoben
+##bei 1348 Proteinen sind die Hauptmaxima mindestens 2 Fraktionen verschoben
 rownames(abs_max$compare==TRUE)
 
 ```
