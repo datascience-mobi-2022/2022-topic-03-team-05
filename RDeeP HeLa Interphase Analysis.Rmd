@@ -24,8 +24,6 @@ sapply(FullDat,class)
 
 
 
-
-
 ```
 
 The data contains 7086 proteins and 25 fractions which were each repeated three times as a control sample and three times with RNase.
@@ -35,10 +33,7 @@ After the first survey we have to find a way to deal with the missing values in 
 
 ```{r}
 
-# missing values have the value 0; delete these values -> NA
-which(FullDat == 0)
-data_rm = FullDat[-which(FullDat == 0),] #deleted complete rows!
-dim(data_rm) #huge number of zeros!
+
 
 #Reduce data set into smaller data sets 
 colRep1ctrl = seq(1, 150, 6) ##all columns with rep1 ctrl 
@@ -57,8 +52,12 @@ c = which(rowSums(FullDat[,c(colRep1RNAse, colRep2RNAse, colRep3RNAse)]== 0) ==7
 
 FullDat = FullDat[-c(2089,2993, 4123,4405, 6216),]
 
+```
+Now that we have a survey about our data and performed a first data reduction we will normalize the data.
 
-# data sets for each replicate; normalization 
+```{r}
+
+# data sets for each replicate; normalization, row-wise
 rep1ctrlnormData = t(apply(FullDat[, colRep1ctrl], 1, function(x) x/(sum(x)/100)))
 rep2ctrlnormData = t(apply(FullDat[, colRep2ctrl], 1, function(x) x/(sum(x)/100)))
 rep3ctrlnormData = t(apply(FullDat[, colRep3ctrl], 1, function(x) x/(sum(x)/100)))
@@ -66,6 +65,7 @@ rep1rnasenormData = t(apply(FullDat[, colRep1rnase], 1, function(x) x/(sum(x)/10
 rep2rnasenormData = t(apply(FullDat[, colRep2rnase], 1, function(x) x/(sum(x)/100)))
 rep3rnasenormData = t(apply(FullDat[, colRep3rnase], 1, function(x) x/(sum(x)/100)))
 
+#Transformation into dataframes
 rep1ctrlnormDataframe = as.data.frame(rep1ctrlnormData)
 rep2ctrlnormDataframe = as.data.frame(rep2ctrlnormData)
 rep3ctrlnormDataframe = as.data.frame(rep3ctrlnormData)
@@ -75,15 +75,89 @@ rep3rnasenormDataframe = as.data.frame(rep3rnasenormData)
 
 sum(rep1ctrlnormData[1,]) # == 100
 
-## Versuch alternative Normalisierung, Test
-# Normalisierung Spaltenweise
-copy = FullDat
-copy1ctrlnorm = apply(copy[,colRep1ctrl],2, function(x) x/(sum(x)/100))
-sum(copy1ctrlnorm[,1]) # == 100
 
-# Ok und dann des mit den Replikaten, wenn wir des verstanden haben
-#mean von ctrl und RNase, Ausreißer anpassen
 
+# normalization fraction-wise
+
+FullDat[is.na(FullDat)] = 0
+rep_sum = apply(FullDat, 2, sum)
+
+#Ctrl sum fraction-wise before normalization
+for (i in colRep1ctrl){
+  barplot(rep_sum[i:(i+2)])}
+
+#RNase sum fraction-wise before normalization
+for (i in colRep1rnase){
+  barplot(rep_sum[i:(i+2)])
+}
+
+#vector with mean for each fraction, each condition and each replicate (= 150 values)
+mean_frac_rep = apply(FullDat, 2, mean)
+
+#normalization fraction-wise/ column-wise
+col_frac_per_condition = sort(c(colRep1ctrl, colRep1rnase))
+##vector with mean value of two mean values that are closest to each other in each fraction of each condition (comparing mean values of triplicates):
+mean_rep = vector() 
+for (i in 1:50){
+  a = mean_frac_rep[col_frac_per_condition[i]]
+  b = mean_frac_rep[col_frac_per_condition[i]+1]
+  c = mean_frac_rep[col_frac_per_condition[i]+2]
+  if(abs(a-b) <= abs(b-c) && abs(a-b) <= abs(a-c)){ mean_rep[i] = mean(c(a,b))}
+    else if(abs(b-c) < abs(a-b) && abs(b-c) <= abs(a-c)){mean_rep[i] = mean(c(b,c))}
+      else{mean_rep[i] = mean(c(a,c))}
+}
+
+#normalization to mean values stored in mean_rep
+FullDat_fracnorm = data.frame(FullDat)
+for (i in 1:50) {
+  for (j in col_frac_per_condition[i]:(col_frac_per_condition[i]+2)){
+    x = mean_rep[i]/mean_frac_rep[j]
+    FullDat_fracnorm[,j] = FullDat[,j]*x
+    
+  }
+}## Bei mir nur voll NA; mean oder Summe? mean von Summe? Weil größere Werte 
+
+
+#testing if all fraction-wise sums/means are equal after normalization
+
+rep_sum_norm = apply(FullDat_fracnorm, 2, sum)
+#Ctrl sum fraction-wise before normalization
+for (i in colRep1ctrl){
+  barplot(rep_sum_norm[i:(i+2)])}
+
+#RNase sum fraction-wise before normalization
+for (i in colRep1rnase){
+  barplot(rep_sum_norm[i:(i+2)])
+}
+
+rep_mean_norm = apply(FullDat_fracnorm, 2, mean)
+for (i in colRep1ctrl){
+  barplot(rep_mean_norm[i:(i+2)])}
+
+for (i in colRep1rnase) {
+  barplot(rep_mean_norm[i:(i+2)])
+}
+
+#wenn FullDat_fracnorm bei mir richtig ist: FullDat = FullDat_fracnorm, damit damit weitergearbeitet wird
+## data sets for each replicate; normalization, row-wise
+#rep1ctrlnormData = t(apply(FullDat_fracnorm[, colRep1ctrl], 1, function(x) x/(sum(x)/100)))
+#rep2ctrlnormData = t(apply(FullDat_fracnorm[, colRep2ctrl], 1, function(x) x/(sum(x)/100)))
+#rep3ctrlnormData = t(apply(FullDat_fracnorm[, colRep3ctrl], 1, function(x) x/(sum(x)/100)))
+#rep1rnasenormData = t(apply(FullDat_fracnorm[, colRep1rnase], 1, function(x) x/(sum(x)/100)))
+#rep2rnasenormData = t(apply(FullDat_fracnorm[, colRep2rnase], 1, function(x) x/(sum(x)/100)))
+#rep3rnasenormData = t(apply(FullDat_fracnorm[, colRep3rnase], 1, function(x) x/(sum(x)/100)))#
+
+#Transformation into dataframes
+#rep1ctrlnormDataframe = as.data.frame(rep1ctrlnormData)
+#rep2ctrlnormDataframe = as.data.frame(rep2ctrlnormData)
+#rep3ctrlnormDataframe = as.data.frame(rep3ctrlnormData)
+#rep1rnasenormDataframe = as.data.frame(rep1rnasenormData)
+#rep2rnasenormDataframe = as.data.frame(rep2rnasenormData)
+#rep3rnasenormDataframe = as.data.frame(rep3rnasenormData)
+```
+We normalized our data in two different ways. First we normalized the protein amount of each replicate of each Ctrl and RNase to 100 (row-wise) to be able to compare the three replicates. After that we normalized the protein amount of each of the three replicates of the two groups fraction-wise, so that there is the same amount of protein in each replicate.
+
+```{r}
 
 
 
@@ -164,8 +238,8 @@ plot(y, rep1rnasenormDataframe[i,], col = "orange", xlab = i)
 lines(y, rep2rnasenormDataframe[i,], col = "orange")
 lines(y, rep3rnasenormDataframe[i,], col = "orange")
 }
-## Bei 4000 shift zwischen normalisiert und nicht normalisiert?! Etwas falsch gemacht? Aber bei 4150 stimmt plot überein! Bedeutung?
 
+plot(y, rep1ctrlnormDataframe[1,], type = "o", col = "blue"); lines(y,rep2ctrlnormDataframe[1,], col = "green"); lines(y, rep3ctrlnormDataframe[1,], col="purple")
 
  ## Max. for some proteins for Rep1 ctrl sample and  the fraction the maximum is in
 maxRep1ctrl = apply(FullDat[1:40,colRep1ctrl],1,max)
@@ -246,31 +320,22 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
   fraction_abs_max[i,6] = which.max(rep3rnasenormDataframe[i,])
 }
 
-isTRUE(all.equal(fraction_abs_max[,1], fraction_abs_max[,2], tolerance = 1.1)) #FALSE?
+isTRUE(all.equal(fraction_abs_max[,1], fraction_abs_max[,2], tolerance = 1.1)) 
 isTRUE(all.equal(fraction_abs_max[,2], fraction_abs_max[,3], tolerance = 1.1))
-isTRUE(all.equal(fraction_abs_max[,1], fraction_abs_max[,3], tolerance = 1.1)) #FALSE?
+isTRUE(all.equal(fraction_abs_max[,1], fraction_abs_max[,3], tolerance = 1.1)) 
 isTRUE(all.equal(fraction_abs_max[,4], fraction_abs_max[,5], tolerance = 1.1))
 isTRUE(all.equal(fraction_abs_max[,5], fraction_abs_max[,6], tolerance = 1.1))
 isTRUE(all.equal(fraction_abs_max[,4], fraction_abs_max[,6], tolerance = 1.1))
+#all TRUE
 
 head(fraction_abs_max)
 
 # local maxima
-library(ggplot2)
-library(ggpmisc)
-
-library(splus2R)
-
-loc_max = function(dat1, dat2){
-a1 = which(peaks(t(dat1), span = 5)==TRUE)
-a2 = which(peaks(t(dat2), span = 5)==TRUE)
-all.equal(a1,a2, tolerance = 1)    ###??? kein output
-}
 
 #local maxima without marginal values
-# define local maxima: values of each of the two fractions beside the maximum are smaller than that value and the maximum contains at least 3,5,7 % of the total amount of protein
+# define local maxima: values of each of the two fractions beside the maximum are smaller than that value and the maximum contains at least 3/5/7 % of the total amount of protein
 
-###Funktioniert nicht bei mir
+
 #Threshold 3
 maxctrl1_3 = matrix(0, nrow=nrow(rep1ctrlnormDataframe), ncol=25)
 maxctrl2_3 = matrix(0, nrow=nrow(rep1ctrlnormDataframe), ncol=25)
@@ -333,7 +398,7 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
 # comparison
 
 compare_max = function(a,b){
-logf = matrix(FALSE, ncol = 25, nrow = 7081) ###? Was war das hier nochmal?
+logf = matrix(FALSE, ncol = 25, nrow = 7081) 
 for (i in 1:7081){
   for (j in 2:24){
     if(a[i,j]==b[i,j]){}
@@ -344,11 +409,34 @@ for (i in 1:7081){
 return(sum(logf))
 }
 
-compare_max(maxctrl1_3,maxctrl2_3)
 
-# 2861 aren't equal and not in the fraction besides there fraction 
+#Comparison thresholds
+compare_max(maxctrl1_3,maxctrl2_3) #1327
+compare_max(maxctrl1_3,maxctrl3_3)#1861
+compare_max(maxctrl2_3,maxctrl3_3) #1565
 
-plot(y, rep1ctrlnormDataframe[1,], type = "o", col = "blue"); lines(y,rep2ctrlnormDataframe[1,], col = "green"); lines(y, rep3ctrlnormDataframe[1,], col="purple")
+compare_max(maxctrl1_5,maxctrl2_5) #1172
+compare_max(maxctrl1_5,maxctrl3_5) #1635
+compare_max(maxctrl2_5,maxctrl3_5) #1395
+
+compare_max(maxctrl1_7,maxctrl2_7)#990
+compare_max(maxctrl1_7,maxctrl3_7) #1492
+compare_max(maxctrl2_7,maxctrl3_7) #1305
+
+#in which fractions are all maxima between all three replicates different -> in none ?
+allfrac_diff = matrix(0, ncol = 25, nrow = 7081) 
+for (i in 1:7081){
+  for (j in 2:24){
+    if(maxctrl1_3[i,j]!=maxctrl2_3[i,j] && maxctrl1_3[i,j]!= maxctrl3_3[i,j] && maxctrl2_3[i,j]!= maxctrl3_3[i,j]){allfrac_diff[i,j]= 1}
+    }
+}
+
+which(allfrac_diff==TRUE)
+
+
+
+##
+
 
 isTRUE(all.equal(maxctrl1_3,maxctrl2_3, tolerance = 1.1))
 isTRUE(all.equal(maxctrl1_3,maxctrl3_3, tolerance = 1.1))
@@ -362,21 +450,10 @@ isTRUE(all.equal(maxctrl1_7,maxctrl2_7, tolerance = 1.1))
 isTRUE(all.equal(maxctrl1_7,maxctrl3_7, tolerance = 1.1))
 isTRUE(all.equal(maxctrl2_7,maxctrl3_7, tolerance = 1.1))
 
-##all false so there are shifts
+##all FALSE so there are shifts
 
-maxctrl1_3[is.na(maxctrl1_3)] = 0
-maxctrl2_3[is.na(maxctrl2_3)] = 0
-maxctrl3_3[is.na(maxctrl3_3)] = 0
 
-maxctrl1_5[is.na(maxctrl1_5)] = 0
-maxctrl2_5[is.na(maxctrl2_5)] = 0
-maxctrl3_5[is.na(maxctrl3_5)] = 0
-
-maxctrl1_7[is.na(maxctrl1_7)] = 0
-maxctrl2_7[is.na(maxctrl2_7)] = 0
-maxctrl3_7[is.na(maxctrl3_7)] = 0
-
-mat12_3 = matrix(, nrow = 0, ncol = 23) #subscript out of bounds?
+mat12_3 = data.frame()
 for (i in 1:nrow(maxctrl1_3)){
   for (j in 1:ncol(maxctrl1_3)){
      mat12_3[i,j] = abs(maxctrl1_3[i,j]-maxctrl2_3[i,j])
@@ -384,7 +461,7 @@ for (i in 1:nrow(maxctrl1_3)){
  
 }
 
-mat12_5 = matrix(, nrow = 0, ncol = 23) #subscript out of bounds?
+mat12_5 = data.frame()
 for (i in 1:nrow(maxctrl1_5)){
   for (j in 1:ncol(maxctrl1_5)){
      mat12_5[i,j] = abs(maxctrl1_5[i,j]-maxctrl2_5[i,j])
@@ -392,7 +469,7 @@ for (i in 1:nrow(maxctrl1_5)){
  
 }
    
-mat12_7 = matrix(, nrow = 0, ncol = 23) #subscript out of bounds?
+mat12_7 = data.frame()
 for (i in 1:nrow(maxctrl1_7)){
   for (j in 1:ncol(maxctrl1_7)){
      mat12_7[i,j] = abs(maxctrl1_7[i,j]-maxctrl2_7[i,j])
@@ -414,9 +491,6 @@ meanRepRNase = matrix(nrow= nrow(FullDat), ncol = 25)
 for (j in 1:nrow(tripCtrlnormdat)){ 
   for (i in 1:25){
     meanRepRNase[j,i] = (rep1rnasenormDataframe[j,i] + rep2rnasenormDataframe[j,i] + rep3rnasenormDataframe[j,i])/3}}
-
-##sum(meanRepctrl[1,]) überprüfen, ob 100 insgesamt pro Zeile
-##sum(meanRepRNase[1,])
 
 
 
