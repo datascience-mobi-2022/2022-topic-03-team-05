@@ -129,6 +129,7 @@ for (i in colRep1rnase){
 
 #vector with mean for each fraction, each condition and each replicate (= 150 values)
 mean_frac_rep = apply(FullDat, 2, mean)
+sd_frac_rep = apply(FullDat,2, sd)
 
 #normalization fraction-wise
 col_frac_per_condition = sort(c(colRep1ctrl, colRep1rnase))
@@ -412,14 +413,18 @@ shap
 shapiro.test(FullDat_matrix[4,])
 # Reminder: for p-value >= 0.05, the data is normally distributed. For p-value < 0.05, the data is not normally distributed.
 
+tripctrl_matrix = as.matrix(tripCtrlnormdat)
 
 install.packages('nortest')
 library(nortest)
 ad = 0
-for (i in 1:nrow(FullDat_matrix)){
-  if (ad.test(FullDat_matrix[i,])$p.value < 0.05) {ad = ad + 1}
+for (i in 1:ncol(tripctrl_matrix)){
+  if (ad.test(tripctrl_matrix[,i])$p.value < 0.05) {ad = ad + 1}
 }
+ad
 
+xnorm = rnorm(1000)
+ks.test(xnorm, "pnorm", mean(xnorm), sd(xnorm))
 
 ```
 
