@@ -373,10 +373,55 @@ for (i in 1:nrow(maxctrl1)){
   }
  
 }
-   
+
 
 ```
+verifying normality
+```{r}
+FullDat_matrix = cbind(rep1ctrlnormData, rep2ctrlnormData, rep3ctrlnormData, rep1rnasenormData, rep2rnasenormData, rep3rnasenormData)
 
+
+# Sample a random line from the expression table
+i = sample(1:nrow(FullDat),1)
+# Plot the histogram
+hist(FullDat_matrix[i,],
+     main=rownames(FullDat)[i],
+     col='lightblue',
+     breaks=20, 
+     xlab = "Expression level")
+
+
+
+barplot(rep2ctrlnormData)
+```
+
+
+```{r}
+# Sample a random line from the expression table
+i = sample(1:nrow(FullDat_matrix),1)
+#
+# Plot the histogram für einzelne Gene
+qqnorm(FullDat_matrix[i,],main=rownames(FullDat_matrix)[i]); qqline(FullDat_matrix[i,])
+# if normally distributed -> points lie on straight line
+
+shap = 0
+for (j in 1:nrow(FullDat_matrix)){
+  if ((shapiro.test(FullDat_matrix[j,])$p.value) < 0.05) {shap = shap + 1}
+}
+shap
+shapiro.test(FullDat_matrix[4,])
+# Reminder: for p-value >= 0.05, the data is normally distributed. For p-value < 0.05, the data is not normally distributed.
+
+
+install.packages('nortest')
+library(nortest)
+ad = 0
+for (i in 1:nrow(FullDat_matrix)){
+  if (ad.test(FullDat_matrix[i,])$p.value < 0.05) {ad = ad + 1}
+}
+
+
+```
 
 
 
