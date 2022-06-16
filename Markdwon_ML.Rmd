@@ -344,11 +344,16 @@ logf = matrix(FALSE, ncol = 25, nrow = 7081)
 for (i in 1:7081){
   for (j in 2:24){
     if(a[i,j]==b[i,j]){}
-      else if(b[i,(j+1)] != 0 || b[i,(j-1)] != 0){}
+      if(a[i,j]==0 && b[i,j]!=0){
+        if(a[i,(j+1)] != 0 || a[i,(j-1)] != 0){}}
+      else if(a[i,j]!=0 && b[i,j]==0){
+        if(b[i,(j+1)] != 0 || b[i,(j-1)] != 0){}}
       else {logf[i,j] = TRUE}
     }
-}
 return(sum(logf))
+
+}
+rownames(which(logf==TRUE))
 }
 ## wenns ungleich ist und eine matrix 0, dann links und rechts gucken ob zahl
 
@@ -377,6 +382,45 @@ for (i in 1:nrow(maxctrl1)){
 
 
 ```
+
+```{r}
+for (i in 1:nrow(rep1ctrlnormDataframe)){
+  for (j in 3:23){
+    if(j != fraction_abs_max[i,1] && rep1ctrlnormDataframe[i,j] > 5 && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+2)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-2)]) {
+      maxctrl1[i,j] = j
+    }
+    if(j != fraction_abs_max[i,2] && rep2ctrlnormDataframe[i,j] > 5 && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+2)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-2)]){
+      maxctrl2[i,j] = j
+    }
+    if(j != fraction_abs_max[i,3] && rep3ctrlnormDataframe[i, j] > 5 &&  rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+2)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-2)]) {
+      maxctrl3[i,j] = j
+    }
+  }
+}
+
+# jetzt haben wir drei Datensätze mit 0 außer an den Fraktionen, wo ein Maximum ist
+# Vergleich
+
+compare_max = function(a,b){
+logf = matrix(FALSE, ncol = 25, nrow = 7081)
+for (i in 1:7081){
+  for (j in 2:24){
+    if(a[i,j]==b[i,j]){}
+      if(a[i,j]==0 && b[i,j]!=0){
+        if(a[i,(j+1)] != 0 || a[i,(j-1)] != 0){}}
+      else if(a[i,j]!=0 && b[i,j]==0){
+        if(b[i,(j+1)] != 0 || b[i,(j-1)] != 0){}}
+      else {logf[i,j] = TRUE}
+    }
+return(sum(logf))
+
+}
+rownames(which(logf==TRUE))
+}
+compare_max(maxctrl1,maxctrl2)
+```
+
+
 verifying normality
 ```{r}
 FullDat_matrix = cbind(rep1ctrlnormData, rep2ctrlnormData, rep3ctrlnormData, rep1rnasenormData, rep2rnasenormData, rep3rnasenormData)
