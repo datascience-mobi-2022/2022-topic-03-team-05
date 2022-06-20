@@ -772,6 +772,22 @@ vgl = matrix(FALSE, ncol = 25, nrow = nrow(rep1ctrlnormDataframe))
 row.names(vgl) = rownames(rep1ctrlnormDataframe)
 truesum = vector()
 for (i in 1:nrow(vgl)){
+  
+  for (j in 1) {
+    if(a[i,j]==b[i,j]){
+      
+    } else if(a[i,j]==0 && b[i,j]!=0){
+        if(a[i,(j+1)] != 0){
+        }
+          else {vgl[i,j] = TRUE}
+      }
+      else if(a[i,j]!=0 && b[i,j]==0){
+        if(b[i,(j+1)] != 0){
+        }
+           else {vgl[i,j] = TRUE}
+      }
+    
+  }
   for (j in 2:24){
     if(a[i,j]==b[i,j]){
       
@@ -787,11 +803,27 @@ for (i in 1:nrow(vgl)){
       }
       
   }
+  for (j in 25) {
+    if(a[i,j]==b[i,j]){
+      
+    } else if(a[i,j]==0 && b[i,j]!=0){
+        if(a[i,(j-1)] != 0){
+        }
+          else {vgl[i,j] = TRUE}
+      }
+      else if(a[i,j]!=0 && b[i,j]==0){
+        if(b[i,(j-1)] != 0){
+        }
+           else {vgl[i,j] = TRUE}
+      }
+      
+  }
   truesum[i] = sum(vgl[i,]) 
 }
 
 return(truesum)
 }
+
 
 compare_max(maxctrl2_3, maxctrl3_3)
 
@@ -883,6 +915,7 @@ for (i in 1:10){
 calculating maxima for mean Ctrl and mean Rnase
 
 ```{r}
+# absolute maxima
 abs_max = data.frame(row.names = rownames(rep1ctrlnormDataframe))
 
 for (i in 1:nrow(rep1ctrlnormDataframe)){
@@ -894,7 +927,80 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
 abs_max$compare = ifelse(abs(abs_max$V1-abs_max$V2) > 1, TRUE, FALSE)
 sum(abs_max$compare)
 ##bei 1348 Proteinen sind die Hauptmaxima mindestens 2 Fraktionen verschoben
-rownames (abs_max) [abs_max$compare==TRUE]
+abs_max_shift = rownames (abs_max) [abs_max$compare==TRUE]
 
+# local maxima
+
+max_shift_ctrl = matrix(0, nrow = nrow(rep1ctrlnormDataframe), ncol = 25)
+max_shift_rnase = matrix(0, nrow = nrow(rep1ctrlnormDataframe), ncol = 25)
+
+for (i in 1:nrow(rep1ctrlnormDataframe)){
+  
+  for (j in 1){ #marginal value 1
+    if(j != abs_max[i,1] && meanRepctrl[i,j] > 5 &&  meanRepctrl[i,j] > meanRepctrl[i, (j+1)]){
+      max_shift_ctrl[i,j] = j
+    }
+    if(j != abs_max[i,2] && meanRepRNase[i,j] > 5 && meanRepRNase[i,j] > meanRepRNase[i, (j+1)]){
+      max_shift_rnase[i,j] = j
+    }
+  }
+
+  for(j in 2){ #marginal value 2
+    if(j != abs_max[i,1] && meanRepctrl[i,j] > 5 &&  meanRepctrl[i,j] > meanRepctrl[i, (j-1)] && meanRepctrl[i,j] > meanRepctrl[i, (j+1)] && meanRepctrl[i,j] > meanRepctrl[i, (j+2)]){
+      max_shift_ctrl[i,j] = j
+    }
+    if(j != fraction_abs_max[i,2] && meanRepRNase[i,j] > 5 && meanRepRNase[i,j] > meanRepRNase[i, (j-1)] &&  meanRepRNase[i,j] > meanRepRNase[i, (j+1)] && meanRepRNase[i,j] > meanRepRNase[i, (j+2)]){
+      max_shift_rnase[i,j] = j
+    }
+  }
+
+    
+  for (j in 3:23){
+    if(j != abs_max[i,1] && meanRepctrl[i,j] > 5 && meanRepctrl[i,j] > meanRepctrl[i, (j-1)] && meanRepctrl[i,j] > meanRepctrl[i, (j+1)] && meanRepctrl[i,j] > meanRepctrl[i, (j+2)] && meanRepctrl[i,j] > meanRepctrl[i, (j-2)]) {
+      max_shift_ctrl[i,j] = j
+    }
+    if(j != abs_max[i,2] && meanRepRNase[i,j] > 5 && meanRepRNase[i,j] > meanRepRNase[i, (j-1)] && meanRepRNase[i,j] > meanRepRNase[i, (j+1)] && meanRepRNase[i,j] > meanRepRNase[i, (j+2)] && meanRepRNase[i,j] > meanRepRNase[i, (j-2)]){
+      max_shift_rnase[i,j] = j
+    }
+  }
+  
+  
+  for(j in 24){ #marginal value 3
+    if(j != abs_max[i,1] && meanRepctrl[i,j] > 5 &&  meanRepctrl[i,j] > meanRepctrl[i, (j+1)] && meanRepctrl[i,j] > meanRepctrl[i, (j-1)] && meanRepctrl[i,j] > meanRepctrl[i, (j-2)]){
+      max_shift_ctrl[i,j] = j
+    }
+    if(j != abs_max[i,2] && meanRepRNase[i,j] > 5 && meanRepRNase[i,j] > meanRepRNase[i, (j+1)] &&  meanRepRNase[i,j] > meanRepRNase[i, (j-1)] && meanRepRNase[i,j] > meanRepRNase[i, (j-2)]){
+      max_shift_rnase[i,j] = j
+    }
+  }
+  
+  for (j in 25){ #marginal value 4
+    if(j != abs_max[i,1] && meanRepctrl[i,j] > 5 &&  meanRepctrl[i,j] > meanRepctrl[i, (j-1)]){
+      max_shift_ctrl[i,j] = j
+    }
+    if(j != abs_max[i,2] && meanRepRNase[i,j] > 5 &&  meanRepRNase[i,j] > meanRepRNase[i, (j-1)]){
+      max_shift_rnase[i,j] = j
+    }
+  }
+}
+
+count_shift = compare_max(max_shift_ctrl, max_shift_rnase)
+length(which(count_shift ==0))
+7081-4742
+loc_max_shift = rownames(rep1ctrlnormDataframe)[which(count_shift!=0)]
+
+# vergleich shift haupt- und nebenmaxima
+
+id = vector()
+for (i in 1:length(loc_max_shift)) {
+  j = 1
+  while(j <= length(abs_max_shift) && loc_max_shift[i]!=abs_max_shift[j]){
+      id[i] = FALSE
+      if (j < length(abs_max_shift)) {
+        j = j+1
+      }
+  }
+  if(abs_max_shift[j]==loc_max_shift[i]){id[i] = TRUE}
+}
 ```
 
