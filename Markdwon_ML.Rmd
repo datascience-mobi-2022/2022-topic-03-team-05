@@ -290,12 +290,12 @@ which(is.na(cor_rep))
 
 
 cor_rep_mean_ctrl = apply(cor_rep[,1:3], 1, mean)
-cor_rep_bad_ctrl = rownames(rep1ctrlnormDataframe) [which(cor_rep_mean_ctrl<0.97)]
-length(cor_rep_bad_ctrl) ## 743 der Proteine wären nicht reproduzierbar 
+cor_rep_bad_ctrl = rownames(rep1ctrlnormDataframe) [which(cor_rep_mean_ctrl<0.95)]
+length(cor_rep_bad_ctrl) ## 364 der Proteine wären nicht reproduzierbar 
 
 cor_rep_mean_rnase = apply(cor_rep[,4:6], 1, mean)
-cor_rep_bad_rnase = rownames(rep1ctrlnormDataframe)[which(cor_rep_mean_rnase<0.97)]
-length(cor_rep_bad_rnase) ## 893 der Proteine wären nicht reproduzierbar
+cor_rep_bad_rnase = rownames(rep1ctrlnormDataframe)[which(cor_rep_mean_rnase<0.95)]
+length(cor_rep_bad_rnase) ## 383 der Proteine wären nicht reproduzierbar
 
 
 ```
@@ -852,21 +852,54 @@ loc_max_rnase7 = as.data.frame(comp_rep(maxrnase1_7, maxrnase2_7, maxrnase3_7))
 # zählen der Proteine, die in allen Vergleichen der Reps in RNAs und oder Ctrl mind. eine Fraktion Shift in Nebenmaxima haben
 
 not_repro = function(a,b) {
-  u = 0
+  u = vector()
   for (i in 1:nrow(loc_max_ctrl3)) {
-  if ((a[i,1] != 0 && a[i,2] != 0 && a[i,3] != 0) || (b[i,1] != 0 && b[i,2] != 0 && b[i,3] != 0)){
-    u = u+1
+    if ((a[i,1] != 0 && a[i,2] != 0 && a[i,3] != 0) || (b[i,1] != 0 && b[i,2] != 0 && b[i,3] != 0)){
+      u[i] = TRUE
+      }
+          else {u[i] = FALSE}
   }
-}
 return(u)
 }
 
   
-not_repro(loc_max_ctrl3, loc_max_rnase3) # rausschmeißen von 451 Proteinen
-not_repro(loc_max_ctrl5, loc_max_rnase5) # rausschmeißen von 371 Proteinen
-not_repro(loc_max_ctrl7, loc_max_rnase7) # rausschmeißen von 337 Proteinen
+thres_3 = not_repro(loc_max_ctrl3, loc_max_rnase3)
+sum(thres_3) # rausschmeißen von 502 Proteinen with threshold 3%
+thres_5 = not_repro(loc_max_ctrl5, loc_max_rnase5)
+sum(thres_5)# rausschmeißen von 411 Proteinen with threshold 5%
+thres_7 = not_repro(loc_max_ctrl7, loc_max_rnase7)
+sum(thres_7)# rausschmeißen von 365 Proteinen with threshold 7%
 
+#decide to go with maximum has to contain at least 5 % of total protein amount
 
+#compare to corr
+repro_loc_max_proteins = rownames(rep1ctrlnormDataframe)[which(thres_5==TRUE)]
+
+id_cor_ctrl = vector()
+for (i in 1:length(loc_max_shift)) {
+  j = 1
+  for(j in 1:length(cor_rep_bad_ctrl)){
+    if(loc_max_shift[i]!=cor_rep_bad_ctrl[j]){
+      id_cor_ctrl[i] = FALSE }
+      else if (loc_max_shift[i]==cor_rep_bad_ctrl[j]) {
+        id_cor_ctrl[i] = TRUE
+        break
+      }
+  }
+}
+
+id_cor_rnase = vector()
+for (i in 1:length(loc_max_shift)) {
+  j = 1
+  for(j in 1:length(cor_rep_bad_rnase)){
+    if(loc_max_shift[i]!=cor_rep_bad_rnase[j]){
+      id_cor_rnase[i] = FALSE }
+      else if (loc_max_shift[i]==cor_rep_bad_rnase[j]) {
+        id_cor_rnase[i] = TRUE
+        break
+      }
+  }
+}
 ```
 
 The next step is taking the mean of all three replicates for each condition to receive an average curve of the protein's distribution with and without RNase. Our normalization has the advantage that all values of the resulting curve will sum up to 100. Thus, they are interpretable as percentages.  
@@ -994,13 +1027,22 @@ loc_max_shift = rownames(rep1ctrlnormDataframe)[which(count_shift!=0)]
 id = vector()
 for (i in 1:length(loc_max_shift)) {
   j = 1
-  while(j <= length(abs_max_shift) && loc_max_shift[i]!=abs_max_shift[j]){
+  for(j in 1:length(abs_max_shift)){
+    if(loc_max_shift[i]!=abs_max_shift[j]){
       id[i] = FALSE
-      if (j < length(abs_max_shift)) {
-        j = j+1
+    }
+      else if (loc_max_shift[i]==abs_max_shift[j]) {
+        id[i] = TRUE
+        break
       }
+    
   }
-  if(abs_max_shift[j]==loc_max_shift[i]){id[i] = TRUE}
 }
+sum(id)
+# 1123 proteins are both found in absolute and local maxima shifts
+
+
+
+
 ```
 
