@@ -202,6 +202,8 @@ tripRnasenormdat = cbind(rep1rnasenormDataframe, rep2rnasenormDataframe, rep3rna
 
 sum(rep1ctrlnormData[1,]) # == 100
 
+# Zeile 1771 ist NaN????????
+
 ```
 
 batch effect freie data frames
@@ -242,6 +244,12 @@ for(i in 1:nrow(tripRnasenormdat)){
     }
   }
 }
+na_r = which(rowSums(is.na(tripRnasenormdat))==75)
+na_c = which(rowSums(is.na(tripCtrlnormdat))==75)
+
+tripCtrlnormdat = tripCtrlnormdat[-c(na_r, na_c),]
+tripRnasenormdat = tripRnasenormdat[-c(na_r, na_c),]
+# jetzt sind protein 1771, 2359 und 4209 rnase und 639 und 3297 ctrl na
 
 tripRnasenormdat[is.na(tripRnasenormdat)] = 0
 tripCtrlnormdat[is.na(tripCtrlnormdat)] = 0
@@ -256,11 +264,13 @@ rep3rnasenormDataframe = tripRnasenormdat[,51:75]
 # es gibt sowohl welche mit ==2 als auch ==1 (habe ich einzeln getestet)
 #was genau machen wir mit denen? nur beim mean berechnung verändern? bzw rauslas
 
+
+
 ```
 There are 23 proteins that have a replicate value being a batch effect. 
 
 correlation
-```{r}
+
 
 cor_rep = data.frame()
 c1 = vector()
@@ -298,12 +308,12 @@ cor_rep_bad_rnase = rownames(rep1ctrlnormDataframe)[which(cor_rep_mean_rnase<0.9
 length(cor_rep_bad_rnase) ## 383 der Proteine wären nicht reproduzierbar
 
 
-```
+
 
 
 reproducibility
-```{r}
-
+```{r}   
+ 
 # Hauptmaxima
 fraction_abs_max = data.frame(row.names = rownames(rep1ctrlnormDataframe))
 for (i in 1:nrow(rep1ctrlnormDataframe)){
@@ -879,8 +889,10 @@ rep3ctrlnormDataframe = rep3ctrlnormDataframe[- which(thres_5 == TRUE),]
 rep1rnasenormDataframe = rep1rnasenormDataframe[- which(thres_5 == TRUE),]
 rep2rnasenormDataframe = rep2rnasenormDataframe[- which(thres_5 == TRUE),]
 rep3rnasenormDataframe = rep3rnasenormDataframe[- which(thres_5 == TRUE),]
-tripCtrlnormdat = tripCtrlnormdat[- which(thres_5==TRUE),]
-tripRnasenormdat = tripRnasenormdat[- which(thres_5==TRUE),]
+tripCtrlnormdat = tripCtrlnormdat[- which(thres_5 == TRUE),]
+tripRnasenormdat = tripRnasenormdat[- which(thres_5 == TRUE),]
+
+```
 
 #compare to corr
 repro_loc_max_proteins = rownames(rep1ctrlnormDataframe)[which(thres_5==TRUE)]
@@ -910,7 +922,7 @@ for (i in 1:length(cor_rep_bad_rnase)) {
       }
   }
 }
-```
+
 
 The next step is taking the mean of all three replicates for each condition to receive an average curve of the protein's distribution with and without RNase. Our normalization has the advantage that all values of the resulting curve will sum up to 100. Thus, they are interpretable as percentages.  
 
@@ -948,7 +960,7 @@ plot_rnase = apply(meanRepRNase[1:10,],1,f)
 Our goal is to determine the maxima and find out which proteins are shifting. This is why we plot the two curves of RNase (pink) and control (blue) in one graph. The graphs of the first 10 proteins does not show a shift. 
 
 ```{r} 
-for (i in 1:10){
+for (i in 1000:1020){
   plot(y, meanRepctrl[i,], type ="o", pch = 20, ylab = "percentage of protein amount", xlab = "fractions of sucrose density gradient", col = "cyan")
   lines(y,meanRepRNase[i,], type = "o", pch = 20, col = "magenta")
 }
@@ -1049,7 +1061,8 @@ for (i in 1:length(loc_max_shift)) {
   }
 }
 sum(id)
-# 1123 proteins are both found in absolute and local maxima shifts
+# 910 proteins are both found in absolute and local maxima shifts
+loc_max_shift = loc_max_shift[- which(id==TRUE)]
 
 1123+(1348-1123)+(2339-1123) # anzahl shifting proteins
 
@@ -1057,6 +1070,45 @@ sum(id)
 ```
 t-test of shift of protein amount for maximum verification
 ```{r}
+# absolute maxima
+abs_max_yc = vector()
+abs_max_yr = vector()
+for (i in 1:nrow(abs_max)) {
+  abs_max_yc[i] = meanRepctrl[i, abs_max[i,1]]
+  abs_max_yr[i] = meanRepRNase[i, abs_max[i,2]]
+}
+
+abs_max$ymaxc = abs_max_yc
+abs_max$ymaxr = abs_max_yr
+
+if(abs_max$compare==TRUE){
+  t.test(abs_max$ymaxc, abs_max_yr)
+}
+
+t.test(abs_max[32,4], abs_max[32,5])
+t.test(1,2)
+
+t.test(meanRepctrl[1006,], meanRepRNase[1006,], alternative = "two.sided")
+
+h = c(rep1ctrlnormDataframe[1007,23], rep2ctrlnormDataframe[1007,23], rep3ctrlnormDataframe[1007,23])
+g = c(rep1rnasenormDataframe[1007,23], rep2rnasenormDataframe[1007,23], rep3rnasenormDataframe[1007,23])
+
+t.test(g,h, alternative = "two.sided")
+rep1ctrlnormDataframe[1]
+
+l = vector()
+for (i in 1:nrow(abs_max)) { ??????????
+  if(abs_max[i,3]==TRUE) {
+    fc = abs_max[i,1]
+    l[i] = t.test(c(tripCtrlnormdat[i,fc], tripCtrlnormdat[i, (fc+25)], tripCtrlnormdat[i, (fc+50)]), c(tripRnasenormdat[i,fc], tripRnasenormdat[i, (fc+25)], tripRnasenormdat[i, (fc+50)]), alternative = "two.sided")$p.value
+  }
+    else {l[i] = TRUE}
+}
+
+# ganz durchlaufen lassen und dann:
+# abs_max$pvalue = l
+# wenn kleiner 0.05 dann signifikant
+# FDR Correction??
 
 ```
 
