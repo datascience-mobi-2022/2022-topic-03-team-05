@@ -31,7 +31,7 @@ It is important that all of the values are stored as numerics. If not, this will
 
 ```{r}
 sum(apply(FullDat, 2, is.double))
-##könnte man auch mit sum(apply(FullDat, 2, is.double)), weil TRUE wird in 1 umgewandelt und dann müsste sum = 150 sein oder?
+##=150 if all values are doubles
 ```
 As we can see, all values are stored as doubles.
 
@@ -39,8 +39,9 @@ As we can see, all values are stored as doubles.
 Our data clean-up consists of two parts: removing all rows containing all zeros and removing rows where all of the Control or the RNase values are zero. In the first step of data cleaning, we searched for rows (proteins) that had only zeros. We deleted this row (FHOD3_HUMAN) because it does not contain any information. Thereby, the data set is reduced to 7085 rows. NExt, we transformed all zeros to NA.
 
 ```{r}
-which(rowSums(FullDat==0)==150) ##welche Proteine haben nur 0 in der Zeile?
-FullDat = FullDat[-(which(rowSums(FullDat==0)==150)),]
+which(rowSums(FullDat==0)==150) ##proteins with all zeros
+FullDat = FullDat[-(which(rowSums(FullDat==0)==150)),] ## remove protein with all zeros
+
 
 FullDat[FullDat==0] = NA ##würde ich rausnehmen und nur für mean und co vllt einbauen (aplly hat kein rm.na!!!)
 
@@ -72,17 +73,11 @@ TripCtrldat = cbind(rep1ctrldat, rep2ctrldat, rep3ctrldat)
 TripRnasedat = cbind(rep1rnasedat, rep2rnasedat, rep3rnasedat)
 ```
 
-
-
 Now, we could continue with the second step of data cleaning. A protein without any values in either the control or the RNase tests cannot be compared the other condition, thus giving us no information and can be deleted. As all zeros were turned to NA in a previous step, we used is.na to look for rows in both the control and the RNase data frame containing all zeros (NAs). As the data sets have 75 columns, the NAs in a row without a value must sum up to 75. This step results in a data set with 7081 rows (4 proteins less). 
 
-```{r} 
+```{r}
 FullDat = FullDat[-which(rowSums(is.na(TripCtrldat))==75),]
 FullDat = FullDat[-which(rowSums(is.na(TripRnasedat))==75),]
-rTripCtrldat = TripCtrldat[-which(rowSums(is.na(TripCtrldat))==75),]
-rTripCtrldat = rTripCtrldat[-which(rowSums(is.na(TripRnasedat))==75),]
-rTripRnasedat = TripRnasedat[-which(rowSums(is.na(TripCtrldat))==75),]
-rTripRnasedat = rTripRnasedat[-which(rowSums(is.na(TripRnasedat))==75),]
 
 ##warum funktioniet das nicht
 ##remo = function(x){x = x[-which(rowSums(is.na(TripCtrldat))==75),]}
@@ -90,31 +85,10 @@ rTripRnasedat = rTripRnasedat[-which(rowSums(is.na(TripRnasedat))==75),]
 
 ```
 
-##Varianz
-var_rep = data.frame()
-for (j in 1:2){
-  for (i in 1:25){
-    z = c(rep1ctrldat[j, i], rep2ctrldat[j, i], rep3ctrldat[j, i ])
-    var_rep[1,i] = var(z)
-  }}
+# Normalization fraction-wise 
 
-##Correlation
-cor_rep = data.frame()
-c1 = vector()
-c2 = vector()
-c3 = vector()
-for (j in 1:100){
-    c1 = c(as.numeric(rep1ctrldat[j,])) 
-    c2 = c(as.numeric(rep2ctrldat[j,]))
-    c3 = c(as.numeric(rep3ctrldat[j,]))
-    cor_rep[j,1] = cor(c1, c2)
-    cor_rep[j,2] = cor(c2, c3)
-    cor_rep[j,3] = cor(c3, c1)
-    bad_cor = cor_rep[cor_rep < 0.8]
-}
-plot(1:100, cor_rep[,1])
+For the analysis, it is crucial that the replicates for each condition are comparable. When we looked at the data set, we noticed that all replicates were performed with different amounts of protein. Therefore, we performed a fraction-wise and protein-wise normalization step. First, we adapted the amount of protein per fraction for the three replicates (Ctrl and RNase separately) to be the mean of the two means lying closest to each other between the three replicates.The aim of this step is making the three replicates comparable to each other to check for the reproducibility later on. 
 
-# normalization fraction-wise
 ```{r}
 FullDat[is.na(FullDat)] = 0
 rep_sum = apply(FullDat, 2, sum)
@@ -156,7 +130,8 @@ for (i in 1:50) {
 
 
 ```
-#testing if all fraction-wise sums/means are equal after normalizations
+
+#testing if all fraction-wise sums/means are equal after fraction-wise normalization
 ```{r}
 rep_sum_norm = apply(FullDat_fracnorm, 2, sum)
 #Ctrl sum fraction-wise before normalization
@@ -177,12 +152,11 @@ for (i in colRep1rnase) {
 }
 ```
 
+Then, we normalized the protein amount to 100 for each protein for every replicate using the apply function and saved the resulting values in six different data frames.
 
-For the analysis, it is crucial that the replicates for each condition are comparable. When we looked at the data set, we noticed that all replicates were performed with different amounts of protein. Therefore, we normalized the protein amount to 100 for every replicate using the apply function and save the resulting values in six different data frames.  
-
-```{r} 
+```{r}
 FullDat = FullDat_fracnorm
-FullDat[is.na(FullDat)] = 0
+
 rep1ctrlnormData = t(apply(FullDat[, colRep1ctrl], 1, function(x) x/(sum(x)/100)))
 rep2ctrlnormData = t(apply(FullDat[, colRep2ctrl], 1, function(x) x/(sum(x)/100)))
 rep3ctrlnormData = t(apply(FullDat[, colRep3ctrl], 1, function(x) x/(sum(x)/100)))
@@ -200,13 +174,16 @@ rep3rnasenormDataframe = as.data.frame(rep3rnasenormData)
 tripCtrlnormdat = cbind(rep1ctrlnormDataframe, rep2ctrlnormDataframe, rep3ctrlnormDataframe)
 tripRnasenormdat = cbind(rep1rnasenormDataframe, rep2rnasenormDataframe, rep3rnasenormDataframe)
 
+# check if amount == 100 as example
 sum(rep1ctrlnormData[1,]) # == 100
-
-# Zeile 1771 ist NaN????????
-
 ```
 
-batch effect freie data frames
+#Creating batch-effect free data frames
+
+Batch effects are variations in the data caused by technical factors. They are not relevant for the biological question and may even lead to different or false conclusions. Thus, we analyze the data set looking for batch-effects by comparing the values of the three replicates for each fraction and each condition:
+If there is a protein that contains two zeros (NA) and one value in a fraction, the value will be set to zero.
+If there is a protein showing two values and one zero, the zero is replaced by the mean of the two others.
+
 ```{r}
 
 tripRnasenormdat[tripRnasenormdat==0] = NA
@@ -244,12 +221,15 @@ for(i in 1:nrow(tripRnasenormdat)){
     }
   }
 }
+
+
 na_r = which(rowSums(is.na(tripRnasenormdat))==75)
 na_c = which(rowSums(is.na(tripCtrlnormdat))==75)
+na_afterbatch = c(na_r, na_c)
 
-tripCtrlnormdat = tripCtrlnormdat[-c(na_r, na_c),]
-tripRnasenormdat = tripRnasenormdat[-c(na_r, na_c),]
-# jetzt sind protein 1771, 2359 und 4209 rnase und 639 und 3297 ctrl na
+FullDat = FullDat[-na_afterbatch,]
+tripCtrlnormdat = tripCtrlnormdat[-na_afterbatch,]
+tripRnasenormdat = tripRnasenormdat[-na_afterbatch,]
 
 tripRnasenormdat[is.na(tripRnasenormdat)] = 0
 tripCtrlnormdat[is.na(tripCtrlnormdat)] = 0
@@ -261,60 +241,17 @@ rep1rnasenormDataframe = tripRnasenormdat[,1:25]
 rep2rnasenormDataframe = tripRnasenormdat[,26:50]
 rep3rnasenormDataframe = tripRnasenormdat[,51:75]
 
-# es gibt sowohl welche mit ==2 als auch ==1 (habe ich einzeln getestet)
-#was genau machen wir mit denen? nur beim mean berechnung verändern? bzw rauslas
-
-
 
 ```
-There are 23 proteins that have a replicate value being a batch effect. 
+There are 23 proteins that have a replicate value being a batch effect. The issue was solved as explained before. 
 
-correlation
+#Reproducibility
 
+It is crucial to verify that the data is reproducible. Our approach is to compare the maxima (global and local) between the replicates. We determined that maxima are allowed to differ one fraction. 
 
-cor_rep = data.frame()
-c1 = vector()
-c2 = vector()
-c3 = vector()
-c4 = vector()
-c5 = vector()
-c6 = vector()
-for (j in 1:nrow(rep1ctrlnormDataframe)){
-    c1 = c(as.numeric(rep1ctrlnormDataframe[j,])) 
-    c2 = c(as.numeric(rep2ctrlnormDataframe[j,]))
-    c3 = c(as.numeric(rep3ctrlnormDataframe[j,]))
-    c4 = c(as.numeric(rep1rnasenormDataframe[j,]))
-    c5 = c(as.numeric(rep2rnasenormDataframe[j,]))
-    c6 = c(as.numeric(rep3rnasenormDataframe[j,]))
-    cor_rep[j,1] = cor(c1, c2)
-    cor_rep[j,2] = cor(c2, c3)
-    cor_rep[j,3] = cor(c3, c1)
-    cor_rep[j,4] = cor(c4, c5)
-    cor_rep[j,5] = cor(c5, c6)
-    cor_rep[j,6] = cor(c4, c6)
-    
-}
-sum(is.na(cor_rep))
-which(is.na(cor_rep))
-#Problem: es gibt 6 Proteine, die eine Varianz von 0 haben, d.h. es kann keine Cor berechnet werden
-
-
-cor_rep_mean_ctrl = apply(cor_rep[,1:3], 1, mean)
-cor_rep_bad_ctrl = rownames(rep1ctrlnormDataframe) [which(cor_rep_mean_ctrl<0.95)]
-length(cor_rep_bad_ctrl) ## 364 der Proteine wären nicht reproduzierbar 
-
-cor_rep_mean_rnase = apply(cor_rep[,4:6], 1, mean)
-cor_rep_bad_rnase = rownames(rep1ctrlnormDataframe)[which(cor_rep_mean_rnase<0.95)]
-length(cor_rep_bad_rnase) ## 383 der Proteine wären nicht reproduzierbar
-
-
-
-
-
-reproducibility
 ```{r}   
  
-# Hauptmaxima
+# global maxima with which.max returning the highest value in the row (protein)
 fraction_abs_max = data.frame(row.names = rownames(rep1ctrlnormDataframe))
 for (i in 1:nrow(rep1ctrlnormDataframe)){
   fraction_abs_max[i,1] = which.max(rep1ctrlnormDataframe[i,])
@@ -324,7 +261,9 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
   fraction_abs_max[i,5] = which.max(rep2rnasenormDataframe[i,])
   fraction_abs_max[i,6] = which.max(rep3rnasenormDataframe[i,])
 }
+# fraction_abs_max: data frame where global values are stored for each protein and each replicate (first column -> first replicate ctrl, second column -> second replicate ctrl...)
 
+# verifying if global maximum shifts more than one fraction between the replicates (TRUE means they do not, thus reproducible)
 isTRUE(all.equal(fraction_abs_max[,1], fraction_abs_max[,2], tolerance = 1.1))
 isTRUE(all.equal(fraction_abs_max[,2], fraction_abs_max[,3], tolerance = 1.1))
 isTRUE(all.equal(fraction_abs_max[,1], fraction_abs_max[,3], tolerance = 1.1))
@@ -332,11 +271,12 @@ isTRUE(all.equal(fraction_abs_max[,4], fraction_abs_max[,5], tolerance = 1.1))
 isTRUE(all.equal(fraction_abs_max[,5], fraction_abs_max[,6], tolerance = 1.1))
 isTRUE(all.equal(fraction_abs_max[,4], fraction_abs_max[,6], tolerance = 1.1))
 
-#lokale Maxima
-#lokale Maxima ohne Randwerte
+
+#local maxima
+
 #wenn die Werte jeweils ein, zwei, drei Fraktionen daneben kleiner sind, der wert selbst mind. 3, 5 oder 7 % der gesamtproteinmenge ausmacht
 
-#Threshold 3
+#Threshold 3 % of total protein amount
 #control
 maxctrl1_3 = matrix(0, nrow=nrow(rep1ctrlnormDataframe), ncol=25)
 maxctrl2_3 = matrix(0, nrow=nrow(rep1ctrlnormDataframe), ncol=25)
@@ -482,7 +422,7 @@ for (i in 1:nrow(rep1rnasenormDataframe)){
 }
 
 
-#Threshold 5
+#Threshold 5 % of total protein amount
 #control
 maxctrl1_5 = matrix(0, nrow=nrow(rep1ctrlnormDataframe), ncol=25)
 maxctrl2_5 = matrix(0, nrow=nrow(rep1ctrlnormDataframe), ncol=25)
@@ -630,7 +570,7 @@ for (i in 1:nrow(rep1rnasenormDataframe)){
 
 
 
-#Threshold 7
+#Threshold 7 % of total protein amount
 maxctrl1_7 = matrix(0, nrow=nrow(rep1ctrlnormDataframe), ncol=25)
 maxctrl2_7 = matrix(0, nrow=nrow(rep1ctrlnormDataframe), ncol=25)
 maxctrl3_7 = matrix(0, nrow=nrow(rep1ctrlnormDataframe), ncol=25)
@@ -776,7 +716,7 @@ for (i in 1:nrow(rep1rnasenormDataframe)){
 
 # jetzt haben wir drei Datensätze mit 0 außer an den Fraktionen, wo ein Maximum ist
 # Vergleich
-
+# matrix that is TRUE if local maximum shifted at least two fractions, otherwise FALSE
 compare_max = function(a,b){
 vgl = matrix(FALSE, ncol = 25, nrow = nrow(rep1ctrlnormDataframe))
 row.names(vgl) = rownames(rep1ctrlnormDataframe)
@@ -834,6 +774,7 @@ for (i in 1:nrow(vgl)){
 return(truesum)
 }
 
+# returns vector that tells for each protein how many maxima are more than one fraction different between the compared data frames
 
 compare_max(maxctrl2_3, maxctrl3_3)
 
@@ -849,7 +790,7 @@ return(rows_rep)
 
 }
 
-# matrix with number of at least one fraction local maxima differences for comparison of each two replicates out of three (different thresholds of total protein amount 3, 5, 7%)
+# matrix with number of at least one fraction local maxima differences for comparison of each two replicates out of three (different thresholds of total protein amount 3 %, 5 %, 7 %)
 loc_max_ctrl3 = as.data.frame(comp_rep(maxctrl1_3, maxctrl2_3, maxctrl3_3))
 loc_max_ctrl5 = as.data.frame(comp_rep(maxctrl1_5, maxctrl2_5, maxctrl3_5))
 loc_max_ctrl7 = as.data.frame(comp_rep(maxctrl3_3, maxctrl3_5, maxctrl3_7))
@@ -859,7 +800,7 @@ loc_max_rnase7 = as.data.frame(comp_rep(maxrnase1_7, maxrnase2_7, maxrnase3_7))
 
 
 
-# zählen der Proteine, die in allen Vergleichen der Reps in RNAs und oder Ctrl mind. eine Fraktion Shift in Nebenmaxima haben
+# counting proteins that show at least one fraction shift when comparing all replicates in Ctrl and/or RNase 
 
 not_repro = function(a,b) {
   u = vector()
@@ -874,14 +815,14 @@ return(u)
 
   
 thres_3 = not_repro(loc_max_ctrl3, loc_max_rnase3)
-sum(thres_3) # rausschmeißen von 502 Proteinen with threshold 3%
+sum(thres_3) # remove 502 proteins with threshold 3%
 thres_5 = not_repro(loc_max_ctrl5, loc_max_rnase5)
-sum(thres_5) # rausschmeißen von 411 Proteinen with threshold 5%
+sum(thres_5) # remove 411 proteins with threshold 5%
 thres_7 = not_repro(loc_max_ctrl7, loc_max_rnase7)
-sum(thres_7) # rausschmeißen von 365 Proteinen with threshold 7%
+sum(thres_7) # remove 365 proteins with threshold 7%
 
-#decide to go with maximum has to contain at least 5 % of total protein amount
-
+# decide to go with maximum has to contain at least 5 % of total protein amount
+# remove proteins that are not reproducible
 FullDat = FullDat[- which(thres_5 == TRUE),]
 rep1ctrlnormDataframe = rep1ctrlnormDataframe[- which(thres_5 == TRUE),]
 rep2ctrlnormDataframe = rep2ctrlnormDataframe[- which(thres_5 == TRUE),]
@@ -889,85 +830,42 @@ rep3ctrlnormDataframe = rep3ctrlnormDataframe[- which(thres_5 == TRUE),]
 rep1rnasenormDataframe = rep1rnasenormDataframe[- which(thres_5 == TRUE),]
 rep2rnasenormDataframe = rep2rnasenormDataframe[- which(thres_5 == TRUE),]
 rep3rnasenormDataframe = rep3rnasenormDataframe[- which(thres_5 == TRUE),]
-tripCtrlnormdat = tripCtrlnormdat[- which(thres_5 == TRUE),]
-tripRnasenormdat = tripRnasenormdat[- which(thres_5 == TRUE),]
+tripCtrlnormdat = tripCtrlnormdat[- which(thres_5==TRUE),]
+tripRnasenormdat = tripRnasenormdat[- which(thres_5==TRUE),]
 
 ```
 
-#compare to corr
-repro_loc_max_proteins = rownames(rep1ctrlnormDataframe)[which(thres_5==TRUE)]
-
-id_cor_ctrl = vector()
-for (i in 1:length(cor_rep_bad_ctrl)) {
-  j = 1
-  for(j in 1:length(repro_loc_max_proteins)){
-    if(cor_rep_bad_ctrl[i]!=repro_loc_max_proteins[j]){
-      id_cor_ctrl[i] = FALSE }
-      else if (cor_rep_bad_ctrl[i]==repro_loc_max_proteins[j]) {
-        id_cor_ctrl[i] = TRUE
-        break
-      }
-  }
-}
-
-id_cor_rnase = vector()
-for (i in 1:length(cor_rep_bad_rnase)) {
-  j = 1
-  for(j in 1:length(repro_loc_max_proteins)){
-    if(cor_rep_bad_rnase[i]!=repro_loc_max_proteins[j]){
-      id_cor_rnase[i] = FALSE }
-      else if (cor_rep_bad_rnase[i]==repro_loc_max_proteins[j]) {
-        id_cor_rnase[i] = TRUE
-        break
-      }
-  }
-}
-
-
 The next step is taking the mean of all three replicates for each condition to receive an average curve of the protein's distribution with and without RNase. Our normalization has the advantage that all values of the resulting curve will sum up to 100. Thus, they are interpretable as percentages.  
 
-
-
-```{r} 
+```{r}
 #mean of control replicates of all proteins  
-meanRepctrl = data.frame(row.names = rownames(rep1ctrlnormDataframe))
-for (j in 1:nrow(tripCtrlnormdat)){ 
+meanRepctrl = matrix(nrow= nrow(FullDat), ncol = 25)
+for (j in 1:nrow(FullDat)){ 
   for (i in 1:25){
     meanRepctrl[j,i] = (rep1ctrlnormDataframe[j,i] + rep2ctrlnormDataframe[j,i] + rep3ctrlnormDataframe[j,i])/3}}
 
 #mean of rnase replicates of all proteins 
-meanRepRNase = data.frame(row.names = rownames(rep1ctrlnormDataframe))
-for (j in 1:nrow(tripCtrlnormdat)){ 
+meanRepRNase = matrix(nrow= nrow(FullDat), ncol = 25)
+for (j in 1:nrow(FullDat)){ 
   for (i in 1:25){
     meanRepRNase[j,i] = (rep1rnasenormDataframe[j,i] + rep2rnasenormDataframe[j,i] + rep3rnasenormDataframe[j,i])/3}}
 
-##sum(meanRepctrl[1,]) überprüfen, ob 100 insgesamt pro Zeile
-##sum(meanRepRNase[1,])
 
 ```
 
-BRAUCHEN WIR DAS?: 
-Now that we have two curve for the two conditions, we plot them separately.
-
-```{r}
-y = 1:25
-f = (function(x)plot(y,x, type ="o", pch = 20))
-plot_ctrl = apply(meanRepctrl[1:10,],1,f)
-plot_rnase = apply(meanRepRNase[1:10,],1,f)
-
-```
-
-Our goal is to determine the maxima and find out which proteins are shifting. This is why we plot the two curves of RNase (pink) and control (blue) in one graph. The graphs of the first 10 proteins does not show a shift. 
+Now we have two curves for the two conditions. Our goal is to determine the maxima and find out which proteins are shifting. This is why we plot the two curves of RNase (pink) and control (blue) in one graph. As we can see, the graphs of the first 10 proteins does not show a shift. 
 
 ```{r} 
-for (i in 1000:1020){
+y = 1:25
+
+for (i in 1:6){
   plot(y, meanRepctrl[i,], type ="o", pch = 20, ylab = "percentage of protein amount", xlab = "fractions of sucrose density gradient", col = "cyan")
   lines(y,meanRepRNase[i,], type = "o", pch = 20, col = "magenta")
 }
 
 ```
-
-calculating maxima for mean Ctrl and Mean RNase
+# Maxima for mean Ctrl and mean RNase values
+## Global maxima
 
 ```{r}
 # absolute maxima
@@ -981,8 +879,12 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
 
 abs_max$compare = ifelse(abs(abs_max$V1-abs_max$V2) > 1, TRUE, FALSE)
 sum(abs_max$compare)
-##bei 1348 Proteinen sind die Hauptmaxima mindestens 2 Fraktionen verschoben
-abs_max_shift = rownames (abs_max) [abs_max$compare==TRUE]
+## there are 1118 proteins whose global maximum shifts at least 2 fractions
+abs_max_shift = rownames (abs_max) [abs_max$compare==TRUE] ## proteins shifting in global maximum
+```
+## Local maxima
+
+```{r}
 
 # local maxima
 
@@ -1040,11 +942,20 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
 }
 
 count_shift = compare_max(max_shift_ctrl, max_shift_rnase)
-length(which(count_shift ==0))
-7081-4742
+length(which(count_shift!=0))
 loc_max_shift = rownames(rep1ctrlnormDataframe)[which(count_shift!=0)]
+row.names(max_shift_ctrl) = rownames(rep1ctrlnormDataframe)
+row.names(max_shift_rnase) = rownames(rep1ctrlnormDataframe)
+max_shift_ctrl = as.data.frame(max_shift_ctrl)
+max_shift_rnase = as.data.frame(max_shift_rnase)
+max_shift_ctrl$count = count_shift
+max_shift_rnase$count = count_shift
+max_shift_ctrl = max_shift_ctrl[which(max_shift_ctrl$count > 0),]
+max_shift_rnase = max_shift_rnase[which(max_shift_rnase$count > 0),]
+#proteins_local_shift = as.data.frame(cbind(max_shift_ctrl, max_shift_rnase))
+#proteins_local_shift$count = count_shift
 
-# vergleich shift haupt- und nebenmaxima
+# compare shifts in absolute and local maxima as there are proteins shifting in both
 
 id = vector()
 for (i in 1:length(loc_max_shift)) {
@@ -1062,13 +973,16 @@ for (i in 1:length(loc_max_shift)) {
 }
 sum(id)
 # 910 proteins are both found in absolute and local maxima shifts
-loc_max_shift = loc_max_shift[- which(id==TRUE)]
+loc_max_shift = loc_max_shift[- which(id==TRUE)] ## loc_max_shift are all proteins shifting in local maximum excluded those also shifting in global maximum
 
-1123+(1348-1123)+(2339-1123) # anzahl shifting proteins
-
+# number of shifting proteins
+sum(id)+(length(abs_max_shift)-sum(id))+length(loc_max_shift) ## 2471 proteins have a shift and might be RNA-binding or RNA-dependent
 
 ```
-t-test of shift of protein amount for maximum verification
+We found 2471 proteins shifting in their global and/or local maxima. In the following, we will test if the shift in protein amount is significant which would result in classifying the protein as an RNA-binding or RNA-dependent protein. 
+
+# t-test of shift of protein amount for maximum verification (y-shift)
+
 ```{r}
 # absolute maxima
 abs_max_yc = vector()
@@ -1081,34 +995,106 @@ for (i in 1:nrow(abs_max)) {
 abs_max$ymaxc = abs_max_yc
 abs_max$ymaxr = abs_max_yr
 
-if(abs_max$compare==TRUE){
-  t.test(abs_max$ymaxc, abs_max_yr)
-}
-
-t.test(abs_max[32,4], abs_max[32,5])
-t.test(1,2)
-
-t.test(meanRepctrl[1006,], meanRepRNase[1006,], alternative = "two.sided")
-
-h = c(rep1ctrlnormDataframe[1007,23], rep2ctrlnormDataframe[1007,23], rep3ctrlnormDataframe[1007,23])
-g = c(rep1rnasenormDataframe[1007,23], rep2rnasenormDataframe[1007,23], rep3rnasenormDataframe[1007,23])
-
-t.test(g,h, alternative = "two.sided")
-rep1ctrlnormDataframe[1]
-
 l = vector()
-for (i in 1:nrow(abs_max)) { ??????????
+for (i in 1:nrow(abs_max)) { 
   if(abs_max[i,3]==TRUE) {
     fc = abs_max[i,1]
     l[i] = t.test(c(tripCtrlnormdat[i,fc], tripCtrlnormdat[i, (fc+25)], tripCtrlnormdat[i, (fc+50)]), c(tripRnasenormdat[i,fc], tripRnasenormdat[i, (fc+25)], tripRnasenormdat[i, (fc+50)]), alternative = "two.sided")$p.value
   }
-    else {l[i] = TRUE}
+    else {l[i] = 10} ## random value chosen larger than 1
 }
 
-# ganz durchlaufen lassen und dann:
-# abs_max$pvalue = l
-# wenn kleiner 0.05 dann signifikant
-# FDR Correction??
+abs_max$pvalue = l
+abs_max$sign = ifelse(abs_max$pvalue >= 0.025, FALSE, TRUE) ## 0.025 due to two-sided t-test
+sum(abs_max$sign) ## how many proteins have a significant shift in protein amount in their global maximum (869 out of 1118)
+
+colnames(abs_max)[1] = "global_max_ctrl"
+colnames(abs_max)[2] = "global_max_rnase"
+proteins_global_shift = data.frame(abs_max[(which(abs_max$sign == TRUE)),])
+proteins_global_shift$p_adjusted = p.adjust(proteins_global_shift$pvalue, method = "fdr")
+proteins_global_shift$sign_ad = ifelse(proteins_global_shift$p_adjusted >= 0.025, FALSE, TRUE)
+sum(proteins_global_shift$sign_ad) ## all protein shift identified are still significant after fdr-correction
+
+proteins_global_shift$left_right = ifelse(proteins_global_shift$global_max_ctrl < proteins_global_shift$global_max_rnase, "right", "left")
+
+
+
+# local maxima
+
+compare_loc_max = function(a,b){
+vgl = matrix(10, ncol = 25, nrow = nrow(rep1ctrlnormDataframe))
+row.names(vgl) = rownames(rep1ctrlnormDataframe)
+
+for (i in 1:nrow(vgl)){
+  
+  for (j in 1) {
+    if(a[i,j]==b[i,j]){
+      
+    } else if(a[i,j]==0 && b[i,j]!=0){
+        if(a[i,(j+1)] != 0){
+        }
+          else {
+            vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value 
+            }
+      }
+      else if(a[i,j]!=0 && b[i,j]==0){
+        if(b[i,(j+1)] != 0){
+        }
+           else {
+             vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+               }
+      }
+    
+  }
+  for (j in 2:24){
+    if(a[i,j]==b[i,j]){
+      
+    } else if(a[i,j]==0 && b[i,j]!=0){
+        if(a[i,(j+1)] != 0 || a[i,(j-1)] != 0){
+        }
+          else {
+            vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+          }
+      }
+      else if(a[i,j]!=0 && b[i,j]==0){
+        if(b[i,(j+1)] != 0 || b[i,(j-1)] != 0){
+        }
+           else {
+             vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+           }
+      }
+      
+  }
+  for (j in 25) {
+    if(a[i,j]==b[i,j]){
+      
+    } else if(a[i,j]==0 && b[i,j]!=0){
+        if(a[i,(j-1)] != 0){
+        }
+          else {
+            vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+          }
+      }
+      else if(a[i,j]!=0 && b[i,j]==0){
+        if(b[i,(j-1)] != 0){
+        }
+           else {
+             vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+           }
+      }
+      
+  }
+  
+}
+
+return(vgl)
+}
+# returns matrix with p-values for local maximum shifts of protein x (row) in fraction y (column)
+
+max_shift_ctrl = max_shift_ctrl[,-26]
+max_shift_rnase = max_shift_rnase[,-26]
+compare_loc_max(max_shift_ctrl, max_shift_rnase)
+
+
 
 ```
-
