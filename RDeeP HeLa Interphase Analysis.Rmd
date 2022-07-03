@@ -47,7 +47,7 @@ colRep3rnase = seq(6, 150, 6) ##all columns with rep3 RNase
 # delete rows with only zeros or proteins with only zeros in the Ctrl or RNase samples
 a = which(rowSums(FullDat==0)==150)
 b = which(rowSums(FullDat[,c(colRep1ctrl, colRep2ctrl, colRep3ctrl)]== 0) ==75)
-c = which(rowSums(FullDat[,c(colRep1RNAse, colRep2RNAse, colRep3RNAse)]== 0) ==75)
+c = which(rowSums(FullDat[,c(colRep1rnase, colRep2rnase, colRep3rnase)]== 0) ==75)
 
 
 FullDat = FullDat[-c(2089,2993, 4123,4405, 6216),]
@@ -256,12 +256,6 @@ for(i in 1:40){
 These are some proteins that were selected from the interval of protein 4000 until protein 4300. Their maxima of the plot of the control and RNase group show differences to each other. These differences of these examples have to get examined further. These are only examples for the kind of proteins we are looking for. To further examine those we want to fuse all three curves of the replicates.Before doing that we eliminate batch effects from our data. We look for replicates with one or two NAs. When there is one NA we assign the mean of the other two values to this value and if there are two NAs we delete the third value as well.
 ```{r}
 #batch effect free data
-TripCtrldat = cbind(rep1ctrlnormData, rep2ctrlnormData, rep3ctrlnormData)
-TripRnasedat = cbind(rep1rnasenormData, rep2rnasenormData, rep3rnasenormData)
-
-tripCtrlnormdat = cbind(rep1ctrlnormDataframe, rep2ctrlnormDataframe, rep3ctrlnormDataframe)
-tripRnasenormdat = cbind(rep1rnasenormDataframe, rep2rnasenormDataframe, rep3rnasenormDataframe)
-
 tripRnasenormdat[tripRnasenormdat==0] = NA
 tripCtrlnormdat[tripCtrlnormdat==0] = NA
 for(i in 1:nrow(tripCtrlnormdat)){
@@ -298,6 +292,15 @@ for(i in 1:nrow(tripRnasenormdat)){
   }
 }
 
+
+na_r = which(rowSums(is.na(tripRnasenormdat))==75)
+na_c = which(rowSums(is.na(tripCtrlnormdat))==75)
+na_afterbatch = c(na_r, na_c)
+
+FullDat = FullDat[-na_afterbatch,]
+tripCtrlnormdat = tripCtrlnormdat[-na_afterbatch,]
+tripRnasenormdat = tripRnasenormdat[-na_afterbatch,]
+
 tripRnasenormdat[is.na(tripRnasenormdat)] = 0
 tripCtrlnormdat[is.na(tripCtrlnormdat)] = 0
 
@@ -308,8 +311,9 @@ rep1rnasenormDataframe = tripRnasenormdat[,1:25]
 rep2rnasenormDataframe = tripRnasenormdat[,26:50]
 rep3rnasenormDataframe = tripRnasenormdat[,51:75]
 
+
 ```
-There are 23 proteins that have a replicate value being a batch effect.
+There are 23 proteins that have a replicate value being a batch effect. Now we determine if the data is reproducible, comparing the data in the replicates for each control and RNase.
 
 ```{r}
 
@@ -336,16 +340,18 @@ isTRUE(all.equal(fraction_abs_max[,4], fraction_abs_max[,6], tolerance = 1.1))
 
 head(fraction_abs_max)
 
-# local maxima
 
-#local maxima 
+
+#local maxima
+
 # define local maxima: values of each of the two fractions beside the maximum are smaller than that value and the maximum contains at least 3/5/7 % of the total amount of protein
 
-
+#Ctrl
 #Threshold 3
 maxctrl1_3 = matrix(0, nrow=nrow(rep1ctrlnormDataframe), ncol=25)
 maxctrl2_3 = matrix(0, nrow=nrow(rep1ctrlnormDataframe), ncol=25)
 maxctrl3_3 = matrix(0, nrow=nrow(rep1ctrlnormDataframe), ncol=25)
+
 
 for (i in 1:nrow(rep1ctrlnormDataframe)){
   
@@ -353,10 +359,10 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
     if(j != fraction_abs_max[i,1] && rep1ctrlnormDataframe[i,j] > 3 &&  rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)]){
       maxctrl1_3[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep2ctrlnormDataframe[i,j] > 3 &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)]){
+    if(j != fraction_abs_max[i,2] && rep2ctrlnormDataframe[i,j] > 3 &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)]){
       maxctrl2_3[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep3ctrlnormDataframe[i,j] > 3 &&  rep3ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)]){
+    if(j != fraction_abs_max[i,3] && rep3ctrlnormDataframe[i,j] > 3 &&  rep3ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)]){
       maxctrl3_3[i,j] = j
     }
   }
@@ -365,10 +371,10 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
     if(j != fraction_abs_max[i,1] && rep1ctrlnormDataframe[i,j] > 3 &&  rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+2)]){
       maxctrl1_3[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep2ctrlnormDataframe[i,j] > 3 && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)] &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+2)]){
+    if(j != fraction_abs_max[i,2] && rep2ctrlnormDataframe[i,j] > 3 && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)] &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+2)]){
       maxctrl2_3[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep3ctrlnormDataframe[i,j] > 3 && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+2)]){
+    if(j != fraction_abs_max[i,3] && rep3ctrlnormDataframe[i,j] > 3 && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+2)]){
       maxctrl3_3[i,j] = j
     }
   }
@@ -390,10 +396,10 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
     if(j != fraction_abs_max[i,1] && rep1ctrlnormDataframe[i,j] > 3 &&  rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-2)]){
       maxctrl1_3[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep2ctrlnormDataframe[i,j] > 3 && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)] &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-2)]){
+    if(j != fraction_abs_max[i,2] && rep2ctrlnormDataframe[i,j] > 3 && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)] &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-2)]){
       maxctrl2_3[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep3ctrlnormDataframe[i,j] > 3 && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-2)]){
+    if(j != fraction_abs_max[i,3] && rep3ctrlnormDataframe[i,j] > 3 && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-2)]){
       maxctrl3_3[i,j] = j
     }
   }
@@ -402,15 +408,16 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
     if(j != fraction_abs_max[i,1] && rep1ctrlnormDataframe[i,j] > 3 &&  rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)]){
       maxctrl1_3[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep2ctrlnormDataframe[i,j] > 3 &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)]){
+    if(j != fraction_abs_max[i,2] && rep2ctrlnormDataframe[i,j] > 3 &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)]){
       maxctrl2_3[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep3ctrlnormDataframe[i,j] > 3 &&  rep3ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)]){
+    if(j != fraction_abs_max[i,3] && rep3ctrlnormDataframe[i,j] > 3 &&  rep3ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)]){
       maxctrl3_3[i,j] = j
     }
   }
   
 }
+
 
 #Threshold 5
 maxctrl1_5 = matrix(0, nrow=nrow(rep1ctrlnormDataframe), ncol=25)
@@ -424,10 +431,10 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
     if(j != fraction_abs_max[i,1] && rep1ctrlnormDataframe[i,j] > 5 &&  rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)]){
       maxctrl1_5[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep2ctrlnormDataframe[i,j] > 5 &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)]){
+    if(j != fraction_abs_max[i,2] && rep2ctrlnormDataframe[i,j] > 5 &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)]){
       maxctrl2_5[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep3ctrlnormDataframe[i,j] > 5 &&  rep3ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)]){
+    if(j != fraction_abs_max[i,3] && rep3ctrlnormDataframe[i,j] > 5 &&  rep3ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)]){
       maxctrl3_5[i,j] = j
     }
   }
@@ -436,10 +443,10 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
     if(j != fraction_abs_max[i,1] && rep1ctrlnormDataframe[i,j] > 5 &&  rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+2)]){
       maxctrl1_5[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep2ctrlnormDataframe[i,j] > 5 && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)] &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+2)]){
+    if(j != fraction_abs_max[i,2] && rep2ctrlnormDataframe[i,j] > 5 && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)] &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+2)]){
       maxctrl2_5[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep3ctrlnormDataframe[i,j] > 5 && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+2)]){
+    if(j != fraction_abs_max[i,3] && rep3ctrlnormDataframe[i,j] > 5 && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+2)]){
       maxctrl3_5[i,j] = j
     }
   }
@@ -461,10 +468,10 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
     if(j != fraction_abs_max[i,1] && rep1ctrlnormDataframe[i,j] > 5 &&  rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-2)]){
       maxctrl1_5[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep2ctrlnormDataframe[i,j] > 5 && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)] &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-2)]){
+    if(j != fraction_abs_max[i,2] && rep2ctrlnormDataframe[i,j] > 5 && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)] &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-2)]){
       maxctrl2_5[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep3ctrlnormDataframe[i,j] > 5 && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-2)]){
+    if(j != fraction_abs_max[i,3] && rep3ctrlnormDataframe[i,j] > 5 && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-2)]){
       maxctrl3_5[i,j] = j
     }
   }
@@ -473,10 +480,10 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
     if(j != fraction_abs_max[i,1] && rep1ctrlnormDataframe[i,j] > 5 &&  rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)]){
       maxctrl1_5[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep2ctrlnormDataframe[i,j] > 5 &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)]){
+    if(j != fraction_abs_max[i,2] && rep2ctrlnormDataframe[i,j] > 5 &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)]){
       maxctrl2_5[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep3ctrlnormDataframe[i,j] > 5 &&  rep3ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)]){
+    if(j != fraction_abs_max[i,3] && rep3ctrlnormDataframe[i,j] > 5 &&  rep3ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)]){
       maxctrl3_5[i,j] = j
     }
   }
@@ -484,13 +491,11 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
 }
 
 
-
-
-
 #Threshold 7
 maxctrl1_7 = matrix(0, nrow=nrow(rep1ctrlnormDataframe), ncol=25)
 maxctrl2_7 = matrix(0, nrow=nrow(rep1ctrlnormDataframe), ncol=25)
 maxctrl3_7 = matrix(0, nrow=nrow(rep1ctrlnormDataframe), ncol=25)
+
 
 for (i in 1:nrow(rep1ctrlnormDataframe)){
   
@@ -498,10 +503,10 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
     if(j != fraction_abs_max[i,1] && rep1ctrlnormDataframe[i,j] > 7 &&  rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)]){
       maxctrl1_7[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep2ctrlnormDataframe[i,j] > 7 &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)]){
+    if(j != fraction_abs_max[i,2] && rep2ctrlnormDataframe[i,j] > 7 &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)]){
       maxctrl2_7[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep3ctrlnormDataframe[i,j] > 7 &&  rep3ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)]){
+    if(j != fraction_abs_max[i,3] && rep3ctrlnormDataframe[i,j] > 7 &&  rep3ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)]){
       maxctrl3_7[i,j] = j
     }
   }
@@ -510,10 +515,10 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
     if(j != fraction_abs_max[i,1] && rep1ctrlnormDataframe[i,j] > 7 &&  rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+2)]){
       maxctrl1_7[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep2ctrlnormDataframe[i,j] > 7 && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)] &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+2)]){
+    if(j != fraction_abs_max[i,2] && rep2ctrlnormDataframe[i,j] > 7 && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)] &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+2)]){
       maxctrl2_7[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep3ctrlnormDataframe[i,j] > 7 && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+2)]){
+    if(j != fraction_abs_max[i,3] && rep3ctrlnormDataframe[i,j] > 7 && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+2)]){
       maxctrl3_7[i,j] = j
     }
   }
@@ -535,10 +540,10 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
     if(j != fraction_abs_max[i,1] && rep1ctrlnormDataframe[i,j] > 7 &&  rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-2)]){
       maxctrl1_7[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep2ctrlnormDataframe[i,j] > 7 && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)] &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-2)]){
+    if(j != fraction_abs_max[i,2] && rep2ctrlnormDataframe[i,j] > 7 && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+1)] &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-2)]){
       maxctrl2_7[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep3ctrlnormDataframe[i,j] > 7 && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-2)]){
+    if(j != fraction_abs_max[i,3] && rep3ctrlnormDataframe[i,j] > 7 && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j+1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-1)] && rep3ctrlnormDataframe[i,j] > rep3ctrlnormDataframe[i, (j-2)]){
       maxctrl3_7[i,j] = j
     }
   }
@@ -547,74 +552,357 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
     if(j != fraction_abs_max[i,1] && rep1ctrlnormDataframe[i,j] > 7 &&  rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)]){
       maxctrl1_7[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep2ctrlnormDataframe[i,j] > 7 &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)]){
+    if(j != fraction_abs_max[i,2] && rep2ctrlnormDataframe[i,j] > 7 &&  rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j-1)]){
       maxctrl2_7[i,j] = j
     }
-    if(j != fraction_abs_max[i,1] && rep3ctrlnormDataframe[i,j] > 7 &&  rep3ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)]){
+    if(j != fraction_abs_max[i,3] && rep3ctrlnormDataframe[i,j] > 7 &&  rep3ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)]){
       maxctrl3_7[i,j] = j
     }
   }
   
 }
 
+
+#RNase
+#Threshold 3
+maxrnase1_3 = matrix(0, nrow=nrow(rep1rnasenormDataframe), ncol=25)
+maxrnase2_3 = matrix(0, nrow=nrow(rep1rnasenormDataframe), ncol=25)
+maxrnase3_3 = matrix(0, nrow=nrow(rep1rnasenormDataframe), ncol=25)
+
+for (i in 1:nrow(rep1rnasenormDataframe)){
+  
+  for (j in 1){ #marginal value 1; weiterer threshold für Randwerte?
+    if(j != fraction_abs_max[i,4] && rep1rnasenormDataframe[i,j] > 3 &&  rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+1)]){
+      maxrnase1_3[i,j] = j
+    }
+    if(j != fraction_abs_max[i,5] && rep2rnasenormDataframe[i,j] > 3 &&  rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j+1)]){
+      maxrnase2_3[i,j] = j
+    }
+    if(j != fraction_abs_max[i,6] && rep3rnasenormDataframe[i,j] > 3 &&  rep3rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+1)]){
+      maxrnase3_3[i,j] = j
+    }
+  }
  
-# Jetzt muss man noch vergleichen wie viele man dann rausschmeißt
+   
+  for(j in 2){ #marginal value 2
+    if(j != fraction_abs_max[i,4] && rep1rnasenormDataframe[i,j] > 3 &&  rep1rnasenormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+2)]){
+      maxrnase1_3[i,j] = j
+    }
+    if(j != fraction_abs_max[i,5] && rep2rnasenormDataframe[i,j] > 3 && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-1)] &&  rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j+1)] && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j+2)]){
+      maxrnase2_3[i,j] = j
+    }
+    if(j != fraction_abs_max[i,6] && rep3rnasenormDataframe[i,j] > 3 && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j-1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j+1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j+2)]){
+      maxrnase3_3[i,j] = j
+    }
+  }
+  
+  
+  
+  for (j in 3:23){
+    if(j != fraction_abs_max[i,4] && rep1rnasenormDataframe[i,j] > 3 && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-1)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+1)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+2)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-2)]) {
+      maxrnase1_3[i,j] = j
+    }
+    if(j != fraction_abs_max[i,5] && rep2rnasenormDataframe[i,j] > 3 && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-1)] && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j+1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+2)] && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-2)]){
+      maxrnase2_3[i,j] = j
+    }
+    if(j != fraction_abs_max[i,6] && rep3rnasenormDataframe[i, j] > 3 &&  rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j-1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j+1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j+2)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j-2)]) {
+      maxrnase3_3[i,j] = j
+    }
+  }
+  
+  
+  for(j in 24){ #marginal value 3
+    if(j != fraction_abs_max[i,4] && rep1rnasenormDataframe[i,j] > 3 &&  rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+1)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-1)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-2)]){
+      maxrnase1_3[i,j] = j
+    }
+    if(j != fraction_abs_max[i,5] && rep2rnasenormDataframe[i,j] > 3 && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j+1)] &&  rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-1)] && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-2)]){
+      maxrnase2_3[i,j] = j
+    }
+    if(j != fraction_abs_max[i,6] && rep3rnasenormDataframe[i,j] > 3 && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j+1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j-1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j-2)]){
+      maxrnase3_3[i,j] = j
+    }
+  }
+  
+  for (j in 25){ #marginal value 4
+    if(j != fraction_abs_max[i,4] && rep1rnasenormDataframe[i,j] > 3 &&  rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-1)]){
+      maxrnase1_3[i,j] = j
+    }
+    if(j != fraction_abs_max[i,5] && rep2rnasenormDataframe[i,j] > 3 &&  rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-1)]){
+      maxrnase2_3[i,j] = j
+    }
+    if(j != fraction_abs_max[i,6] && rep3rnasenormDataframe[i,j] > 3 &&  rep3rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-1)]){
+      maxrnase3_3[i,j] = j
+    }
+  }
+  
+}
 
 
-# three datasets of 0 but with values at places where there is a maximum
-# comparison
 
+#Threshold 5
+maxrnase1_5 = matrix(0, nrow=nrow(rep1rnasenormDataframe), ncol=25)
+maxrnase2_5 = matrix(0, nrow=nrow(rep1rnasenormDataframe), ncol=25)
+maxrnase3_5 = matrix(0, nrow=nrow(rep1rnasenormDataframe), ncol=25)
+
+for (i in 1:nrow(rep1rnasenormDataframe)){
+  
+  for (j in 1){ #marginal value 1; weiterer threshold für Randwerte?
+    if(j != fraction_abs_max[i,4] && rep1rnasenormDataframe[i,j] > 5 &&  rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+1)]){
+      maxrnase1_5[i,j] = j
+    }
+    if(j != fraction_abs_max[i,5] && rep2rnasenormDataframe[i,j] > 5 &&  rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j+1)]){
+      maxrnase2_5[i,j] = j
+    }
+    if(j != fraction_abs_max[i,6] && rep3rnasenormDataframe[i,j] > 5 &&  rep3rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+1)]){
+      maxrnase3_5[i,j] = j
+    }
+  }
+ 
+   
+  for(j in 2){ #marginal value 2
+    if(j != fraction_abs_max[i,4] && rep1rnasenormDataframe[i,j] > 5 &&  rep1rnasenormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+2)]){
+      maxrnase1_5[i,j] = j
+    }
+    if(j != fraction_abs_max[i,5] && rep2rnasenormDataframe[i,j] > 5 && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-1)] &&  rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j+1)] && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j+2)]){
+      maxrnase2_5[i,j] = j
+    }
+    if(j != fraction_abs_max[i,6] && rep3rnasenormDataframe[i,j] > 5 && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j-1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j+1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j+2)]){
+      maxrnase3_5[i,j] = j
+    }
+  }
+  
+  
+  
+  for (j in 3:23){
+    if(j != fraction_abs_max[i,4] && rep1rnasenormDataframe[i,j] > 5 && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-1)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+1)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+2)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-2)]) {
+      maxrnase1_5[i,j] = j
+    }
+    if(j != fraction_abs_max[i,5] && rep2rnasenormDataframe[i,j] > 5 && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-1)] && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j+1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+2)] && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-2)]){
+      maxrnase2_5[i,j] = j
+    }
+    if(j != fraction_abs_max[i,6] && rep3rnasenormDataframe[i, j] > 5 &&  rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j-1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j+1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j+2)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j-2)]) {
+      maxrnase3_5[i,j] = j
+    }
+  }
+  
+  
+  for(j in 24){ #marginal value 3
+    if(j != fraction_abs_max[i,4] && rep1rnasenormDataframe[i,j] > 5 &&  rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+1)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-1)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-2)]){
+      maxrnase1_5[i,j] = j
+    }
+    if(j != fraction_abs_max[i,5] && rep2rnasenormDataframe[i,j] > 5 && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j+1)] &&  rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-1)] && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-2)]){
+      maxrnase2_5[i,j] = j
+    }
+    if(j != fraction_abs_max[i,6] && rep3rnasenormDataframe[i,j] > 5 && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j+1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j-1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j-2)]){
+      maxrnase3_5[i,j] = j
+    }
+  }
+  
+  for (j in 25){ #marginal value 4
+    if(j != fraction_abs_max[i,4] && rep1rnasenormDataframe[i,j] > 5 &&  rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-1)]){
+      maxrnase1_5[i,j] = j
+    }
+    if(j != fraction_abs_max[i,5] && rep2rnasenormDataframe[i,j] > 5 &&  rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-1)]){
+      maxrnase2_5[i,j] = j
+    }
+    if(j != fraction_abs_max[i,6] && rep3rnasenormDataframe[i,j] > 5 &&  rep3rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-1)]){
+      maxrnase3_5[i,j] = j
+    }
+  }
+  
+}
+
+
+
+#Threshold 7
+maxrnase1_7 = matrix(0, nrow=nrow(rep1rnasenormDataframe), ncol=25)
+maxrnase2_7 = matrix(0, nrow=nrow(rep1rnasenormDataframe), ncol=25)
+maxrnase3_7 = matrix(0, nrow=nrow(rep1rnasenormDataframe), ncol=25)
+
+for (i in 1:nrow(rep1rnasenormDataframe)){
+  
+  for (j in 1){ #marginal value 1; weiterer threshold für Randwerte?
+    if(j != fraction_abs_max[i,4] && rep1rnasenormDataframe[i,j] > 7 &&  rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+1)]){
+      maxrnase1_7[i,j] = j
+    }
+    if(j != fraction_abs_max[i,5] && rep2rnasenormDataframe[i,j] > 7 &&  rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j+1)]){
+      maxrnase2_7[i,j] = j
+    }
+    if(j != fraction_abs_max[i,6] && rep3rnasenormDataframe[i,j] > 7 &&  rep3rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+1)]){
+      maxrnase3_7[i,j] = j
+    }
+  }
+ 
+   
+  for(j in 2){ #marginal value 2
+    if(j != fraction_abs_max[i,4] && rep1rnasenormDataframe[i,j] > 7 &&  rep1rnasenormDataframe[i,j] > rep1ctrlnormDataframe[i, (j-1)] && rep1ctrlnormDataframe[i,j] > rep1ctrlnormDataframe[i, (j+1)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+2)]){
+      maxrnase1_7[i,j] = j
+    }
+    if(j != fraction_abs_max[i,5] && rep2rnasenormDataframe[i,j] > 7 && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-1)] &&  rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j+1)] && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j+2)]){
+      maxrnase2_7[i,j] = j
+    }
+    if(j != fraction_abs_max[i,6] && rep3rnasenormDataframe[i,j] > 7 && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j-1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j+1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j+2)]){
+      maxrnase3_7[i,j] = j
+    }
+  }
+  
+  
+  
+  for (j in 3:23){
+    if(j != fraction_abs_max[i,4] && rep1rnasenormDataframe[i,j] > 7 && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-1)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+1)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+2)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-2)]) {
+      maxrnase1_7[i,j] = j
+    }
+    if(j != fraction_abs_max[i,5] && rep2rnasenormDataframe[i,j] > 7 && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-1)] && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j+1)] && rep2ctrlnormDataframe[i,j] > rep2ctrlnormDataframe[i, (j+2)] && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-2)]){
+      maxrnase2_7[i,j] = j
+    }
+    if(j != fraction_abs_max[i,6] && rep3rnasenormDataframe[i, j] > 7 &&  rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j-1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j+1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j+2)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j-2)]) {
+      maxrnase3_7[i,j] = j
+    }
+  }
+  
+  
+  for(j in 24){ #marginal value 3
+    if(j != fraction_abs_max[i,4] && rep1rnasenormDataframe[i,j] > 7 &&  rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j+1)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-1)] && rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-2)]){
+      maxrnase1_7[i,j] = j
+    }
+    if(j != fraction_abs_max[i,5] && rep2rnasenormDataframe[i,j] > 7 && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j+1)] &&  rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-1)] && rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-2)]){
+      maxrnase2_7[i,j] = j
+    }
+    if(j != fraction_abs_max[i,6] && rep3rnasenormDataframe[i,j] > 7 && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j+1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j-1)] && rep3rnasenormDataframe[i,j] > rep3rnasenormDataframe[i, (j-2)]){
+      maxrnase3_7[i,j] = j
+    }
+  }
+  
+  for (j in 25){ #marginal value 4
+    if(j != fraction_abs_max[i,4] && rep1rnasenormDataframe[i,j] > 7 &&  rep1rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-1)]){
+      maxrnase1_7[i,j] = j
+    }
+    if(j != fraction_abs_max[i,5] && rep2rnasenormDataframe[i,j] > 7 &&  rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-1)]){
+      maxrnase2_7[i,j] = j
+    }
+    if(j != fraction_abs_max[i,6] && rep3rnasenormDataframe[i,j] > 3 &&  rep3rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-1)]){
+      maxrnase3_7[i,j] = j
+    }
+  }
+  
+}
+
+
+#Comparison Thesholds
 
 compare_max = function(a,b){
-logf = matrix(FALSE, ncol = 25, nrow = 7081)
-for (i in 1:7081){
+vgl = matrix(FALSE, ncol = 25, nrow = nrow(rep1ctrlnormDataframe))
+row.names(vgl) = rownames(rep1ctrlnormDataframe)
+truesum = vector()
+for (i in 1:nrow(vgl)){
+  
+  for (j in 1) {
+    if(a[i,j]==b[i,j]){
+      
+    } else if(a[i,j]==0 && b[i,j]!=0){
+        if(a[i,(j+1)] != 0){
+        }
+          else {vgl[i,j] = TRUE}
+      }
+      else if(a[i,j]!=0 && b[i,j]==0){
+        if(b[i,(j+1)] != 0){
+        }
+           else {vgl[i,j] = TRUE}
+      }
+    
+  }
   for (j in 2:24){
-    if(a[i,j]==b[i,j]){}
-      else if(b[i,(j+1)] != 0 || b[i,(j-1)] != 0){}
-      else {logf[i,j] = TRUE}
-    }
+    if(a[i,j]==b[i,j]){
+      
+    } else if(a[i,j]==0 && b[i,j]!=0){
+        if(a[i,(j+1)] != 0 || a[i,(j-1)] != 0){
+        }
+          else {vgl[i,j] = TRUE}
+      }
+      else if(a[i,j]!=0 && b[i,j]==0){
+        if(b[i,(j+1)] != 0 || b[i,(j-1)] != 0){
+        }
+           else {vgl[i,j] = TRUE}
+      }
+      
+  }
+  for (j in 25) {
+    if(a[i,j]==b[i,j]){
+      
+    } else if(a[i,j]==0 && b[i,j]!=0){
+        if(a[i,(j-1)] != 0){
+        }
+          else {vgl[i,j] = TRUE}
+      }
+      else if(a[i,j]!=0 && b[i,j]==0){
+        if(b[i,(j-1)] != 0){
+        }
+           else {vgl[i,j] = TRUE}
+      }
+      
+  }
+  truesum[i] = sum(vgl[i,]) 
 }
-return(sum(logf))
+
+return(truesum)
 }
 
 
-#Comparison thresholds
-compare_max(maxctrl1_3,maxctrl2_3) 
-compare_max(maxctrl1_3,maxctrl3_3)
-compare_max(maxctrl2_3,maxctrl3_3) 
-
-compare_max(maxctrl1_5,maxctrl2_5) 
-compare_max(maxctrl1_5,maxctrl3_5) 
-compare_max(maxctrl2_5,maxctrl3_5) 
-
-compare_max(maxctrl1_7,maxctrl2_7)
-compare_max(maxctrl1_7,maxctrl3_7) 
-compare_max(maxctrl2_7,maxctrl3_7) 
+compare_max(maxctrl2_3, maxctrl3_3)
 
 
+comp_rep = function(a,b,c){
+ rows_rep = vector()
+ rows_rep = compare_max(a, b)
+ rows_rep = cbind(rows_rep, compare_max(a,c))
+ rows_rep = cbind(rows_rep, compare_max(b,c))
+ row.names(rows_rep) = rownames(rep1ctrlnormDataframe)
+
+ return(rows_rep)
+
+}
+
+# matrix with number of at least one fraction local maxima differences for comparison of each two replicates out of three (different thresholds of total protein amount 3, 5, 7%)
+loc_max_ctrl3 = as.data.frame(comp_rep(maxctrl1_3, maxctrl2_3, maxctrl3_3))
+loc_max_ctrl5 = comp_rep(maxctrl1_5, maxctrl2_5, maxctrl3_5)
+loc_max_ctrl7 = comp_rep(maxctrl3_3, maxctrl3_5, maxctrl3_7)
+loc_max_rnase3 = comp_rep(maxrnase1_3, maxrnase2_3, maxrnase3_3)
+loc_max_rnase5 = comp_rep(maxrnase1_5, maxrnase2_5, maxrnase3_5)
+loc_max_rnase7 = comp_rep(maxrnase1_7, maxrnase2_7, maxrnase3_7)
 
 
-##
+#Counting proteins which have at least one fraction wide shifts in the local maxima in each comparison of the replicates in RNase and Ctrl 
+
+not_repro = function(a,b) {
+  u = 0
+  for (i in 1:nrow(loc_max_ctrl3)) {
+  if ((a[i,1] != 0 && a[i,2] != 0 && a[i,3] != 0) || (b[i,1] != 0 && b[i,2] != 0 && b[i,3] != 0)){
+    u = u+1
+  }
+}
+return(u)
+}
+
+  
+not_repro(loc_max_ctrl3, loc_max_rnase3) #502 are not reproducible -> kick proteins out
+not_repro(loc_max_ctrl5, loc_max_rnase5) #410
+not_repro(loc_max_ctrl7, loc_max_rnase7) #365
+
+#decide to go with maximum has to contain at least 5 % of total protein amount
+
+ 
 
 
-isTRUE(all.equal(maxctrl1_3,maxctrl2_3, tolerance = 1.1))
-isTRUE(all.equal(maxctrl1_3,maxctrl3_3, tolerance = 1.1))
-isTRUE(all.equal(maxctrl2_3,maxctrl3_3, tolerance = 1.1))
 
-isTRUE(all.equal(maxctrl1_5,maxctrl2_5, tolerance = 1.1))
-isTRUE(all.equal(maxctrl1_5,maxctrl3_5, tolerance = 1.1))
-isTRUE(all.equal(maxctrl2_5,maxctrl3_5, tolerance = 1.1))
 
-isTRUE(all.equal(maxctrl1_7,maxctrl2_7, tolerance = 1.1))
-isTRUE(all.equal(maxctrl1_7,maxctrl3_7, tolerance = 1.1))
-isTRUE(all.equal(maxctrl2_7,maxctrl3_7, tolerance = 1.1))
 
-##all FALSE so there are shifts
+
+
 
 
 
 ```
-
+The next step is taking the mean of all three replicates for each condition to receive an average curve of the protein's distribution with and without RNase. Our normalization has the advantage that all values of the resulting curve will sum up to 100. Thus, they are interpretable as percentages. 
 ```{r}
 #mean of control replicates of all proteins  
 meanRepctrl = matrix(nrow= nrow(tripCtrlnormdat), ncol = 25)
@@ -622,7 +910,7 @@ for (j in 1:nrow(tripCtrlnormdat)){
   for (i in 1:25){
     meanRepctrl[j,i] = (rep1ctrlnormDataframe[j,i] + rep2ctrlnormDataframe[j,i] + rep3ctrlnormDataframe[j,i])/3}}
 
-#mean of rnase replicates of all proteins 
+#mean of RNase replicates of all proteins 
 meanRepRNase = matrix(nrow= nrow(FullDat), ncol = 25)
 for (j in 1:nrow(tripCtrlnormdat)){ 
   for (i in 1:25){
@@ -631,4 +919,282 @@ for (j in 1:nrow(tripCtrlnormdat)){
 
 
 
+```
+After checking reproducibility we determine and compare main and local maxima between RNase and Control.
 
+```{r}
+# absolute maxima
+abs_max = data.frame(row.names = rownames(rep1ctrlnormDataframe))
+
+for (i in 1:nrow(rep1ctrlnormDataframe)){
+  abs_max[i,1] = which.max(meanRepctrl[i,])
+  abs_max[i,2] = which.max(meanRepRNase[i,])
+  
+}
+
+abs_max$compare = ifelse(abs(abs_max$V1-abs_max$V2) > 1, TRUE, FALSE)
+sum(abs_max$compare)
+##bei 1348 Proteinen sind die Hauptmaxima mindestens 2 Fraktionen verschoben
+abs_max_shift = rownames (abs_max) [abs_max$compare==TRUE]
+
+
+
+# local maxima
+
+max_shift_ctrl = matrix(0, nrow = nrow(rep1ctrlnormDataframe), ncol = 25)
+max_shift_rnase = matrix(0, nrow = nrow(rep1ctrlnormDataframe), ncol = 25)
+
+for (i in 1:nrow(rep1ctrlnormDataframe)){
+  
+  for (j in 1){ #marginal value 1
+    if(j != abs_max[i,1] && meanRepctrl[i,j] > 5 &&  meanRepctrl[i,j] > meanRepctrl[i, (j+1)]){
+      max_shift_ctrl[i,j] = j
+    }
+    if(j != abs_max[i,2] && meanRepRNase[i,j] > 5 && meanRepRNase[i,j] > meanRepRNase[i, (j+1)]){
+      max_shift_rnase[i,j] = j
+    }
+  }
+
+  for(j in 2){ #marginal value 2
+    if(j != abs_max[i,1] && meanRepctrl[i,j] > 5 &&  meanRepctrl[i,j] > meanRepctrl[i, (j-1)] && meanRepctrl[i,j] > meanRepctrl[i, (j+1)] && meanRepctrl[i,j] > meanRepctrl[i, (j+2)]){
+      max_shift_ctrl[i,j] = j
+    }
+    if(j != fraction_abs_max[i,2] && meanRepRNase[i,j] > 5 && meanRepRNase[i,j] > meanRepRNase[i, (j-1)] &&  meanRepRNase[i,j] > meanRepRNase[i, (j+1)] && meanRepRNase[i,j] > meanRepRNase[i, (j+2)]){
+      max_shift_rnase[i,j] = j
+    }
+  }
+
+    
+  for (j in 3:23){
+    if(j != abs_max[i,1] && meanRepctrl[i,j] > 5 && meanRepctrl[i,j] > meanRepctrl[i, (j-1)] && meanRepctrl[i,j] > meanRepctrl[i, (j+1)] && meanRepctrl[i,j] > meanRepctrl[i, (j+2)] && meanRepctrl[i,j] > meanRepctrl[i, (j-2)]) {
+      max_shift_ctrl[i,j] = j
+    }
+    if(j != abs_max[i,2] && meanRepRNase[i,j] > 5 && meanRepRNase[i,j] > meanRepRNase[i, (j-1)] && meanRepRNase[i,j] > meanRepRNase[i, (j+1)] && meanRepRNase[i,j] > meanRepRNase[i, (j+2)] && meanRepRNase[i,j] > meanRepRNase[i, (j-2)]){
+      max_shift_rnase[i,j] = j
+    }
+  }
+  
+  
+  for(j in 24){ #marginal value 3
+    if(j != abs_max[i,1] && meanRepctrl[i,j] > 5 &&  meanRepctrl[i,j] > meanRepctrl[i, (j+1)] && meanRepctrl[i,j] > meanRepctrl[i, (j-1)] && meanRepctrl[i,j] > meanRepctrl[i, (j-2)]){
+      max_shift_ctrl[i,j] = j
+    }
+    if(j != abs_max[i,2] && meanRepRNase[i,j] > 5 && meanRepRNase[i,j] > meanRepRNase[i, (j+1)] &&  meanRepRNase[i,j] > meanRepRNase[i, (j-1)] && meanRepRNase[i,j] > meanRepRNase[i, (j-2)]){
+      max_shift_rnase[i,j] = j
+    }
+  }
+  
+  for (j in 25){ #marginal value 4
+    if(j != abs_max[i,1] && meanRepctrl[i,j] > 5 &&  meanRepctrl[i,j] > meanRepctrl[i, (j-1)]){
+      max_shift_ctrl[i,j] = j
+    }
+    if(j != abs_max[i,2] && meanRepRNase[i,j] > 5 &&  meanRepRNase[i,j] > meanRepRNase[i, (j-1)]){
+      max_shift_rnase[i,j] = j
+    }
+  }
+}
+
+count_shift = compare_max(max_shift_ctrl, max_shift_rnase)
+length(which(count_shift !=0))
+
+loc_max_shift = rownames(rep1ctrlnormDataframe)[which(count_shift!=0)]
+row.names(max_shift_ctrl) = rownames(rep1ctrlnormDataframe)      ##Fehlermeldung
+row.names(max_shift_rnase) = rownames(rep1ctrlnormDataframe)     ##Fehlermeldung
+max_shift_ctrl = as.data.frame(max_shift_ctrl)
+max_shift_rnase = as.data.frame(max_shift_rnase)
+max_shift_ctrl$count = count_shift
+max_shift_rnase$count = count_shift                              ##Fehlermeldung
+max_shift_ctrl = max_shift_ctrl[which(max_shift_ctrl$count > 0),]
+max_shift_rnase = max_shift_rnase[which(max_shift_rnase$count > 0),]
+#proteins_local_shift = as.data.frame(cbind(max_shift_ctrl, max_shift_rnase))
+#proteins_local_shift$count = count_shift
+# vergleich shift haupt- und nebenmaxima
+
+id = vector()
+for (i in 1:length(loc_max_shift)) {
+  j = 1
+  for(j in 1:length(abs_max_shift)){
+    if(loc_max_shift[i]!=abs_max_shift[j]){
+      id[i] = FALSE
+    }
+      else if (loc_max_shift[i]==abs_max_shift[j]) {
+        id[i] = TRUE
+        break
+      }
+    
+  }
+}
+sum(id)
+# 1123 proteins are both found in absolute and local maxima shifts
+
+
+
+
+
+
+
+```
+```{r}
+# t-test of shift of protein amount for maximum verification (y-shift)
+
+# absolute maxima
+abs_max_yc = vector()
+abs_max_yr = vector()
+for (i in 1:nrow(abs_max)) {
+  abs_max_yc[i] = meanRepctrl[i, abs_max[i,1]]
+  abs_max_yr[i] = meanRepRNase[i, abs_max[i,2]]
+}
+
+abs_max$ymaxc = abs_max_yc
+abs_max$ymaxr = abs_max_yr
+
+l = vector()
+for (i in 1:nrow(abs_max)) { 
+  if(abs_max[i,3]==TRUE) {
+    fc = abs_max[i,1]
+    l[i] = t.test(c(tripCtrlnormdat[i,fc], tripCtrlnormdat[i, (fc+25)], tripCtrlnormdat[i, (fc+50)]), c(tripRnasenormdat[i,fc], tripRnasenormdat[i, (fc+25)], tripRnasenormdat[i, (fc+50)]), alternative = "two.sided")$p.value
+  }
+    else {l[i] = 10} ## random value chosen larger than 1
+}
+
+abs_max$pvalue = l
+abs_max$sign = ifelse(abs_max$pvalue >= 0.025, FALSE, TRUE) ## 0.025 due to two-sided t-test
+sum(abs_max$sign) ## how many proteins have a significant shift in protein amount in their global maximum (869 out of 1118)
+
+colnames(abs_max)[1] = "global_max_ctrl"
+colnames(abs_max)[2] = "global_max_rnase"
+proteins_global_shift = data.frame(abs_max[(which(abs_max$sign == TRUE)),])
+proteins_global_shift$p_adjusted = p.adjust(proteins_global_shift$pvalue, method = "fdr")
+proteins_global_shift$sign_ad = ifelse(proteins_global_shift$p_adjusted >= 0.025, FALSE, TRUE)
+sum(proteins_global_shift$sign_ad) ## all protein shift identified are still significant after fdr-correction
+
+proteins_global_shift$left_right = ifelse(proteins_global_shift$global_max_ctrl < proteins_global_shift$global_max_rnase, "right", "left")
+
+
+
+# local maxima
+
+compare_loc_max = function(a,b){
+vgl = matrix(10, ncol = 25, nrow = nrow(rep1ctrlnormDataframe))
+row.names(vgl) = rownames(rep1ctrlnormDataframe)
+
+for (i in 1:nrow(vgl)){
+  
+  for (j in 1) {
+    if(a[i,j]==b[i,j]){
+      
+    } else if(a[i,j]==0 && b[i,j]!=0){
+        if(a[i,(j+1)] != 0){
+        }
+          else {
+            vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value 
+            }
+      }
+      else if(a[i,j]!=0 && b[i,j]==0){
+        if(b[i,(j+1)] != 0){
+        }
+           else {
+             vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+               }
+      }
+    
+  }
+  for (j in 2:24){
+    if(a[i,j]==b[i,j]){
+      
+    } else if(a[i,j]==0 && b[i,j]!=0){
+        if(a[i,(j+1)] != 0 || a[i,(j-1)] != 0){
+        }
+          else {
+            vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+          }
+      }
+      else if(a[i,j]!=0 && b[i,j]==0){
+        if(b[i,(j+1)] != 0 || b[i,(j-1)] != 0){
+        }
+           else {
+             vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+           }
+      }
+      
+  }
+  for (j in 25) {
+    if(a[i,j]==b[i,j]){
+      
+    } else if(a[i,j]==0 && b[i,j]!=0){
+        if(a[i,(j-1)] != 0){
+        }
+          else {
+            vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+          }
+      }
+      else if(a[i,j]!=0 && b[i,j]==0){
+        if(b[i,(j-1)] != 0){
+        }
+           else {
+             vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+           }
+      }
+      
+  }
+  
+}
+
+return(vgl)
+}
+# returns matrix with p-values for local maximum shifts of protein x (row) in fraction y (column)
+
+max_shift_ctrl = max_shift_ctrl[,-26]
+max_shift_rnase = max_shift_rnase[,-26]
+compare_loc_max(max_shift_ctrl, max_shift_rnase) ##Fehlermeldung
+
+
+
+```
+
+
+```{r}
+#kmeans ausprobieren
+
+kmeans(FullDat[1,],  centers=2, nstart =10) #more cluster centers than distinct data points???
+kmeans(FullDat[,1],  centers=5, nstart =100) #WSS = 96,7%
+kmeans(FullDat[,1],  centers=10, nstart =100) #WSS = 98,4% bei nstart 10 und 100
+
+lalala = vector()
+for (i in 5:11){
+  lalala = kmeans(FullDat[,1],  centers=i, nstart =10)
+  
+}
+lalala$cluster
+lalala$centers
+lalala$withinss
+which.min(lalala$withinss)
+
+
+#Cluster full dataset
+kmeans(FullDat,  centers=7, nstart =10)
+
+lalala = vector()
+for (i in 5:11){ #warning keine Konvergenz nach 10 Schritten
+  lalala = kmeans(FullDat,  centers=i, nstart =10)
+  
+}
+
+library (cluster)
+b = as.integer(unlist(lalala$cluster))
+is.integer(b)
+bb= silhouette(b, dist(b)) 
+
+plot(bb) ##weird
+
+###silhouette plot aus Internet(Beispiel)
+###silhouette_score <- function(k){
+#  km <- kmeans(df, centers = k, nstart=25)
+# ss <- silhouette(km$cluster, dist(df))
+# mean(ss[, 3])
+#}
+#k <- 2:10
+#avg_sil <- sapply(k, silhouette_score)
+#plot(k, type='b', avg_sil, xlab='Number of clusters', ylab='Average Silhouette Scores', frame=FALSE)
+
+```
