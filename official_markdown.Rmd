@@ -705,7 +705,7 @@ for (i in 1:nrow(rep1rnasenormDataframe)){
     if(j != fraction_abs_max[i,5] && rep2rnasenormDataframe[i,j] > 7 &&  rep2rnasenormDataframe[i,j] > rep2rnasenormDataframe[i, (j-1)]){
       maxrnase2_7[i,j] = j
     }
-    if(j != fraction_abs_max[i,6] && rep3rnasenormDataframe[i,j] > 3 &&  rep3rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-1)]){
+    if(j != fraction_abs_max[i,6] && rep3rnasenormDataframe[i,j] > 7 &&  rep3rnasenormDataframe[i,j] > rep1rnasenormDataframe[i, (j-1)]){
       maxrnase3_7[i,j] = j
     }
   }
@@ -904,7 +904,7 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
     if(j != abs_max[i,1] && meanRepctrl[i,j] > 5 &&  meanRepctrl[i,j] > meanRepctrl[i, (j-1)] && meanRepctrl[i,j] > meanRepctrl[i, (j+1)] && meanRepctrl[i,j] > meanRepctrl[i, (j+2)]){
       max_shift_ctrl[i,j] = j
     }
-    if(j != fraction_abs_max[i,2] && meanRepRNase[i,j] > 5 && meanRepRNase[i,j] > meanRepRNase[i, (j-1)] &&  meanRepRNase[i,j] > meanRepRNase[i, (j+1)] && meanRepRNase[i,j] > meanRepRNase[i, (j+2)]){
+    if(j != abs_max[i,2] && meanRepRNase[i,j] > 5 && meanRepRNase[i,j] > meanRepRNase[i, (j-1)] &&  meanRepRNase[i,j] > meanRepRNase[i, (j+1)] && meanRepRNase[i,j] > meanRepRNase[i, (j+2)]){
       max_shift_rnase[i,j] = j
     }
   }
