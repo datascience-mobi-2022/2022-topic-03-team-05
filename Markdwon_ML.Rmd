@@ -1018,7 +1018,7 @@ proteins_global_shift$p_adjusted = p.adjust(proteins_global_shift$pvalue, method
 proteins_global_shift$sign_ad = ifelse(proteins_global_shift$p_adjusted >= 0.025, FALSE, TRUE)
 sum(proteins_global_shift$sign_ad) ## all 869 proteins with shift identified are still significant after fdr-correction
 
-proteins_global_shift$left_right = ifelse(proteins_global_shift$global_max_ctrl < proteins_global_shift$global_max_rnase, "right", "left")
+proteins_global_shift$leftorright = ifelse(proteins_global_shift$global_max_ctrl < proteins_global_shift$global_max_rnase, "right", "left")
 
 
 
@@ -1156,21 +1156,50 @@ rownames(data_glob) = paste(proteins_global_shift$left_right, 1:nrow(data_glob),
 fviz_cluster(list(data = data_glob, cluster = km.clusters1))
 
 # gucken, wie viele left/right shift in welchem Cluster
-table(km.clusters1, proteins_global_shift$left_right)
+table(km.clusters1, proteins_global_shift$leftorright)
+table(km.clusters1, proteins_global_shift$)
 
+numb_max_ctrl = rowSums(max_shift_ctrl!=0)+1 ## plus global maximum
+numb_max_rnase = rowSums(max_shift_rnase!=0)+1 ## plus global maximum
 
+abs_max$max_ctrl = numb_max_ctrl
+abs_max$max_rnase = numb_max_rnase
+abs_max$left_right = ifelse(p_loc_shift == TRUE | abs_max$sign == TRUE, "shift", "no shift") 
+diff1 = abs_max[,c(1:2,8,9)]
+diff2 = cbind(numb_max_ctrl, numb_max_rnase)
 
-diff1 = meanRepctrl - meanRepRNase
-diff2 = cbind(rowSums(diff1), count_shift, abs_max$global_max_ctrl, abs_max$global_max_rnase)
+fviz_nbclust(diff1, kmeans, method = "wss") + labs(subtitle = "Elbow method")
 
-fviz_nbclust(diff2, kmeans, method = "wss") + labs(subtitle = "Elbow method")
-
-km.out2 = kmeans(diff2, centers = 2, nstart = 100)
+km.out2 = kmeans(diff1, centers = 2, nstart = 100, iter.max = 20)
 km.clusters2 = km.out2$cluster
-rownames(diff2) = paste(proteins_global_shift$left_right, 1:nrow(diff2), sep = "_")
-fviz_cluster(list(data = diff2, cluster = km.clusters2))
+rownames(diff2) = paste(abs_max$left_right, 1:nrow(diff2), sep = "_")
+fviz_cluster(list(data = diff1, cluster = km.clusters2), geom = "point")
+table(km.clusters2, abs_max$global_max_rnase) ## in cluster 2 there are mostly proteins with rnase maxima in the first ten fractions, in cluster 1 "equally distributed"
+table(km.clusters2,abs_max$left_right)
+
+numb = cbind(numb_max_ctrl, numb_max_rnase)
+numb_max = cbind(rownames(rep1ctrlnormDataframe), numb)
+colnames(numb_max)[1] = "protein"
+
+data1.1 = merge(proteins_global_shift, numb_max, by = "protein")
+data1 = data1.1[, c(2,3,12,13)]
+
+# find optimal numbers of clusters
+fviz_nbclust(data1, kmeans, method = "wss") + labs(subtitle = "Elbow method")
+
+# k-means
+
+km.out3 = kmeans(data1, centers = 3, nstart = 100)
+#print(km.out)
+
+# visualize clusters
+km.clusters3 = km.out3$cluster
+#rownames(data1) = paste(proteins_global_shift$left_right, 1:nrow(data_glob), sep = "_")
+fviz_cluster(list(data = data1, cluster = km.clusters3))
 
 # gucken, wie viele left/right shift in welchem Cluster
-table(km.clusters2, proteins_global_shift$left_right)
+table(km.clusters1, proteins_global_shift$leftorright)
+table(km.clusters1, proteins_global_shift$)
+
 ```
 
