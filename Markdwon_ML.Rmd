@@ -726,12 +726,13 @@ for (i in 1:nrow(vgl)){
   for (j in 1) {
     if(a[i,j]==b[i,j]){
       
-    } else if(a[i,j]==0 && b[i,j]!=0){
+    } 
+    else if(a[i,j]==0 && b[i,j]!=0){
         if(a[i,(j+1)] != 0){
         }
           else {vgl[i,j] = TRUE}
       }
-      else if(a[i,j]!=0 && b[i,j]==0){
+    else if(a[i,j]!=0 && b[i,j]==0){
         if(b[i,(j+1)] != 0){
         }
            else {vgl[i,j] = TRUE}
@@ -741,12 +742,13 @@ for (i in 1:nrow(vgl)){
   for (j in 2:24){
     if(a[i,j]==b[i,j]){
       
-    } else if(a[i,j]==0 && b[i,j]!=0){
+    } 
+    else if(a[i,j]==0 && b[i,j]!=0){
         if(a[i,(j+1)] != 0 || a[i,(j-1)] != 0){
         }
           else {vgl[i,j] = TRUE}
       }
-      else if(a[i,j]!=0 && b[i,j]==0){
+    else if(a[i,j]!=0 && b[i,j]==0){
         if(b[i,(j+1)] != 0 || b[i,(j-1)] != 0){
         }
            else {vgl[i,j] = TRUE}
@@ -756,12 +758,13 @@ for (i in 1:nrow(vgl)){
   for (j in 25) {
     if(a[i,j]==b[i,j]){
       
-    } else if(a[i,j]==0 && b[i,j]!=0){
+    } 
+    else if(a[i,j]==0 && b[i,j]!=0){
         if(a[i,(j-1)] != 0){
         }
           else {vgl[i,j] = TRUE}
       }
-      else if(a[i,j]!=0 && b[i,j]==0){
+    else if(a[i,j]!=0 && b[i,j]==0){
         if(b[i,(j-1)] != 0){
         }
            else {vgl[i,j] = TRUE}
@@ -858,7 +861,7 @@ Now we have two curves for the two conditions. Our goal is to determine the maxi
 ```{r} 
 y = 1:25
 
-for (i in 1:6){
+for (i in 30:50){
   plot(y, meanRepctrl[i,], type ="o", pch = 20, ylab = "percentage of protein amount", xlab = "fractions of sucrose density gradient", col = "cyan")
   lines(y,meanRepRNase[i,], type = "o", pch = 20, col = "magenta")
 }
@@ -906,7 +909,7 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
     if(j != abs_max[i,1] && meanRepctrl[i,j] > 5 &&  meanRepctrl[i,j] > meanRepctrl[i, (j-1)] && meanRepctrl[i,j] > meanRepctrl[i, (j+1)] && meanRepctrl[i,j] > meanRepctrl[i, (j+2)]){
       max_shift_ctrl[i,j] = j
     }
-    if(j != fraction_abs_max[i,2] && meanRepRNase[i,j] > 5 && meanRepRNase[i,j] > meanRepRNase[i, (j-1)] &&  meanRepRNase[i,j] > meanRepRNase[i, (j+1)] && meanRepRNase[i,j] > meanRepRNase[i, (j+2)]){
+    if(j != abs_max[i,2] && meanRepRNase[i,j] > 5 && meanRepRNase[i,j] > meanRepRNase[i, (j-1)] &&  meanRepRNase[i,j] > meanRepRNase[i, (j+1)] && meanRepRNase[i,j] > meanRepRNase[i, (j+2)]){
       max_shift_rnase[i,j] = j
     }
   }
@@ -950,8 +953,8 @@ max_shift_ctrl = as.data.frame(max_shift_ctrl)
 max_shift_rnase = as.data.frame(max_shift_rnase)
 max_shift_ctrl$count = count_shift
 max_shift_rnase$count = count_shift
-max_shift_ctrl = max_shift_ctrl[which(max_shift_ctrl$count > 0),]
-max_shift_rnase = max_shift_rnase[which(max_shift_rnase$count > 0),]
+#max_shift_ctrl = max_shift_ctrl[which(max_shift_ctrl$count > 0),]
+#max_shift_rnase = max_shift_rnase[which(max_shift_rnase$count > 0),]
 #proteins_local_shift = as.data.frame(cbind(max_shift_ctrl, max_shift_rnase))
 #proteins_local_shift$count = count_shift
 
@@ -972,14 +975,14 @@ for (i in 1:length(loc_max_shift)) {
   }
 }
 sum(id)
-# 910 proteins are both found in absolute and local maxima shifts
+# 913 proteins are both found in absolute and local maxima shifts
 loc_max_shift = loc_max_shift[- which(id==TRUE)] ## loc_max_shift are all proteins shifting in local maximum excluded those also shifting in global maximum
 
 # number of shifting proteins
-sum(id)+(length(abs_max_shift)-sum(id))+length(loc_max_shift) ## 2471 proteins have a shift and might be RNA-binding or RNA-dependent
+sum(id)+(length(abs_max_shift)-sum(id))+length(loc_max_shift) ## 2107 proteins have a shift and might be RNA-binding or RNA-dependent
 
 ```
-We found 2471 proteins shifting in their global and/or local maxima. In the following, we will test if the shift in protein amount is significant which would result in classifying the protein as an RNA-binding or RNA-dependent protein. 
+We found 2107 proteins shifting in their global and/or local maxima. In the following, we will test if the shift in protein amount is significant which would result in classifying the protein as an RNA-binding or RNA-dependent protein. 
 
 # t-test of shift of protein amount for maximum verification (y-shift)
 
@@ -1013,7 +1016,7 @@ colnames(abs_max)[2] = "global_max_rnase"
 proteins_global_shift = data.frame(abs_max[(which(abs_max$sign == TRUE)),])
 proteins_global_shift$p_adjusted = p.adjust(proteins_global_shift$pvalue, method = "fdr")
 proteins_global_shift$sign_ad = ifelse(proteins_global_shift$p_adjusted >= 0.025, FALSE, TRUE)
-sum(proteins_global_shift$sign_ad) ## all protein shift identified are still significant after fdr-correction
+sum(proteins_global_shift$sign_ad) ## all 869 proteins with shift identified are still significant after fdr-correction
 
 proteins_global_shift$left_right = ifelse(proteins_global_shift$global_max_ctrl < proteins_global_shift$global_max_rnase, "right", "left")
 
@@ -1021,80 +1024,114 @@ proteins_global_shift$left_right = ifelse(proteins_global_shift$global_max_ctrl 
 
 # local maxima
 
-compare_loc_max = function(a,b){
-vgl = matrix(10, ncol = 25, nrow = nrow(rep1ctrlnormDataframe))
-row.names(vgl) = rownames(rep1ctrlnormDataframe)
-
-for (i in 1:nrow(vgl)){
-  
-  for (j in 1) {
-    if(a[i,j]==b[i,j]){
-      
-    } else if(a[i,j]==0 && b[i,j]!=0){
-        if(a[i,(j+1)] != 0){
-        }
-          else {
-            vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value 
-            }
-      }
-      else if(a[i,j]!=0 && b[i,j]==0){
-        if(b[i,(j+1)] != 0){
-        }
-           else {
-             vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
-               }
-      }
-    
-  }
-  for (j in 2:24){
-    if(a[i,j]==b[i,j]){
-      
-    } else if(a[i,j]==0 && b[i,j]!=0){
-        if(a[i,(j+1)] != 0 || a[i,(j-1)] != 0){
-        }
-          else {
-            vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
-          }
-      }
-      else if(a[i,j]!=0 && b[i,j]==0){
-        if(b[i,(j+1)] != 0 || b[i,(j-1)] != 0){
-        }
-           else {
-             vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
-           }
-      }
-      
-  }
-  for (j in 25) {
-    if(a[i,j]==b[i,j]){
-      
-    } else if(a[i,j]==0 && b[i,j]!=0){
-        if(a[i,(j-1)] != 0){
-        }
-          else {
-            vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
-          }
-      }
-      else if(a[i,j]!=0 && b[i,j]==0){
-        if(b[i,(j-1)] != 0){
-        }
-           else {
-             vgl[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
-           }
-      }
-      
-  }
-  
-}
-
-return(vgl)
-}
-# returns matrix with p-values for local maximum shifts of protein x (row) in fraction y (column)
-
 max_shift_ctrl = max_shift_ctrl[,-26]
 max_shift_rnase = max_shift_rnase[,-26]
-compare_loc_max(max_shift_ctrl, max_shift_rnase)
+
+p_loc_max = matrix(10, ncol = 25, nrow = nrow(rep1ctrlnormDataframe))
+row.names(p_loc_max) = rownames(rep1ctrlnormDataframe)
+p_loc_shift = vector(length = nrow(rep1ctrlnormDataframe))
+
+for (i in 1:nrow(p_loc_max)) {
+  if(count_shift[i] > 0){  
+    for (j in 1) {
+      if(max_shift_ctrl[i,j]==max_shift_rnase[i,j]){
+          
+      } else if(max_shift_ctrl[i,j]==0 && max_shift_rnase[i,j]!=0){
+          if(max_shift_ctrl[i,(j+1)] != 0){
+          }
+            else {
+              p_loc_max[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+              p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
+              if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
+              }
+        }
+        else if(max_shift_ctrl[i,j]!=0 && max_shift_rnase[i,j]==0){
+          if(max_shift_rnase[i,(j+1)] != 0){
+          }
+             else {
+               p_loc_max[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+               p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
+               if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
+                 }
+        }
+      
+    }
+    for (j in 2:24){
+      if(max_shift_ctrl[i,j]==max_shift_rnase[i,j]){
+         
+      } else if(max_shift_ctrl[i,j]==0 && max_shift_rnase[i,j]!=0){
+          if(max_shift_ctrl[i,(j+1)] != 0 || max_shift_ctrl[i,(j-1)] != 0){
+          }
+            else {
+              p_loc_max[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+              p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
+              if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
+            }
+        }
+        else if(max_shift_ctrl[i,j]!=0 && max_shift_rnase[i,j]==0){
+          if(max_shift_rnase[i,(j+1)] != 0 || max_shift_rnase[i,(j-1)] != 0){
+          }
+             else {
+               p_loc_max[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+               p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
+               if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
+             }
+        }
+        
+    }
+    for (j in 25) {
+      if(max_shift_ctrl[i,j]==max_shift_rnase[i,j]){
+          
+      } else if(max_shift_ctrl[i,j]==0 && max_shift_rnase[i,j]!=0){
+          if(max_shift_ctrl[i,(j-1)] != 0){
+          }
+            else {
+              p_loc_max[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+              p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
+              if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
+            }
+        }
+        else if(max_shift_ctrl[i,j]!=0 && max_shift_rnase[i,j]==0){
+          if(max_shift_rnase[i,(j-1)] != 0){
+          }
+             else {
+               p_loc_max[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+               p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
+               if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
+             }
+        }
+        
+    }
+  }    
+}
+
+p_loc_max = as.data.frame(p_loc_max)
+proteins_local_shift = p_loc_max[which(p_loc_shift==TRUE),] ## proteins that shift in local maximum
+dim(proteins_local_shift) ## 1471 proteins shift in local maximum
+proteins_local_shift = cbind(rownames(proteins_local_shift), proteins_local_shift)
+colnames(proteins_local_shift)[1] = "protein"
+
+proteins_global_shift = cbind(rownames(proteins_global_shift), proteins_global_shift)
+colnames(proteins_global_shift)[1] = "protein"
+proteins_both_shift = merge(proteins_global_shift, proteins_local_shift, by = "protein") ## data sets merged by row names
+proteins_both_shift = proteins_both_shift[,-(11:36)]
+dim(proteins_both_shift) ## 687 proteins shift in both global and local maximum
+proteins_shifting = merge(proteins_global_shift, proteins_local_shift, by = "protein", all = TRUE) ## 1653 proteins have a shift in either local and/or global maximum
+# get names with proteins_shifting[,1]
 
 
+#install.packages(dplyr)
+library(dplyr)
+proteins_only_global = anti_join(proteins_global_shift, proteins_both_shift, by = "protein") 
+nrow(proteins_only_global) ## 182 proteins only shift in global maximum
+proteins_only_local = anti_join(proteins_local_shift, proteins_both_shift, by = "protein") 
+nrow(proteins_only_local) ## 784 proteins only shift in local maximum
 
 ```
+
+# k-means
+
+```{r}
+
+```
+
