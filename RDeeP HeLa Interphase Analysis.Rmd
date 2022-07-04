@@ -903,6 +903,7 @@ not_repro(loc_max_ctrl7, loc_max_rnase7) #365
 
 ```
 The next step is taking the mean of all three replicates for each condition to receive an average curve of the protein's distribution with and without RNase. Our normalization has the advantage that all values of the resulting curve will sum up to 100. Thus, they are interpretable as percentages. 
+
 ```{r}
 #mean of control replicates of all proteins  
 meanRepctrl = matrix(nrow= nrow(tripCtrlnormdat), ncol = 25)
@@ -1196,5 +1197,34 @@ plot(bb) ##weird
 #k <- 2:10
 #avg_sil <- sapply(k, silhouette_score)
 #plot(k, type='b', avg_sil, xlab='Number of clusters', ylab='Average Silhouette Scores', frame=FALSE)
+
+
+
+#kmeans Anzahl maxima und right/left shift
+
+sumctrl = data.frame()
+sumrnase = data.frame()
+diffshift= data.frame()
+vectorsumctrl= rowSums(max_shift_ctrl)
+vectorsumrnase = rowSums(max_shift_rnase)
+
+for (i in 7076){
+  sumctrl[i,1] = sumctrl[(abs_max[i,1]+ vectorsumctrl[i]),]
+  sumrnase[i,1] = sumctrl[(abs_max[i,2]+ vectorsumrnase[i]),]
+  diffshift[i,1] = diffshift[sumctrl[i,1]-sumrnase[i,1]]
+}
+
+sum_max_ctrl = vector()
+sum_m_c = data.frame
+
+
+for(i in 1:7076){
+  sum_m_c = ifelse(max_shift_ctrl[i,1] == 0,FALSE, TRUE)
+  sum_max_ctrl = rowSums(sum_m_c)
+  
+}
+
+l_r_shft_sum = as.data.frame(cbind(diffshift,sum_max_ctrl))
+kmeans(l_r_shft_sum, centers = 3, nstart = 10)
 
 ```
