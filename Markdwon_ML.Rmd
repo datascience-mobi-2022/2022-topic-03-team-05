@@ -1106,6 +1106,7 @@ for (i in 1:nrow(p_loc_max)) {
     }
   }    
 }
+## p_loc_shift if TRUE y-shift in local maximum is significant
 
 p_loc_max = as.data.frame(p_loc_max) ## data frame with all 10 only at shifting position adjusted p-value
 p_loc_max$count = count_shift
@@ -1204,9 +1205,17 @@ table(km.clusters1, proteins_global_shift$leftorright)
 table(km.clusters1, proteins_global_shift$)
 
 # anzahl maxima und anzahl shift gegen shift in haupt, haupt+neben oder nur nebenmaximum
-data2 = cbind(abs_max[, c(1,2,3,7,8,9,10)], count_shift)
-colnames(data2)[3] = "x.shift"
-colnames(data2)[4] = "y.shift"
 
-``
+overview = cbind(abs_max[, c(1,2,3,4,5,7,8,9,10)], count_shift, p_loc_shift)
+colnames(overview)[3] = "x.shift.glo"
+colnames(overview)[6] = "y.shift.glo"
+colnames(overview)[9] = "no.shift?"
+colnames(overview)[10] = "count.x.shift.loc"
+colnames(overview)[11] = "y.shift.loc"
+overview$x.shift.loc = ifelse(overview$count.x.shift.loc != 0, TRUE, FALSE)
+overview$x.loc.glo = ifelse(overview$x.shift.glo == TRUE & overview$x.shift.loc == TRUE, TRUE, FALSE)
+overview$y.loc.glo = ifelse(overview$y.shift.glo == TRUE & overview$y.shift.loc == TRUE, TRUE, FALSE)
+
+
+```
 
