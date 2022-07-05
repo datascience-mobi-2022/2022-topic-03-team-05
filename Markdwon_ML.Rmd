@@ -861,13 +861,15 @@ Now we have two curves for the two conditions. Our goal is to determine the maxi
 ```{r} 
 y = 1:25
 
-for (i in 30:50){
+for (i in 55:65){
   plot(y, meanRepctrl[i,], type ="o", pch = 20, ylab = "percentage of protein amount", xlab = "fractions of sucrose density gradient", col = "cyan")
   lines(y,meanRepRNase[i,], type = "o", pch = 20, col = "magenta")
 }
 
+## 57 Beispiel für nur nebenmaximum shift (weitere: 62, 42, 74)
+
 ```
-# Maxima for mean Ctrl and mean RNase values
+# Maxima for mean Ctrl and mean RNase values 
 ## Global maxima
 
 ```{r}
@@ -882,8 +884,8 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
 
 abs_max$compare = ifelse(abs(abs_max$V1-abs_max$V2) > 1, TRUE, FALSE)
 sum(abs_max$compare)
-## there are 1118 proteins whose global maximum shifts at least 2 fractions
-abs_max_shift = rownames (abs_max) [abs_max$compare==TRUE] ## proteins shifting in global maximum
+## there are 1118 proteins whose global maximum shifts at least 2 fractions (x-shift)
+abs_max_shift = rownames (abs_max) [abs_max$compare==TRUE] ## proteins x-shifting in global maximum
 ```
 ## Local maxima
 
@@ -946,7 +948,7 @@ for (i in 1:nrow(rep1ctrlnormDataframe)){
 
 count_shift = compare_max(max_shift_ctrl, max_shift_rnase)
 length(which(count_shift!=0))
-loc_max_shift = rownames(rep1ctrlnormDataframe)[which(count_shift!=0)]
+loc_max_shift = rownames(rep1ctrlnormDataframe)[which(count_shift!=0)] ## x-shift
 row.names(max_shift_ctrl) = rownames(rep1ctrlnormDataframe)
 row.names(max_shift_rnase) = rownames(rep1ctrlnormDataframe)
 max_shift_ctrl = as.data.frame(max_shift_ctrl)
@@ -1105,7 +1107,7 @@ for (i in 1:nrow(p_loc_max)) {
   }    
 }
 
-p_loc_max = as.data.frame(p_loc_max)
+p_loc_max = as.data.frame(p_loc_max) ## data frame with all 10 only at shifting position adjusted p-value
 p_loc_max$count = count_shift
 proteins_local_shift = p_loc_max[which(p_loc_shift==TRUE),] ## proteins that shift in local maximum
 dim(proteins_local_shift) ## 1471 proteins shift in local maximum
@@ -1201,5 +1203,10 @@ fviz_cluster(list(data = data1, cluster = km.clusters3))
 table(km.clusters1, proteins_global_shift$leftorright)
 table(km.clusters1, proteins_global_shift$)
 
-```
+# anzahl maxima und anzahl shift gegen shift in haupt, haupt+neben oder nur nebenmaximum
+data2 = cbind(abs_max[, c(1,2,3,7,8,9,10)], count_shift)
+colnames(data2)[3] = "x.shift"
+colnames(data2)[4] = "y.shift"
+
+``
 
