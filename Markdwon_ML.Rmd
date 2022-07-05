@@ -1032,6 +1032,8 @@ max_shift_rnase = max_shift_rnase[,-26]
 p_loc_max = matrix(10, ncol = 25, nrow = nrow(rep1ctrlnormDataframe))
 row.names(p_loc_max) = rownames(rep1ctrlnormDataframe)
 p_loc_shift = vector(length = nrow(rep1ctrlnormDataframe))
+sign_loc_shiftc = matrix(0, ncol = 25, nrow = nrow(rep1ctrlnormDataframe))
+sign_loc_shiftr = matrix(0, ncol = 25, nrow = nrow(rep1ctrlnormDataframe))
 
 for (i in 1:nrow(p_loc_max)) {
   if(count_shift[i] > 0){  
@@ -1042,6 +1044,7 @@ for (i in 1:nrow(p_loc_max)) {
           if(max_shift_ctrl[i,(j+1)] != 0){
           }
             else {
+              sign_loc_shiftr[i,j] = j
               p_loc_max[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
               p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
               if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
@@ -1051,6 +1054,7 @@ for (i in 1:nrow(p_loc_max)) {
           if(max_shift_rnase[i,(j+1)] != 0){
           }
              else {
+               sign_loc_shiftc[i,j] = j
                p_loc_max[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
                p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
                if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
@@ -1065,6 +1069,7 @@ for (i in 1:nrow(p_loc_max)) {
           if(max_shift_ctrl[i,(j+1)] != 0 || max_shift_ctrl[i,(j-1)] != 0){
           }
             else {
+              sign_loc_shiftr[i,j] = j
               p_loc_max[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
               p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
               if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
@@ -1074,6 +1079,7 @@ for (i in 1:nrow(p_loc_max)) {
           if(max_shift_rnase[i,(j+1)] != 0 || max_shift_rnase[i,(j-1)] != 0){
           }
              else {
+               sign_loc_shiftc[i,j] = j
                p_loc_max[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
                p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
                if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
@@ -1088,6 +1094,7 @@ for (i in 1:nrow(p_loc_max)) {
           if(max_shift_ctrl[i,(j-1)] != 0){
           }
             else {
+              sign_loc_shiftr[i,j] = j
               p_loc_max[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
               p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
               if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
@@ -1097,6 +1104,7 @@ for (i in 1:nrow(p_loc_max)) {
           if(max_shift_rnase[i,(j-1)] != 0){
           }
              else {
+               sign_loc_shiftc[i,j] = j
                p_loc_max[i,j] = t.test(c(tripCtrlnormdat[i,j], tripCtrlnormdat[i, (j+25)], tripCtrlnormdat[i, (j+50)]), c(tripRnasenormdat[i,j], tripRnasenormdat[i, (j+25)], tripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
                p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
                if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
@@ -1143,6 +1151,7 @@ nrow(proteins_only_local) ## 784 proteins only shift in local maximum
 ```{r}
 
 library(factoextra)
+library(ggplot2)
 data_glob = proteins_global_shift[,c(2:3)]
 
 # find optimal numbers of clusters
@@ -1150,17 +1159,26 @@ fviz_nbclust(data_glob, kmeans, method = "wss") + labs(subtitle = "Elbow method"
 
 # k-means
 
-km.out1 = kmeans(data_glob, centers = 2, nstart = 100)
+km.out1 = kmeans(data_glob, centers = 3, nstart = 100)
 #print(km.out)
 
 # visualize clusters
 km.clusters1 = km.out1$cluster
 rownames(data_glob) = paste(proteins_global_shift$left_right, 1:nrow(data_glob), sep = "_")
-fviz_cluster(list(data = data_glob, cluster = km.clusters1))
+fviz_cluster(list(data = data_glob, cluster = km.clusters1), geom = "point")
+#for ggplot data_glob$cluster = as.character(km.out1$cluster)
+#ggplot() +
+#  geom_point(data = data_glob,
+#            mapping = aes(x = global_max_ctrl, y = global_max_rnase, colour = cluster))
 
 # gucken, wie viele left/right shift in welchem Cluster
-table(km.clusters1, proteins_global_shift$leftorright)
-table(km.clusters1, proteins_global_shift$)
+table(km.clusters1, proteins_global_shift$leftorright) ## left mostly in cluster 2 and 3, right in cluster 1
+table(km.clusters1, proteins_global_shift$global_max_rnase) ## cluster 1 and 3 mostly proteins with rnase max in the first 10 fractions
+table(km.clusters1, proteins_global_shift$global_max_ctrl) ## cluster 2 and 3 mostly proteins with ctrl max in the last ten fractions
+
+
+
+
 
 numb_max_ctrl = rowSums(max_shift_ctrl!=0)+1 ## plus global maximum
 numb_max_rnase = rowSums(max_shift_rnase!=0)+1 ## plus global maximum
@@ -1169,40 +1187,17 @@ abs_max$max_ctrl = numb_max_ctrl
 abs_max$max_rnase = numb_max_rnase
 abs_max$left_right = ifelse(p_loc_shift == TRUE | abs_max$sign == TRUE, "shift", "no shift") 
 diff1 = abs_max[,c(1:2,8,9)]
-diff2 = cbind(numb_max_ctrl, numb_max_rnase)
 
 fviz_nbclust(diff1, kmeans, method = "wss") + labs(subtitle = "Elbow method")
 
 km.out2 = kmeans(diff1, centers = 2, nstart = 100, iter.max = 20)
 km.clusters2 = km.out2$cluster
-rownames(diff2) = paste(abs_max$left_right, 1:nrow(diff2), sep = "_")
+
 fviz_cluster(list(data = diff1, cluster = km.clusters2), geom = "point")
-table(km.clusters2, abs_max$global_max_rnase) ## in cluster 2 there are mostly proteins with rnase maxima in the first ten fractions, in cluster 1 "equally distributed"
-table(km.clusters2,abs_max$left_right)
+table(km.clusters2, abs_max$global_max_rnase) ## in cluster 1 there are mostly proteins with rnase maxima in the first 10 fractions, in cluster 2 "equally distributed"
+table(km.clusters2,abs_max$left_right) ## bringt nichts
 
-numb = cbind(numb_max_ctrl, numb_max_rnase)
-numb_max = cbind(rownames(rep1ctrlnormDataframe), numb)
-colnames(numb_max)[1] = "protein"
 
-data1.1 = merge(proteins_global_shift, numb_max, by = "protein")
-data1 = data1.1[, c(2,3,12,13)]
-
-# find optimal numbers of clusters
-fviz_nbclust(data1, kmeans, method = "wss") + labs(subtitle = "Elbow method")
-
-# k-means
-
-km.out3 = kmeans(data1, centers = 3, nstart = 100)
-#print(km.out)
-
-# visualize clusters
-km.clusters3 = km.out3$cluster
-#rownames(data1) = paste(proteins_global_shift$left_right, 1:nrow(data_glob), sep = "_")
-fviz_cluster(list(data = data1, cluster = km.clusters3))
-
-# gucken, wie viele left/right shift in welchem Cluster
-table(km.clusters1, proteins_global_shift$leftorright)
-table(km.clusters1, proteins_global_shift$)
 
 # anzahl maxima und anzahl shift gegen shift in haupt, haupt+neben oder nur nebenmaximum
 
@@ -1215,6 +1210,67 @@ colnames(overview)[11] = "y.shift.loc"
 overview$x.shift.loc = ifelse(overview$count.x.shift.loc != 0, TRUE, FALSE)
 overview$x.loc.glo = ifelse(overview$x.shift.glo == TRUE & overview$x.shift.loc == TRUE, TRUE, FALSE)
 overview$y.loc.glo = ifelse(overview$y.shift.glo == TRUE & overview$y.shift.loc == TRUE, TRUE, FALSE)
+overview$left.right = ifelse(overview$x.shift.glo == TRUE & overview$global_max_ctrl - overview$global_max_rnase > 0, "left", overview$`no.shift?`) 
+overview$left.right = ifelse(overview$left.right != "left" & overview$x.shift.glo == TRUE & overview$global_max_ctrl - overview$global_max_rnase < 0, "right", overview$left.right)
+overview$x.shift.frac.glo = overview$global_max_rnase - overview$global_max_ctrl
+
+
+vectorsumctrl= rowSums(sign_loc_shiftc)
+vectorsumrnase = rowSums(sign_loc_shiftr)
+vectordiff = vectorsumrnase - vectorsumctrl
+
+overview$left.right = ifelse(overview$left.right != "left" & overview$left.right != "right" & vectordiff > 0, "right", overview$left.right)
+overview$left.right = ifelse(overview$left.right != "left" & overview$left.right != "right" & vectordiff < 0, "left", overview$left.right)
+overview$protein = rownames(overview)
+
+
+data4 = merge(overview, overview_mi, by = "protein")
+
+data4$in_mi = ifelse(data4$left.right == data4$m.left.right, data4$left.right, 0)
+data4$in_mi = ifelse(data4$left.right == "right" & data4$m.left.right == "left", "rl", data4$in_mi)
+data4$in_mi = ifelse(data4$left.right == "left" & data4$m.left.right == "right", "lr", data4$in_mi)
+data4$in_mi = ifelse(data4$left.right == "left" & data4$m.left.right == "no shift", "lno", data4$in_mi)
+data4$in_mi = ifelse(data4$left.right == "right" & data4$m.left.right == "no shift", "rno", data4$in_mi)
+data4$in_mi = ifelse(data4$left.right == "no shift" & data4$m.left.right == "left", "nol", data4$in_mi)
+data4$in_mi = ifelse(data4$left.right == "no shift" & data4$m.left.right == "right", "nor", data4$in_mi)
+
+data3 = cbind(data4$x.shift.glo, data4$y.shift.glo, data4$x.shift.loc, data4$y.shift.loc, data4$m.x.shift.glo, data4$m.y.shift.glo, data4$m.x.shift.glo, data4$m.x.shift.loc)
+
+data3 = cbind(data4$x.shift.frac.glo, data4$m.x.shift.frac.glo, data4$count.x.shift.loc, data4$m.count.x.shift.loc, data4$max_ctrl, data4$max_rnase, data4$m.max_ctrl, data4$m.max_rnase) 
+
+
+fviz_nbclust(data3, kmeans, method = "wss") + labs(subtitle = "Elbow method")
+
+km.out3 = kmeans(data3, centers = 4, nstart = 100, iter.max = 20)
+km.clusters3 = km.out3$cluster
+#rownames(data3) = paste(overview$left.right, 1:nrow(diff2), sep = "_")
+
+# ggplot data3$cluster = as.character(km.out3$cluster)
+# ggplot ggplot() +
+#  geom_point(data = data3,
+#             mapping = aes(x = , y = max_ctrl, colour = cluster))
+
+fviz_cluster(km.out3, data = as.data.frame(data3) , geom = "point")
+table(km.clusters3, data4$x.loc.glo) 
+table(km.clusters3, data4$y.loc.glo) 
+table(km.clusters3, data4$`no.shift?`)
+table(km.clusters3, data4$left.right)
+table(km.clusters3, data4$y.shift.loc) 
+table(km.clusters3, data4$in_mi)
+
+
+
+
+# Internet GGPLOt
+# cls <- kmeans(x = iris_cluster, centers = 3)
+# iris_cluster$cluster <- as.character(cls$cluster)
+# head(iris_cluster)
+# ggplot() +
+#  geom_point(data = iris_cluster, 
+#             mapping = aes(x = Sepal.Length, 
+#                                  y = Petal.Length, 
+#                                  colour = cluster))
+
 
 
 ```
