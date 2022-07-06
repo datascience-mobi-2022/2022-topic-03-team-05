@@ -1187,15 +1187,16 @@ abs_max$max_ctrl = numb_max_ctrl
 abs_max$max_rnase = numb_max_rnase
 abs_max$left_right = ifelse(p_loc_shift == TRUE | abs_max$sign == TRUE, "shift", "no shift") 
 diff1 = abs_max[,c(1:2,8,9)]
+diff1 = cbind(data5$max_ctrl, data5$max_rnase)
 
 fviz_nbclust(diff1, kmeans, method = "wss") + labs(subtitle = "Elbow method")
 
-km.out2 = kmeans(diff1, centers = 2, nstart = 100, iter.max = 20)
+km.out2 = kmeans(diff1, centers = 3, nstart = 100, iter.max = 20)
 km.clusters2 = km.out2$cluster
 
 fviz_cluster(list(data = diff1, cluster = km.clusters2), geom = "point")
 table(km.clusters2, abs_max$global_max_rnase) ## in cluster 1 there are mostly proteins with rnase maxima in the first 10 fractions, in cluster 2 "equally distributed"
-table(km.clusters2,abs_max$left_right) ## bringt nichts
+table(km.clusters2,data5$left.right) ## bringt nichts
 
 
 
@@ -1238,6 +1239,11 @@ data3 = cbind(data4$x.shift.glo, data4$y.shift.glo, data4$x.shift.loc, data4$y.s
 
 data3 = cbind(data4$x.shift.frac.glo, data4$m.x.shift.frac.glo, data4$count.x.shift.loc, data4$m.count.x.shift.loc, data4$max_ctrl, data4$max_rnase, data4$m.max_ctrl, data4$m.max_rnase) 
 
+data3 = cbind((data4$global_max_rnase - data4$global_max_ctrl), (data4$m.global_max_rnase - data4$m.global_max_ctrl), data4$max_ctrl, data4$max_rnase, data4$m.max_ctrl, data4$m.max_rnase)
+
+data3 = cbind((data4$global_max_rnase-data4$global_max_ctrl), (data4$m.global_max_rnase-data4$m.global_max_ctrl)) ## bestes bisher!!!!
+
+data3 = cbind((data4$global_max_rnase-data4$global_max_ctrl), (data4$ymaxr-data4$ymaxc))
 
 fviz_nbclust(data3, kmeans, method = "wss") + labs(subtitle = "Elbow method")
 
@@ -1259,7 +1265,15 @@ table(km.clusters3, data4$y.shift.loc)
 table(km.clusters3, data4$in_mi)
 
 
-
+data5 = data4
+data5$y.r_c = data5$ymaxr - data5$ymaxc
+m = mean(data5$y.r_c)
+sd = sd(data5$y.r_c)
+data5$y.r_cstandard = (data5$y.r_c - m)/sd
+data5$rlnstandard = ifelse(data5$left.right == "left", -1, 0)
+data5$rlnstandard = ifelse(data5$left.right == "right", 1, data5$rlnstandard)
+data5$m.rlnstandard = ifelse(data5$m.left.right == "left", -1, 0)
+data5$rlnstandard = ifelse(data5$m.left.right == "right", 1, data5$m.rlnstandard)
 
 # Internet GGPLOt
 # cls <- kmeans(x = iris_cluster, centers = 3)
