@@ -832,11 +832,11 @@ return(u)
 }
 
   
-mthres_3 = not_repro(mloc_max_ctrl3, loc_max_rnase3)
+mthres_3 = not_repro(mloc_max_ctrl3, mloc_max_rnase3)
 sum(mthres_3) # remove 594 proteins with threshold 3%
-mthres_5 = not_repro(mloc_max_ctrl5, loc_max_rnase5)
+mthres_5 = not_repro(mloc_max_ctrl5, mloc_max_rnase5)
 sum(mthres_5) # remove 498 proteins with threshold 5%
-mthres_7 = not_repro(mloc_max_ctrl7, loc_max_rnase7)
+mthres_7 = not_repro(mloc_max_ctrl7, mloc_max_rnase7)
 sum(mthres_7) # remove 303 proteins with threshold 7% (wahrscheinlich jetzt anders)
 
 # decide to go with maximum has to contain at least 5 % of total protein amount
@@ -857,16 +857,16 @@ The next step is taking the mean of all three replicates for each condition to r
 
 ```{r}
 #mean of control replicates of all proteins  
-meanRepctrl = matrix(nrow= nrow(mFullDat), ncol = 25)
+mmeanRepctrl = matrix(nrow= nrow(mFullDat), ncol = 25)
 for (j in 1:nrow(mFullDat)){ 
   for (i in 1:25){
-    meanRepctrl[j,i] = (mrep1ctrlnormDataframe[j,i] + mrep2ctrlnormDataframe[j,i] + mrep3ctrlnormDataframe[j,i])/3}}
+    mmeanRepctrl[j,i] = (mrep1ctrlnormDataframe[j,i] + mrep2ctrlnormDataframe[j,i] + mrep3ctrlnormDataframe[j,i])/3}}
 
 #mean of rnase replicates of all proteins 
-meanRepRNase = matrix(nrow= nrow(mFullDat), ncol = 25)
+mmeanRepRNase = matrix(nrow= nrow(mFullDat), ncol = 25)
 for (j in 1:nrow(mFullDat)){ 
   for (i in 1:25){
-    meanRepRNase[j,i] = (mrep1rnasenormDataframe[j,i] + mrep2rnasenormDataframe[j,i] + mrep3rnasenormDataframe[j,i])/3}}
+    mmeanRepRNase[j,i] = (mrep1rnasenormDataframe[j,i] + mrep2rnasenormDataframe[j,i] + mrep3rnasenormDataframe[j,i])/3}}
 
 
 ```
@@ -877,8 +877,8 @@ Now we have two curves for the two conditions. Our goal is to determine the maxi
 y = 1:25
 
 for (i in 55:65){
-  plot(y, meanRepctrl[i,], type ="o", pch = 20, ylab = "percentage of protein amount", xlab = "fractions of sucrose density gradient", col = "cyan")
-  lines(y,meanRepRNase[i,], type = "o", pch = 20, col = "magenta")
+  plot(y, mmeanRepctrl[i,], type ="o", pch = 20, ylab = "percentage of protein amount", xlab = "fractions of sucrose density gradient", col = "cyan")
+  lines(y,mmeanRepRNase[i,], type = "o", pch = 20, col = "magenta")
 }
 
 ## 57 Beispiel für nur nebenmaximum shift (weitere: 62, 42, 74)
@@ -889,18 +889,18 @@ for (i in 55:65){
 
 ```{r}
 # absolute maxima
-abs_max = data.frame(row.names = rownames(mrep1ctrlnormDataframe))
+mabs_max = data.frame(row.names = rownames(mrep1ctrlnormDataframe))
 
 for (i in 1:nrow(mrep1ctrlnormDataframe)){
-  abs_max[i,1] = which.max(meanRepctrl[i,])
-  abs_max[i,2] = which.max(meanRepRNase[i,])
+  mabs_max[i,1] = which.max(mmeanRepctrl[i,])
+  mabs_max[i,2] = which.max(mmeanRepRNase[i,])
   
 }
 
-abs_max$compare = ifelse(abs(abs_max$V1-abs_max$V2) > 1, TRUE, FALSE)
-sum(abs_max$compare)
+mabs_max$compare = ifelse(abs(mabs_max$V1-mabs_max$V2) > 1, TRUE, FALSE)
+sum(mabs_max$compare)
 ## there are 1118 proteins whose global maximum shifts at least 2 fractions (x-shift)
-abs_max_shift = rownames (abs_max) [abs_max$compare==TRUE] ## proteins x-shifting in global maximum
+mabs_max_shift = rownames (mabs_max) [mabs_max$compare==TRUE] ## proteins x-shifting in global maximum
 ```
 ## Local maxima
 
@@ -908,95 +908,95 @@ abs_max_shift = rownames (abs_max) [abs_max$compare==TRUE] ## proteins x-shiftin
 
 # local maxima
 
-max_shift_ctrl = matrix(0, nrow = nrow(mrep1ctrlnormDataframe), ncol = 25)
-max_shift_rnase = matrix(0, nrow = nrow(mrep1ctrlnormDataframe), ncol = 25)
+mmax_shift_ctrl = matrix(0, nrow = nrow(mrep1ctrlnormDataframe), ncol = 25)
+mmax_shift_rnase = matrix(0, nrow = nrow(mrep1ctrlnormDataframe), ncol = 25)
 
 for (i in 1:nrow(mrep1ctrlnormDataframe)){
   
   for (j in 1){ #marginal value 1
-    if(j != abs_max[i,1] && meanRepctrl[i,j] > 5 &&  meanRepctrl[i,j] > meanRepctrl[i, (j+1)]){
-      max_shift_ctrl[i,j] = j
+    if(j != mabs_max[i,1] && mmeanRepctrl[i,j] > 5 &&  mmeanRepctrl[i,j] > mmeanRepctrl[i, (j+1)]){
+      mmax_shift_ctrl[i,j] = j
     }
-    if(j != abs_max[i,2] && meanRepRNase[i,j] > 5 && meanRepRNase[i,j] > meanRepRNase[i, (j+1)]){
-      max_shift_rnase[i,j] = j
+    if(j != mabs_max[i,2] && mmeanRepRNase[i,j] > 5 && mmeanRepRNase[i,j] > mmeanRepRNase[i, (j+1)]){
+      mmax_shift_rnase[i,j] = j
     }
   }
 
   for(j in 2){ #marginal value 2
-    if(j != abs_max[i,1] && meanRepctrl[i,j] > 5 &&  meanRepctrl[i,j] > meanRepctrl[i, (j-1)] && meanRepctrl[i,j] > meanRepctrl[i, (j+1)] && meanRepctrl[i,j] > meanRepctrl[i, (j+2)]){
-      max_shift_ctrl[i,j] = j
+    if(j != mabs_max[i,1] && mmeanRepctrl[i,j] > 5 &&  mmeanRepctrl[i,j] > mmeanRepctrl[i, (j-1)] && mmeanRepctrl[i,j] > mmeanRepctrl[i, (j+1)] && mmeanRepctrl[i,j] > mmeanRepctrl[i, (j+2)]){
+      mmax_shift_ctrl[i,j] = j
     }
-    if(j != abs_max[i,2] && meanRepRNase[i,j] > 5 && meanRepRNase[i,j] > meanRepRNase[i, (j-1)] &&  meanRepRNase[i,j] > meanRepRNase[i, (j+1)] && meanRepRNase[i,j] > meanRepRNase[i, (j+2)]){
-      max_shift_rnase[i,j] = j
+    if(j != mabs_max[i,2] && mmeanRepRNase[i,j] > 5 && mmeanRepRNase[i,j] > mmeanRepRNase[i, (j-1)] &&  mmeanRepRNase[i,j] > mmeanRepRNase[i, (j+1)] && mmeanRepRNase[i,j] > mmeanRepRNase[i, (j+2)]){
+      mmax_shift_rnase[i,j] = j
     }
   }
 
     
   for (j in 3:23){
-    if(j != abs_max[i,1] && meanRepctrl[i,j] > 5 && meanRepctrl[i,j] > meanRepctrl[i, (j-1)] && meanRepctrl[i,j] > meanRepctrl[i, (j+1)] && meanRepctrl[i,j] > meanRepctrl[i, (j+2)] && meanRepctrl[i,j] > meanRepctrl[i, (j-2)]) {
-      max_shift_ctrl[i,j] = j
+    if(j != mabs_max[i,1] && mmeanRepctrl[i,j] > 5 && mmeanRepctrl[i,j] > mmeanRepctrl[i, (j-1)] && mmeanRepctrl[i,j] > mmeanRepctrl[i, (j+1)] && mmeanRepctrl[i,j] > mmeanRepctrl[i, (j+2)] && mmeanRepctrl[i,j] > mmeanRepctrl[i, (j-2)]) {
+      mmax_shift_ctrl[i,j] = j
     }
-    if(j != abs_max[i,2] && meanRepRNase[i,j] > 5 && meanRepRNase[i,j] > meanRepRNase[i, (j-1)] && meanRepRNase[i,j] > meanRepRNase[i, (j+1)] && meanRepRNase[i,j] > meanRepRNase[i, (j+2)] && meanRepRNase[i,j] > meanRepRNase[i, (j-2)]){
-      max_shift_rnase[i,j] = j
+    if(j != mabs_max[i,2] && mmeanRepRNase[i,j] > 5 && mmeanRepRNase[i,j] > mmeanRepRNase[i, (j-1)] && mmeanRepRNase[i,j] > mmeanRepRNase[i, (j+1)] && mmeanRepRNase[i,j] > mmeanRepRNase[i, (j+2)] && mmeanRepRNase[i,j] > mmeanRepRNase[i, (j-2)]){
+      mmax_shift_rnase[i,j] = j
     }
   }
   
   
   for(j in 24){ #marginal value 3
-    if(j != abs_max[i,1] && meanRepctrl[i,j] > 5 &&  meanRepctrl[i,j] > meanRepctrl[i, (j+1)] && meanRepctrl[i,j] > meanRepctrl[i, (j-1)] && meanRepctrl[i,j] > meanRepctrl[i, (j-2)]){
-      max_shift_ctrl[i,j] = j
+    if(j != mabs_max[i,1] && mmeanRepctrl[i,j] > 5 &&  mmeanRepctrl[i,j] > mmeanRepctrl[i, (j+1)] && mmeanRepctrl[i,j] > mmeanRepctrl[i, (j-1)] && mmeanRepctrl[i,j] > mmeanRepctrl[i, (j-2)]){
+      mmax_shift_ctrl[i,j] = j
     }
-    if(j != abs_max[i,2] && meanRepRNase[i,j] > 5 && meanRepRNase[i,j] > meanRepRNase[i, (j+1)] &&  meanRepRNase[i,j] > meanRepRNase[i, (j-1)] && meanRepRNase[i,j] > meanRepRNase[i, (j-2)]){
-      max_shift_rnase[i,j] = j
+    if(j != mabs_max[i,2] && mmeanRepRNase[i,j] > 5 && mmeanRepRNase[i,j] > mmeanRepRNase[i, (j+1)] &&  mmeanRepRNase[i,j] > mmeanRepRNase[i, (j-1)] && mmeanRepRNase[i,j] > mmeanRepRNase[i, (j-2)]){
+      mmax_shift_rnase[i,j] = j
     }
   }
   
   for (j in 25){ #marginal value 4
-    if(j != abs_max[i,1] && meanRepctrl[i,j] > 5 &&  meanRepctrl[i,j] > meanRepctrl[i, (j-1)]){
-      max_shift_ctrl[i,j] = j
+    if(j != mabs_max[i,1] && mmeanRepctrl[i,j] > 5 &&  mmeanRepctrl[i,j] > mmeanRepctrl[i, (j-1)]){
+      mmax_shift_ctrl[i,j] = j
     }
-    if(j != abs_max[i,2] && meanRepRNase[i,j] > 5 &&  meanRepRNase[i,j] > meanRepRNase[i, (j-1)]){
-      max_shift_rnase[i,j] = j
+    if(j != mabs_max[i,2] && mmeanRepRNase[i,j] > 5 &&  mmeanRepRNase[i,j] > mmeanRepRNase[i, (j-1)]){
+      mmax_shift_rnase[i,j] = j
     }
   }
 }
 
-count_shift = compare_max(max_shift_ctrl, max_shift_rnase)
-length(which(count_shift!=0))
-loc_max_shift = rownames(mrep1ctrlnormDataframe)[which(count_shift!=0)] ## x-shift
-row.names(max_shift_ctrl) = rownames(mrep1ctrlnormDataframe)
-row.names(max_shift_rnase) = rownames(mrep1ctrlnormDataframe)
-max_shift_ctrl = as.data.frame(max_shift_ctrl)
-max_shift_rnase = as.data.frame(max_shift_rnase)
-max_shift_ctrl$count = count_shift
-max_shift_rnase$count = count_shift
-#max_shift_ctrl = max_shift_ctrl[which(max_shift_ctrl$count > 0),]
-#max_shift_rnase = max_shift_rnase[which(max_shift_rnase$count > 0),]
-#proteins_local_shift = as.data.frame(cbind(max_shift_ctrl, max_shift_rnase))
-#proteins_local_shift$count = count_shift
+mcount_shift = compare_max(mmax_shift_ctrl, mmax_shift_rnase)
+length(which(mcount_shift!=0))
+mloc_max_shift = rownames(mrep1ctrlnormDataframe)[which(mcount_shift!=0)] ## x-shift
+row.names(mmax_shift_ctrl) = rownames(mrep1ctrlnormDataframe)
+row.names(mmax_shift_rnase) = rownames(mrep1ctrlnormDataframe)
+mmax_shift_ctrl = as.data.frame(mmax_shift_ctrl)
+mmax_shift_rnase = as.data.frame(mmax_shift_rnase)
+mmax_shift_ctrl$count = mcount_shift
+mmax_shift_rnase$count = mcount_shift
+#mmax_shift_ctrl = mmax_shift_ctrl[which(mmax_shift_ctrl$count > 0),]
+#mmax_shift_rnase = mmax_shift_rnase[which(mmax_shift_rnase$count > 0),]
+#mproteins_local_shift = as.data.frame(cbind(mmax_shift_ctrl, mmax_shift_rnase))
+#mproteins_local_shift$count = mcount_shift
 
 # compare shifts in absolute and local maxima as there are proteins shifting in both
 
-id = vector()
-for (i in 1:length(loc_max_shift)) {
+mid = vector()
+for (i in 1:length(mloc_max_shift)) {
   j = 1
-  for(j in 1:length(abs_max_shift)){
-    if(loc_max_shift[i]!=abs_max_shift[j]){
-      id[i] = FALSE
+  for(j in 1:length(mabs_max_shift)){
+    if(mloc_max_shift[i]!=mabs_max_shift[j]){
+      mid[i] = FALSE
     }
-      else if (loc_max_shift[i]==abs_max_shift[j]) {
-        id[i] = TRUE
+      else if (mloc_max_shift[i]==mabs_max_shift[j]) {
+        mid[i] = TRUE
         break
       }
     
   }
 }
-sum(id)
+sum(mid)
 # 772 proteins are both found in absolute and local maxima shifts
-loc_max_shift = loc_max_shift[- which(id==TRUE)] ## loc_max_shift are all proteins shifting in local maximum excluded those also shifting in global maximum
+mloc_max_shift = mloc_max_shift[- which(mid==TRUE)] ## mloc_max_shift are all proteins shifting in local maximum excluded those also shifting in global maximum
 
 # number of shifting proteins
-sum(id)+(length(abs_max_shift)-sum(id))+length(loc_max_shift) ## 1828 proteins have a shift and might be RNA-binding or RNA-dependent
+sum(mid)+(length(mabs_max_shift)-sum(mid))+length(mloc_max_shift) ## 1828 proteins have a shift and might be RNA-binding or RNA-dependent
 
 ```
 We found 2107 proteins shifting in their global and/or local maxima. In the following, we will test if the shift in protein amount is significant which would result in classifying the protein as an RNA-binding or RNA-dependent protein. 
@@ -1005,159 +1005,159 @@ We found 2107 proteins shifting in their global and/or local maxima. In the foll
 
 ```{r}
 # absolute maxima
-abs_max_yc = vector()
-abs_max_yr = vector()
-for (i in 1:nrow(abs_max)) {
-  abs_max_yc[i] = meanRepctrl[i, abs_max[i,1]]
-  abs_max_yr[i] = meanRepRNase[i, abs_max[i,2]]
+mabs_max_yc = vector()
+mabs_max_yr = vector()
+for (i in 1:nrow(mabs_max)) {
+  mabs_max_yc[i] = mmeanRepctrl[i, mabs_max[i,1]]
+  mabs_max_yr[i] = mmeanRepRNase[i, mabs_max[i,2]]
 }
 
-abs_max$ymaxc = abs_max_yc
-abs_max$ymaxr = abs_max_yr
+mabs_max$ymaxc = mabs_max_yc
+mabs_max$ymaxr = mabs_max_yr
 
-l = vector()
-for (i in 1:nrow(abs_max)) { 
-  if(abs_max[i,3]==TRUE) {
-    fc = abs_max[i,1]
-    l[i] = t.test(c(mtripCtrlnormdat[i,fc], mtripCtrlnormdat[i, (fc+25)], mtripCtrlnormdat[i, (fc+50)]), c(mtripRnasenormdat[i,fc], mtripRnasenormdat[i, (fc+25)], mtripRnasenormdat[i, (fc+50)]), alternative = "two.sided")$p.value
+ml = vector()
+for (i in 1:nrow(mabs_max)) { 
+  if(mabs_max[i,3]==TRUE) {
+    fc = mabs_max[i,1]
+    ml[i] = t.test(c(mtripCtrlnormdat[i,fc], mtripCtrlnormdat[i, (fc+25)], mtripCtrlnormdat[i, (fc+50)]), c(mtripRnasenormdat[i,fc], mtripRnasenormdat[i, (fc+25)], mtripRnasenormdat[i, (fc+50)]), alternative = "two.sided")$p.value
   }
-    else {l[i] = 10} ## random value chosen larger than 1
+    else {ml[i] = 10} ## random value chosen larger than 1
 }
 
-abs_max$pvalue = l
-abs_max$sign = ifelse(abs_max$pvalue >= 0.025, FALSE, TRUE) ## 0.025 due to two-sided t-test
-sum(abs_max$sign) ## how many proteins have a significant shift in protein amount in their global maximum 
+mabs_max$pvalue = ml
+mabs_max$sign = ifelse(mabs_max$pvalue >= 0.025, FALSE, TRUE) ## 0.025 due to two-sided t-test
+sum(mabs_max$sign) ## how many proteins have a significant shift in protein amount in their global maximum 
 
-colnames(abs_max)[1] = "m.global_max_ctrl"
-colnames(abs_max)[2] = "m.global_max_rnase"
-proteins_global_shift = data.frame(abs_max[(which(abs_max$sign == TRUE)),])
-proteins_global_shift$p_adjusted = p.adjust(proteins_global_shift$pvalue, method = "fdr")
-proteins_global_shift$sign_ad = ifelse(proteins_global_shift$p_adjusted >= 0.025, FALSE, TRUE)
-sum(proteins_global_shift$sign_ad) ## all 641 proteins with shift identified are still significant after fdr-correction
+colnames(mabs_max)[1] = "m.global_max_ctrl"
+colnames(mabs_max)[2] = "m.global_max_rnase"
+mproteins_global_shift = data.frame(mabs_max[(which(mabs_max$sign == TRUE)),])
+mproteins_global_shift$p_adjusted = p.adjust(mproteins_global_shift$pvalue, method = "fdr")
+mproteins_global_shift$sign_ad = ifelse(mproteins_global_shift$p_adjusted >= 0.025, FALSE, TRUE)
+sum(mproteins_global_shift$sign_ad) ## all 641 proteins with shift identified are still significant after fdr-correction
 
-proteins_global_shift$leftorright = ifelse(proteins_global_shift$m.global_max_ctrl < proteins_global_shift$m.global_max_rnase, "right", "left")
+mproteins_global_shift$leftorright = ifelse(mproteins_global_shift$m.global_max_ctrl < mproteins_global_shift$m.global_max_rnase, "right", "left")
 
 
 
 # local maxima
 
-max_shift_ctrl = max_shift_ctrl[,-26]
-max_shift_rnase = max_shift_rnase[,-26]
+mmax_shift_ctrl = mmax_shift_ctrl[,-26]
+mmax_shift_rnase = mmax_shift_rnase[,-26]
 
-p_loc_max = matrix(10, ncol = 25, nrow = nrow(mrep1ctrlnormDataframe))
-row.names(p_loc_max) = rownames(mrep1ctrlnormDataframe)
-p_loc_shift = vector(length = nrow(mrep1ctrlnormDataframe))
-sign_loc_shiftc = matrix(0, ncol = 25, nrow = nrow(mrep1ctrlnormDataframe))
-sign_loc_shiftr = matrix(0, ncol = 25, nrow = nrow(mrep1ctrlnormDataframe))
+mp_loc_max = matrix(10, ncol = 25, nrow = nrow(mrep1ctrlnormDataframe))
+row.names(mp_loc_max) = rownames(mrep1ctrlnormDataframe)
+mp_loc_shift = vector(length = nrow(mrep1ctrlnormDataframe))
+msign_loc_shiftc = matrix(0, ncol = 25, nrow = nrow(mrep1ctrlnormDataframe))
+msign_loc_shiftr = matrix(0, ncol = 25, nrow = nrow(mrep1ctrlnormDataframe))
 
-for (i in 1:nrow(p_loc_max)) {
-  if(count_shift[i] > 0){  
+for (i in 1:nrow(mp_loc_max)) {
+  if(mcount_shift[i] > 0){  
     for (j in 1) {
-      if(max_shift_ctrl[i,j]==max_shift_rnase[i,j]){
+      if(mmax_shift_ctrl[i,j]==mmax_shift_rnase[i,j]){
           
-      } else if(max_shift_ctrl[i,j]==0 && max_shift_rnase[i,j]!=0){
-          if(max_shift_ctrl[i,(j+1)] != 0){
+      } else if(mmax_shift_ctrl[i,j]==0 && mmax_shift_rnase[i,j]!=0){
+          if(mmax_shift_ctrl[i,(j+1)] != 0){
           }
             else {
-              sign_loc_shiftr[i,j] = j
-              p_loc_max[i,j] = t.test(c(mtripCtrlnormdat[i,j], mtripCtrlnormdat[i, (j+25)], mtripCtrlnormdat[i, (j+50)]), c(mtripRnasenormdat[i,j], mtripRnasenormdat[i, (j+25)], mtripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
-              p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
-              if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
+              msign_loc_shiftr[i,j] = j
+              mp_loc_max[i,j] = t.test(c(mtripCtrlnormdat[i,j], mtripCtrlnormdat[i, (j+25)], mtripCtrlnormdat[i, (j+50)]), c(mtripRnasenormdat[i,j], mtripRnasenormdat[i, (j+25)], mtripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+              mp_loc_max[i,j] = p.adjust(mp_loc_max[i,j], method = "fdr")
+              if(mp_loc_max[i,j] < 0.025) { mp_loc_shift[i]=TRUE }
               }
         }
-        else if(max_shift_ctrl[i,j]!=0 && max_shift_rnase[i,j]==0){
-          if(max_shift_rnase[i,(j+1)] != 0){
+        else if(mmax_shift_ctrl[i,j]!=0 && mmax_shift_rnase[i,j]==0){
+          if(mmax_shift_rnase[i,(j+1)] != 0){
           }
              else {
-               sign_loc_shiftc[i,j] = j
-               p_loc_max[i,j] = t.test(c(mtripCtrlnormdat[i,j], mtripCtrlnormdat[i, (j+25)], mtripCtrlnormdat[i, (j+50)]), c(mtripRnasenormdat[i,j], mtripRnasenormdat[i, (j+25)], mtripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
-               p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
-               if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
+               msign_loc_shiftc[i,j] = j
+               mp_loc_max[i,j] = t.test(c(mtripCtrlnormdat[i,j], mtripCtrlnormdat[i, (j+25)], mtripCtrlnormdat[i, (j+50)]), c(mtripRnasenormdat[i,j], mtripRnasenormdat[i, (j+25)], mtripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+               mp_loc_max[i,j] = p.adjust(mp_loc_max[i,j], method = "fdr")
+               if(mp_loc_max[i,j] < 0.025) { mp_loc_shift[i]=TRUE }
                  }
         }
       
     }
     for (j in 2:24){
-      if(max_shift_ctrl[i,j]==max_shift_rnase[i,j]){
+      if(mmax_shift_ctrl[i,j]==mmax_shift_rnase[i,j]){
          
-      } else if(max_shift_ctrl[i,j]==0 && max_shift_rnase[i,j]!=0){
-          if(max_shift_ctrl[i,(j+1)] != 0 || max_shift_ctrl[i,(j-1)] != 0){
+      } else if(mmax_shift_ctrl[i,j]==0 && mmax_shift_rnase[i,j]!=0){
+          if(mmax_shift_ctrl[i,(j+1)] != 0 || mmax_shift_ctrl[i,(j-1)] != 0){
           }
             else {
-              sign_loc_shiftr[i,j] = j
-              p_loc_max[i,j] = t.test(c(mtripCtrlnormdat[i,j], mtripCtrlnormdat[i, (j+25)], mtripCtrlnormdat[i, (j+50)]), c(mtripRnasenormdat[i,j], mtripRnasenormdat[i, (j+25)], mtripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
-              p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
-              if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
+              msign_loc_shiftr[i,j] = j
+              mp_loc_max[i,j] = t.test(c(mtripCtrlnormdat[i,j], mtripCtrlnormdat[i, (j+25)], mtripCtrlnormdat[i, (j+50)]), c(mtripRnasenormdat[i,j], mtripRnasenormdat[i, (j+25)], mtripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+              mp_loc_max[i,j] = p.adjust(mp_loc_max[i,j], method = "fdr")
+              if(mp_loc_max[i,j] < 0.025) { mp_loc_shift[i]=TRUE }
             }
         }
-        else if(max_shift_ctrl[i,j]!=0 && max_shift_rnase[i,j]==0){
-          if(max_shift_rnase[i,(j+1)] != 0 || max_shift_rnase[i,(j-1)] != 0){
+        else if(mmax_shift_ctrl[i,j]!=0 && mmax_shift_rnase[i,j]==0){
+          if(mmax_shift_rnase[i,(j+1)] != 0 || mmax_shift_rnase[i,(j-1)] != 0){
           }
              else {
-               sign_loc_shiftc[i,j] = j
-               p_loc_max[i,j] = t.test(c(mtripCtrlnormdat[i,j], mtripCtrlnormdat[i, (j+25)], mtripCtrlnormdat[i, (j+50)]), c(mtripRnasenormdat[i,j], mtripRnasenormdat[i, (j+25)], mtripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
-               p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
-               if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
+               msign_loc_shiftc[i,j] = j
+               mp_loc_max[i,j] = t.test(c(mtripCtrlnormdat[i,j], mtripCtrlnormdat[i, (j+25)], mtripCtrlnormdat[i, (j+50)]), c(mtripRnasenormdat[i,j], mtripRnasenormdat[i, (j+25)], mtripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+               mp_loc_max[i,j] = p.adjust(mp_loc_max[i,j], method = "fdr")
+               if(mp_loc_max[i,j] < 0.025) { mp_loc_shift[i]=TRUE }
              }
         }
         
     }
     for (j in 25) {
-      if(max_shift_ctrl[i,j]==max_shift_rnase[i,j]){
+      if(mmax_shift_ctrl[i,j]==mmax_shift_rnase[i,j]){
           
-      } else if(max_shift_ctrl[i,j]==0 && max_shift_rnase[i,j]!=0){
-          if(max_shift_ctrl[i,(j-1)] != 0){
+      } else if(mmax_shift_ctrl[i,j]==0 && mmax_shift_rnase[i,j]!=0){
+          if(mmax_shift_ctrl[i,(j-1)] != 0){
           }
             else {
-              sign_loc_shiftr[i,j] = j
-              p_loc_max[i,j] = t.test(c(mtripCtrlnormdat[i,j], mtripCtrlnormdat[i, (j+25)], mtripCtrlnormdat[i, (j+50)]), c(mtripRnasenormdat[i,j], mtripRnasenormdat[i, (j+25)], mtripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
-              p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
-              if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
+              msign_loc_shiftr[i,j] = j
+              mp_loc_max[i,j] = t.test(c(mtripCtrlnormdat[i,j], mtripCtrlnormdat[i, (j+25)], mtripCtrlnormdat[i, (j+50)]), c(mtripRnasenormdat[i,j], mtripRnasenormdat[i, (j+25)], mtripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+              mp_loc_max[i,j] = p.adjust(mp_loc_max[i,j], method = "fdr")
+              if(mp_loc_max[i,j] < 0.025) { mp_loc_shift[i]=TRUE }
             }
         }
-        else if(max_shift_ctrl[i,j]!=0 && max_shift_rnase[i,j]==0){
-          if(max_shift_rnase[i,(j-1)] != 0){
+        else if(mmax_shift_ctrl[i,j]!=0 && mmax_shift_rnase[i,j]==0){
+          if(mmax_shift_rnase[i,(j-1)] != 0){
           }
              else {
-               sign_loc_shiftc[i,j] = j
-               p_loc_max[i,j] = t.test(c(mtripCtrlnormdat[i,j], mtripCtrlnormdat[i, (j+25)], mtripCtrlnormdat[i, (j+50)]), c(mtripRnasenormdat[i,j], mtripRnasenormdat[i, (j+25)], mtripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
-               p_loc_max[i,j] = p.adjust(p_loc_max[i,j], method = "fdr")
-               if(p_loc_max[i,j] < 0.025) { p_loc_shift[i]=TRUE }
+               msign_loc_shiftc[i,j] = j
+               mp_loc_max[i,j] = t.test(c(mtripCtrlnormdat[i,j], mtripCtrlnormdat[i, (j+25)], mtripCtrlnormdat[i, (j+50)]), c(mtripRnasenormdat[i,j], mtripRnasenormdat[i, (j+25)], mtripRnasenormdat[i, (j+50)]), alternative = "two.sided")$p.value
+               mp_loc_max[i,j] = p.adjust(mp_loc_max[i,j], method = "fdr")
+               if(mp_loc_max[i,j] < 0.025) { mp_loc_shift[i]=TRUE }
              }
         }
         
     }
   }    
 }
-## p_loc_shift if TRUE y-shift in local maximum is significant
+## mp_loc_shift if TRUE y-shift in local maximum is significant
 
-p_loc_max = as.data.frame(p_loc_max) ## data frame with all 10 only at shifting position adjusted p-value
-p_loc_max$count = count_shift
-proteins_local_shift = p_loc_max[which(p_loc_shift==TRUE),] ## proteins that shift in local maximum
-dim(proteins_local_shift) ## 1471 proteins shift in local maximum
-proteins_local_shift = cbind(rownames(proteins_local_shift), proteins_local_shift)
-colnames(proteins_local_shift)[1] = "protein"
+mp_loc_max = as.data.frame(mp_loc_max) ## data frame with all 10 only at shifting position adjusted p-value
+mp_loc_max$count = mcount_shift
+mproteins_local_shift = mp_loc_max[which(mp_loc_shift==TRUE),] ## proteins that shift in local maximum
+dim(mproteins_local_shift) ## 1471 proteins shift in local maximum
+mproteins_local_shift = cbind(rownames(mproteins_local_shift), mproteins_local_shift)
+colnames(mproteins_local_shift)[1] = "protein"
 
 
-proteins_global_shift = cbind(rownames(proteins_global_shift), proteins_global_shift)
-colnames(proteins_global_shift)[1] = "protein"
-proteins_both_shift = merge(proteins_global_shift, proteins_local_shift, by = "protein") ## data sets merged by row names
-proteins_both_shift = proteins_both_shift[,-(11:36)]
-dim(proteins_both_shift) ## 687 proteins shift in both global and local maximum
-proteins_shifting = merge(proteins_global_shift, proteins_local_shift, by = "protein", all = TRUE) ## 1653 proteins have a shift in either local and/or global maximum
-proteins_shifting = proteins_shifting[,-(12:36)]
-# get names with proteins_shifting[,1]
-proteins_shifting$glo_loc = ifelse(is.na(proteins_shifting[,11]), "only local", "global")
-proteins_shifting$sign_ad[is.na(proteins_shifting$sign_ad)] = 0
-proteins_shifting$count[is.na(proteins_shifting$count)] = 0
-proteins_shifting$count_shift = ifelse(proteins_shifting$sign_ad == 1, (proteins_shifting$count +1), proteins_shifting$count)
+mproteins_global_shift = cbind(rownames(mproteins_global_shift), mproteins_global_shift)
+colnames(mproteins_global_shift)[1] = "protein"
+mproteins_both_shift = merge(mproteins_global_shift, mproteins_local_shift, by = "protein") ## data sets merged by row names
+mproteins_both_shift = mproteins_both_shift[,-(11:36)]
+dim(mproteins_both_shift) ## 687 proteins shift in both global and local maximum
+mproteins_shifting = merge(mproteins_global_shift, mproteins_local_shift, by = "protein", all = TRUE) ## 1653 proteins have a shift in either local and/or global maximum
+mproteins_shifting = mproteins_shifting[,-(12:36)]
+# get names with mproteins_shifting[,1]
+mproteins_shifting$glo_loc = ifelse(is.na(mproteins_shifting[,11]), "only local", "global")
+mproteins_shifting$sign_ad[is.na(mproteins_shifting$sign_ad)] = 0
+mproteins_shifting$count[is.na(mproteins_shifting$count)] = 0
+mproteins_shifting$mcount_shift = ifelse(mproteins_shifting$sign_ad == 1, (mproteins_shifting$count +1), mproteins_shifting$count)
 
 #install.packages(dplyr)
 library(dplyr)
-proteins_only_global = anti_join(proteins_global_shift, proteins_both_shift, by = "protein") 
-nrow(proteins_only_global) ## 163 proteins only shift in global maximum
-proteins_only_local = anti_join(proteins_local_shift, proteins_both_shift, by = "protein") 
-nrow(proteins_only_local) ## 603 proteins only shift in local maximum
+mproteins_only_global = anti_join(mproteins_global_shift, mproteins_both_shift, by = "protein") 
+nrow(mproteins_only_global) ## 163 proteins only shift in global maximum
+mproteins_only_local = anti_join(mproteins_local_shift, mproteins_both_shift, by = "protein") 
+nrow(mproteins_only_local) ## 603 proteins only shift in local maximum
 
 ```
 
@@ -1167,55 +1167,55 @@ nrow(proteins_only_local) ## 603 proteins only shift in local maximum
 
 library(factoextra)
 library(ggplot2)
-data_glob = proteins_global_shift[,c(2:3)]
+mdata_glob = mproteins_global_shift[,c(2:3)]
 
 # find optimal numbers of clusters
-fviz_nbclust(data_glob, kmeans, method = "wss") + labs(subtitle = "Elbow method")
+fviz_nbclust(mdata_glob, kmeans, method = "wss") + labs(subtitle = "Elbow method")
 
 # k-means
 
-km.out1 = kmeans(data_glob, centers = 4, nstart = 100)
+mkm.out1 = kmeans(mdata_glob, centers = 4, nstart = 100)
 #print(km.out)
 
 # visualize clusters
-km.clusters1 = km.out1$cluster
-rownames(data_glob) = paste(proteins_global_shift$left_right, 1:nrow(data_glob), sep = "_")
-fviz_cluster(list(data = data_glob, cluster = km.clusters1), geom = "point")
-#for ggplot data_glob$cluster = as.character(km.out1$cluster)
+mkm.clusters1 = mkm.out1$cluster
+rownames(mdata_glob) = paste(mproteins_global_shift$left_right, 1:nrow(mdata_glob), sep = "_")
+fviz_cluster(list(data = mdata_glob, cluster = mkm.clusters1), geom = "point")
+#for ggplot mdata_glob$cluster = as.character(mkm.out1$cluster)
 #ggplot() +
-#  geom_point(data = data_glob,
+#  geom_point(data = mdata_glob,
 #            mapping = aes(x = global_max_ctrl, y = global_max_rnase, colour = cluster))
 
 # gucken, wie viele left/right shift in welchem Cluster
-table(km.clusters1, proteins_global_shift$leftorright) ## right mostly in cluster 2 and 3, left in cluster 1 and 4
-table(km.clusters1, proteins_global_shift$m.global_max_rnase) ## cluster 4 first ten fractions, cluster 1 middle fractions
-table(km.clusters1, proteins_global_shift$m.global_max_ctrl) ## cluster 1 last ten fractions, cluster 4 last ten fractions
+table(mkm.clusters1, mproteins_global_shift$leftorright) ## right mostly in cluster 2 and 3, left in cluster 1 and 4
+table(mkm.clusters1, mproteins_global_shift$m.global_max_rnase) ## cluster 4 first ten fractions, cluster 1 middle fractions
+table(mkm.clusters1, mproteins_global_shift$m.global_max_ctrl) ## cluster 1 last ten fractions, cluster 4 last ten fractions
 
 
 
 
 
-numb_max_ctrl = rowSums(max_shift_ctrl!=0)+1 ## plus global maximum
-numb_max_rnase = rowSums(max_shift_rnase!=0)+1 ## plus global maximum
+mnumb_max_ctrl = rowSums(mmax_shift_ctrl!=0)+1 ## plus global maximum
+mnumb_max_rnase = rowSums(mmax_shift_rnase!=0)+1 ## plus global maximum
 
-abs_max$max_ctrl = numb_max_ctrl
-abs_max$max_rnase = numb_max_rnase
-abs_max$left_right = ifelse(p_loc_shift == TRUE | abs_max$sign == TRUE, "shift", "no shift") 
-diff1 = abs_max[,c(1:2,8,9)]
+mabs_max$max_ctrl = mnumb_max_ctrl
+mabs_max$max_rnase = mnumb_max_rnase
+mabs_max$left_right = ifelse(mp_loc_shift == TRUE | mabs_max$sign == TRUE, "shift", "no shift") 
+mdiff1 = mabs_max[,c(1:2,8,9)]
 
-fviz_nbclust(diff1, kmeans, method = "wss") + labs(subtitle = "Elbow method")
+fviz_nbclust(mdiff1, kmeans, method = "wss") + labs(subtitle = "Elbow method")
 
-km.out2 = kmeans(diff1, centers = 2, nstart = 100, iter.max = 20)
-km.clusters2 = km.out2$cluster
-fviz_cluster(list(data = diff1, cluster = km.clusters2), geom = "point") ## looks weird
-table(km.clusters2, abs_max$global_max_rnase) ## in cluster 1 there are mostly proteins with rnase maxima in the first 10 fractions, in cluster 2 "equally distributed"
-table(km.clusters2,abs_max$left_right) ## bringt nichts
+mkm.out2 = kmeans(mdiff1, centers = 2, nstart = 100, iter.max = 20)
+mkm.clusters2 = mkm.out2$cluster
+fviz_cluster(list(data = mdiff1, cluster = mkm.clusters2), geom = "point") ## looks weird
+table(mkm.clusters2, mabs_max$global_max_rnase) ## in cluster 1 there are mostly proteins with rnase maxima in the first 10 fractions, in cluster 2 "equally distributed"
+table(mkm.clusters2,mabs_max$left_right) ## bringt nichts
 
 
 
 # anzahl maxima und anzahl shift gegen shift in haupt, haupt+neben oder nur nebenmaximum
 
-overview_mi = cbind(abs_max[, c(1,2,3,4,5,7,8,9,10)], count_shift, p_loc_shift)
+overview_mi = cbind(mabs_max[, c(1,2,3,4,5,7,8,9,10)], mcount_shift, mp_loc_shift)
 colnames(overview_mi)[3] = "m.x.shift.glo"
 colnames(overview_mi)[6] = "m.y.shift.glo"
 colnames(overview_mi)[9] = "m.no.shift?"
@@ -1233,8 +1233,8 @@ overview_mi$m.left.right = ifelse(overview_mi$m.left.right != "left" & overview_
 overview_mi$m.x.shift.frac.glo = overview_mi$m.global_max_rnase - overview_mi$m.global_max_ctrl
 
 
-vectorsumctrl= rowSums(sign_loc_shiftc)
-vectorsumrnase = rowSums(sign_loc_shiftr)
+vectorsumctrl= rowSums(msign_loc_shiftc)
+vectorsumrnase = rowSums(msign_loc_shiftr)
 vectordiff = vectorsumrnase - vectorsumctrl
 
 overview_mi$m.left.right = ifelse(overview_mi$m.left.right != "left" & overview_mi$m.left.right != "right" & vectordiff > 0, "right", overview_mi$m.left.right)
