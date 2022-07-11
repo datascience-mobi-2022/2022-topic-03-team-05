@@ -1206,7 +1206,20 @@ cor_merge = vector()
 for(i in 1:nrow(meanRepctrl)){
   cor_merge[i] = cor(meanRepctrl[i,], meanRepRNase[i,])
 }
-overview$corr = cor_merge
+cors_merge = vector()
+for(i in 1:nrow(meanRepctrl)){
+  cors_merge[i] = cor(meanRepctrl[i,], meanRepRNase[i,], method = "spearman")
+}
+overview$corr.s = cors_merge
+eucli_merge = vector()
+for (i in 1:nrow(meanRepctrl)) {
+  eu = vector()
+  for (j in 1:ncol(meanRepctrl)) {
+    eu[j] = sqrt((meanRepctrl[i,j] - meanRepRNase[i,j])^2)
+  }
+  eucli_merge[i] = eu[which.max(eu)]
+}
+overview$eucli = eucli_merge
 
 vgl_locshiftc = sign_loc_shiftc
 vgl_locshiftc[vgl_locshiftc != 0] = TRUE
@@ -1231,6 +1244,7 @@ loc_overview$protein = rownames(loc_overview)
 merge_loc_overview = merge(loc_overview, mloc_overview, by = "protein")
 overview$protein = rownames(overview)
 overview$count.shift = ifelse(overview$x.shift.glo == TRUE, overview$count.x.shift.loc + 1, overview$count.x.shift.loc)
+
 merge_overview = merge(overview, overview_mi, by = "protein")
 
 
@@ -1301,6 +1315,7 @@ table(km.clusters3, merge_overview$global_max_rnase)
 library(ggplot2)
 
 merge_overview$`no.shift?`= ifelse(merge_overview$`no.shift?`=="shift", TRUE, FALSE)
+merge_overview$ymaxdiffc = meanRepctrl[merge_overview$global_max_ctrl]-meanRepRNase[merge_overview$global_max_ctrl]
 
 
 plot((max_ctrl-max_rnase) ~ corr, data = merge_overview)
@@ -1318,8 +1333,8 @@ ggplot(merge_overview,aes(y=m.x.shift.frac.glo,x=m.corr))+geom_point()+geom_smoo
 
 
 ## split data set into training (80 % of total data set) and test data set (20 %)
-set.seed(2)
-section = sample(nrow(merge_overview), round(nrow(merge_overview)*0.8))
+set.seed(1)
+section = sample(1:nrow(merge_overview), 0.8 * nrow(merge_overview))
 
 ## train data set
 train_data = merge_overview[section,]
@@ -1327,14 +1342,71 @@ train_data = merge_overview[section,]
 ## test data set
 test_data = merge_overview[-section,]
 
+## output variable: how many fractions does the global maximum of the protein shift? (x.shift.frac.glo)
+## take multiple input variables: difference in number of maxima, pearson correlation
 
+# pearson correlation
 plot(x.shift.frac.glo ~ corr, data = train_data)
 cor(train_data$x.shift.frac.glo, train_data$corr) ## sollte eigentlich niedrig sein
 corr_globfrac = lm(x.shift.frac.glo ~ corr, data = test_data)
 summary(corr_globfrac)
-samples = ifelse(train_data$left.right == "no shift", "magenta", "cyan")
-ggplot(train_data,aes(y=x.shift.frac.glo,x=corr))+geom_point(col = samples)+geom_smooth(method="lm")
+plot(corr_globfrac)
+ggplot(train_data, aes(y=x.shift.frac.glo, x=corr, col = left.right, group = 1)) + geom_point() + geom_smooth(method ="lm")
 
 
+# difference in number of maxima
+plot(x.shift.frac.glo ~ (ymaxc - ymaxr), data = train_data)
+cor(train_data$x.shift.frac.glo, train_data$ymaxc - train_data$ymaxr) ## sollte eigentlich niedrig sein
+maxdiff_globfrac = lm(x.shift.frac.glo ~ (ymaxc - ymaxr), data = test_data)
+summary(maxdiff_globfrac)
+ggplot(train_data,aes(y=x.shift.frac.glo,x=(ymaxc - ymaxr), col = left.right, group = 1)) + geom_point() + geom_smooth(method="lm") 
+
+
+
+# y shift of global maximum of ctrl replicate
+plot(x.shift.frac.glo ~ ymaxdiffc, data = train_data)
+cor(train_data$x.shift.frac.glo, train_data$ymaxdiffc) ## sollte eigentlich niedrig sein
+ydiff_globfrac = lm(x.shift.frac.glo ~ ymaxdiffc, data = test_data)
+summary(ydiff_globfrac)
+ggplot(train_data,aes(y=x.shift.frac.glo,x=ymaxdiffc, col = left.right, group = 1)) + geom_point() + geom_smooth(method="lm") 
+
+
+
+# highest euclidean distance of meanrepctrl and meanrepRnase
+plot(x.shift.frac.glo ~ eucli, data = train_data)
+cor(train_data$x.shift.frac.glo, train_data$eucli) ## sollte eigentlich niedrig sein
+eucli_globfrac = lm(x.shift.frac.glo ~ eucli, data = test_data)
+summary(eucli_globfrac)
+ggplot(train_data,aes(y=x.shift.frac.glo,x=eucli, col = left.right, group = 1)) + geom_point() + geom_smooth(method="lm") 
+
+
+
+# spearman correlation
+plot(x.shift.frac.glo ~ corr.s, data = train_data)
+cor(train_data$x.shift.frac.glo, train_data$corr.s) ## sollte eigentlich niedrig sein
+corrs_globfrac = lm(x.shift.frac.glo ~ corr.s, data = test_data)
+summary(corrs_globfrac)
+plot(corrs_globfrac)
+ggplot(train_data,aes(y=x.shift.frac.glo,x=corr.s, col = left.right, group = 1)) + geom_point() + geom_smooth(method="lm") 
+
+## Pearson correlation is the most significant feature when predicting the x-shift of the global maximum
+
+## Plot residuals
+ggplot(data = train_data, aes(x = corr,y = residuals(corr_globfrac))) + geom_point() + geom_smooth()
+
+plot(corr_globfrac)
+## residuals VS fitted (predictions) should be a line
+## qq plot should be a line
+
+# test data set
+
+prediction = predict(corr_globfrac, newdata = test_data)
+avg_dis = sqrt(sum((prediction) - test_data$x.shift.frac.glo)^2)/length(test_data$x.shift.frac.glo) 
+
+## avg_dis = comparison of predicted value and actual value -> very small -> good 
+
+par(mfrow=c(1,1))
+plot(test_data$x.shift.frac.glo, exp(prediction))
+## does not look good?? oder gut?
 ```
 
