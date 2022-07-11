@@ -1202,6 +1202,11 @@ overview$left.right = ifelse(overview$left.right != "left" & overview$x.shift.gl
 overview$left.right = ifelse(overview$x.shift.glo == FALSE & overview$x.shift.loc == TRUE, "shift", overview$left.right)
 overview$x.shift.frac.glo = overview$global_max_rnase - overview$global_max_ctrl
 
+cor_merge = vector()
+for(i in 1:nrow(meanRepctrl)){
+  cor_merge[i] = cor(meanRepctrl[i,], meanRepRNase[i,])
+}
+overview$corr = cor_merge
 
 vgl_locshiftc = sign_loc_shiftc
 vgl_locshiftc[vgl_locshiftc != 0] = TRUE
@@ -1225,7 +1230,9 @@ loc_overview$protein = rownames(loc_overview)
 
 merge_loc_overview = merge(loc_overview, mloc_overview, by = "protein")
 overview$protein = rownames(overview)
+overview$count.shift = ifelse(overview$x.shift.glo == TRUE, overview$count.x.shift.loc + 1, overview$count.x.shift.loc)
 merge_overview = merge(overview, overview_mi, by = "protein")
+
 
 # transfer local maxima x shift (proteins with equal number of maxima) in big merge data set
 
@@ -1291,14 +1298,15 @@ table(km.clusters3, merge_overview$global_max_rnase)
 ```
 # Regression analysis
 ```{r}
+merge_overview$`no.shift?`= ifelse(merge_overview$`no.shift?`=="shift", TRUE, FALSE)
 
-vectorcor = vector()
-for (i in 1:nrow(rep1ctrlnormDataframe)) {
-  vectorcor[i] = cor(meanRepctrl[i,], meanRepctrl[i,])
-}
+plot(x.shift.frac.glo ~ corr, data = merge_overview)
+cor(merge_overview$x.shift.frac.glo, merge_overview$corr) ## sollte eigentlich niedrig sein
+corr_globfrac = lm(x.shift.frac.glo ~ corr, data = merge_overview)
+summary(corr_globfrac)
 
-
-plot((ymaxc - ymaxr) ~ x.shift.frac.glo, data = merge_overview)
+library(ggplot2)
+ggplot(merge_overview,aes(y=x.shift.frac.glo,x=corr))+geom_point()+geom_smooth(method="lm")
 
 ```
 
