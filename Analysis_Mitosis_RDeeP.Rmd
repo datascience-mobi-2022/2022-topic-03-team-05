@@ -1228,17 +1228,32 @@ colnames(overview_mi)[8] = "m.max_rnase"
 overview_mi$m.x.shift.loc = ifelse(overview_mi$m.count.x.shift.loc != 0, TRUE, FALSE)
 overview_mi$m.x.loc.glo = ifelse(overview_mi$m.x.shift.glo == TRUE & overview_mi$m.x.shift.loc == TRUE, TRUE, FALSE)
 overview_mi$m.y.loc.glo = ifelse(overview_mi$m.y.shift.glo == TRUE & overview_mi$m.y.shift.loc == TRUE, TRUE, FALSE)
-overview_mi$m.left.right = ifelse(overview_mi$m.x.shift.glo == TRUE & overview_mi$m.global_max_ctrl - overview_mi$m.global_max_rnase > 0, "left", overview_mi$`m.no.shift?`) 
+overview_mi$m.left.right = ifelse(overview_mi$m.x.shift.glo == TRUE & overview_mi$m.global_max_ctrl - overview_mi$m.global_max_rnase > 0, "left", "no shift") 
 overview_mi$m.left.right = ifelse(overview_mi$m.left.right != "left" & overview_mi$m.x.shift.glo == TRUE & overview_mi$m.global_max_ctrl - overview_mi$m.global_max_rnase < 0, "right", overview_mi$m.left.right)
+overview_mi$m.left.right = ifelse(overview_mi$m.x.shift.glo == FALSE & overview_mi$m.x.shift.loc == TRUE, "shift", overview_mi$m.left.right)
 overview_mi$m.x.shift.frac.glo = overview_mi$m.global_max_rnase - overview_mi$m.global_max_ctrl
 
+overview_mi$protein = rownames(overview_mi)
 
-vectorsumctrl= rowSums(msign_loc_shiftc)
-vectorsumrnase = rowSums(msign_loc_shiftr)
-vectordiff = vectorsumrnase - vectorsumctrl
+mvgl_locshiftc = msign_loc_shiftc
+mvgl_locshiftc[mvgl_locshiftc != 0] = TRUE
+mvgl_locshiftr = msign_loc_shiftr
+mvgl_locshiftr[mvgl_locshiftr != 0] = TRUE
+mvectorsumctrl= rowSums(mvgl_locshiftc)
+mvectorsumrnase = rowSums(mvgl_locshiftr)
+mvectordiff = mvectorsumrnase - mvectorsumctrl ## count local maxima 
+mvectorlocshift = rowSums(msign_loc_shiftc[which(mvectordiff==0),]) - rowSums(msign_loc_shiftr[which(mvectordiff==0),])
 
-overview_mi$m.left.right = ifelse(overview_mi$m.left.right != "left" & overview_mi$m.left.right != "right" & vectordiff > 0, "right", overview_mi$m.left.right)
-overview_mi$m.left.right = ifelse(overview_mi$m.left.right != "left" & overview_mi$m.left.right != "right" & vectordiff < 0, "left", overview_mi$m.left.right)
+
+
+mloc_overview = overview_mi[which(mvectordiff==0),]
+
+mloc_overview$m.left.right = ifelse(mloc_overview$m.left.right != "left" & mloc_overview$m.left.right != "right" & mvectorlocshift > 0, "left", mloc_overview$m.left.right)
+mloc_overview$m.left.right = ifelse(mloc_overview$m.left.right != "left" & mloc_overview$m.left.right != "right" & mvectorlocshift < 0, "right", mloc_overview$m.left.right)
+mloc_overview$protein = rownames(mloc_overview)
+## data set with all proteins that have the same number of maxima in ctrl and RNase
+
+
 
 data3 = overview_mi[,c(3,7,8,10)]
 # 3,7,8,10 ergibt 3 cluster ganz ok
