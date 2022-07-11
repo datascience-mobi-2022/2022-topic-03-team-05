@@ -1298,15 +1298,43 @@ table(km.clusters3, merge_overview$global_max_rnase)
 ```
 # Regression analysis
 ```{r}
+library(ggplot2)
+
 merge_overview$`no.shift?`= ifelse(merge_overview$`no.shift?`=="shift", TRUE, FALSE)
 
-plot(x.shift.frac.glo ~ corr, data = merge_overview)
-cor(merge_overview$x.shift.frac.glo, merge_overview$corr) ## sollte eigentlich niedrig sein
-corr_globfrac = lm(x.shift.frac.glo ~ corr, data = merge_overview)
-summary(corr_globfrac)
 
-library(ggplot2)
+plot((max_ctrl-max_rnase) ~ corr, data = merge_overview)
+cor(merge_overview$x.shift.frac.glo, merge_overview$corr) ## sollte eigentlich niedrig sein
+corr_globfrac = lm((ymaxc-ymaxr) ~ (max_ctrl-max_rnase), data = merge_overview)
+summary(corr_globfrac)
 ggplot(merge_overview,aes(y=x.shift.frac.glo,x=corr))+geom_point()+geom_smooth(method="lm")
+
+
+plot(m.x.shift.frac.glo ~ m.corr, data = merge_overview)
+cor(merge_overview$m.x.shift.frac.glo, merge_overview$m.corr) ## sollte eigentlich niedrig sein
+m.corr_globfrac = lm(m.x.shift.frac.glo ~ m.corr, data = merge_overview)
+summary(m.corr_globfrac)
+ggplot(merge_overview,aes(y=m.x.shift.frac.glo,x=m.corr))+geom_point()+geom_smooth(method="lm")
+
+
+## split data set into training (80 % of total data set) and test data set (20 %)
+set.seed(2)
+section = sample(nrow(merge_overview), round(nrow(merge_overview)*0.8))
+
+## train data set
+train_data = merge_overview[section,]
+
+## test data set
+test_data = merge_overview[-section,]
+
+
+plot(x.shift.frac.glo ~ corr, data = train_data)
+cor(train_data$x.shift.frac.glo, train_data$corr) ## sollte eigentlich niedrig sein
+corr_globfrac = lm(x.shift.frac.glo ~ corr, data = test_data)
+summary(corr_globfrac)
+samples = ifelse(train_data$left.right == "no shift", "magenta", "cyan")
+ggplot(train_data,aes(y=x.shift.frac.glo,x=corr))+geom_point(col = samples)+geom_smooth(method="lm")
+
 
 ```
 
