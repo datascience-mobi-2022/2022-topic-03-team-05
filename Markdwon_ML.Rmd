@@ -76,12 +76,9 @@ TripRnasedat = cbind(rep1rnasedat, rep2rnasedat, rep3rnasedat)
 Now, we could continue with the second step of data cleaning. A protein without any values in either the control or the RNase tests cannot be compared the other condition, thus giving us no information and can be deleted. As all zeros were turned to NA in a previous step, we used is.na to look for rows in both the control and the RNase data frame containing all zeros (NAs). As the data sets have 75 columns, the NAs in a row without a value must sum up to 75. This step results in a data set with 7081 rows (4 proteins less). 
 
 ```{r}
-FullDat = FullDat[-which(rowSums(is.na(TripCtrldat))==75),]
-FullDat = FullDat[-which(rowSums(is.na(TripRnasedat))==75),]
-
-##warum funktioniet das nicht
-##remo = function(x){x = x[-which(rowSums(is.na(TripCtrldat))==75),]}
-##remo(FullDat)
+remo1 = which(rowSums(is.na(TripCtrldat))==75) 
+remo2 = which(rowSums(is.na(TripRnasedat))==75) 
+FullDat = FullDat[-c(remo1,remo2),]
 
 ```
 
@@ -1128,8 +1125,8 @@ proteins_global_shift = cbind(rownames(proteins_global_shift), proteins_global_s
 colnames(proteins_global_shift)[1] = "protein"
 proteins_both_shift = merge(proteins_global_shift, proteins_local_shift, by = "protein") ## data sets merged by row names
 proteins_both_shift = proteins_both_shift[,-(11:36)]
-dim(proteins_both_shift) ## 687 proteins shift in both global and local maximum
-proteins_shifting = merge(proteins_global_shift, proteins_local_shift, by = "protein", all = TRUE) ## 1653 proteins have a shift in either local and/or global maximum
+dim(proteins_both_shift) ## 687 proteins y-shift in both global and local maximum
+proteins_shifting = merge(proteins_global_shift, proteins_local_shift, by = "protein", all = TRUE) ## 1653 proteins have a y-shift in either local and/or global maximum
 proteins_shifting = proteins_shifting[,-(12:36)]
 # get names with proteins_shifting[,1]
 proteins_shifting$glo_loc = ifelse(is.na(proteins_shifting[,11]), "only local", "global")
@@ -1140,46 +1137,21 @@ proteins_shifting$count_shift = ifelse(proteins_shifting$sign_ad == 1, (proteins
 #install.packages(dplyr)
 library(dplyr)
 proteins_only_global = anti_join(proteins_global_shift, proteins_both_shift, by = "protein") 
-nrow(proteins_only_global) ## 182 proteins only shift in global maximum
+nrow(proteins_only_global) ## 182 proteins only y-shift in global maximum
 proteins_only_local = anti_join(proteins_local_shift, proteins_both_shift, by = "protein") 
-nrow(proteins_only_local) ## 784 proteins only shift in local maximum
+nrow(proteins_only_local) ## 784 proteins only y-shift in local maximum
 
 ```
 
 # k-means
 
 ```{r}
+## load and install packages
 
 library(factoextra)
 library(ggplot2)
 
-# global maxima, fraction ctrl VS fraction rnase
-
-data_glob = proteins_global_shift[,c(2:3)]
-
-## find optimal numbers of clusters
-fviz_nbclust(data_glob, kmeans, method = "wss") + labs(subtitle = "Elbow method")
-
-## k-means
-
-km.out1 = kmeans(data_glob, centers = 3, nstart = 100)
-#print(km.out)
-
-## visualize clusters
-km.clusters1 = km.out1$cluster
-rownames(data_glob) = paste(proteins_global_shift$left_right, 1:nrow(data_glob), sep = "_")
-fviz_cluster(list(data = data_glob, cluster = km.clusters1), geom = "point")
-#for ggplot data_glob$cluster = as.character(km.out1$cluster)
-#ggplot() +
-#  geom_point(data = data_glob,
-#            mapping = aes(x = global_max_ctrl, y = global_max_rnase, colour = cluster))
-
-# gucken, wie viele left/right shift in welchem Cluster
-table(km.clusters1, proteins_global_shift$leftorright) ## left mostly in cluster 2 and 3, right in cluster 1
-table(km.clusters1, proteins_global_shift$global_max_rnase) ## cluster 1 and 3 mostly proteins with rnase max in the first 10 fractions
-table(km.clusters1, proteins_global_shift$global_max_ctrl) ## cluster 2 and 3 mostly proteins with ctrl max in the last ten fractions
-
-# build overview data frame with possibly useful information of previous analysis
+## build overview data frame with possibly useful information of previous analysis
 
 numb_max_ctrl = rowSums(max_shift_ctrl!=0)+1 ## plus global maximum
 numb_max_rnase = rowSums(max_shift_rnase!=0)+1 ## plus global maximum
@@ -1221,25 +1193,8 @@ for (i in 1:nrow(meanRepctrl)) {
 }
 overview$eucli = eucli_merge
 
-vgl_locshiftc = sign_loc_shiftc
-vgl_locshiftc[vgl_locshiftc != 0] = TRUE
-vgl_locshiftr = sign_loc_shiftr
-vgl_locshiftr[vgl_locshiftr != 0] = TRUE
-vectorsumctrl= rowSums(vgl_locshiftc)
-vectorsumrnase = rowSums(vgl_locshiftr)
-vectordiff = vectorsumrnase - vectorsumctrl ## count local maxima 
-vectorlocshift = rowSums(sign_loc_shiftc[which(vectordiff==0),]) - rowSums(sign_loc_shiftr[which(vectordiff==0),])
 
-
-
-loc_overview = overview[which(vectordiff==0),]
-
-loc_overview$left.right = ifelse(loc_overview$left.right != "left" & loc_overview$left.right != "right" & vectorlocshift > 0, "left", loc_overview$left.right)
-loc_overview$left.right = ifelse(loc_overview$left.right != "left" & loc_overview$left.right != "right" & vectorlocshift < 0, "right", loc_overview$left.right)
-loc_overview$protein = rownames(loc_overview)
-## data set with all proteins that have the same number of maxima in ctrl and RNase, 1433B E F G S
-
-# merge data frames are merged between mitosis and interphase data set
+## preparation: data frames are merged between mitosis and interphase data set
 
 merge_loc_overview = merge(loc_overview, mloc_overview, by = "protein")
 overview$protein = rownames(overview)
@@ -1247,90 +1202,40 @@ overview$count.shift = ifelse(overview$x.shift.glo == TRUE, overview$count.x.shi
 
 merge_overview = merge(overview, overview_mi, by = "protein")
 
+## k-means
 
-# transfer local maxima x shift (proteins with equal number of maxima) in big merge data set
+kmeans_data1 = cbind((merge_overview$global_max_rnase-merge_overview$global_max_ctrl), (merge_overview$m.global_max_rnase-merge_overview$m.global_max_ctrl)) 
 
-for (i in 1:nrow(merge_overview)){
-  if(merge_overview[i,1] %in% loc_overview$protein & merge_overview$left.right[i] == "shift"){
-    merge_overview$left.right[i] = loc_overview$left.right[which(loc_overview$protein %in% merge_overview[i,1])]
-  }
-  if(merge_overview[i,1] %in% mloc_overview$protein & merge_overview$m.left.right[i] == "shift"){
-    merge_overview$m.left.right[i] = mloc_overview$m.left.right[which(mloc_overview$protein %in% merge_overview[i,1])]
-  }
-}
+elbowdata1 = fviz_nbclust(kmeans_data1, kmeans, method = "wss") + labs(subtitle = "Elbow method")
 
+km.out1 = kmeans(kmeans_data1, centers = 4, nstart = 100, iter.max = 20)
+km.clusters1 = km.out3$cluster
+clusterdata1 = fviz_cluster(km.out1, data = as.data.frame(kmeans_data1) , geom = "point")
+clusterdata1
 
-merge_loc_overview$in_mi = ifelse(merge_loc_overview$left.right == merge_loc_overview$m.left.right, merge_loc_overview$left.right, 0)
-merge_loc_overview$in_mi = ifelse(merge_loc_overview$left.right == "right" & merge_loc_overview$m.left.right == "left", "rl", merge_loc_overview$in_mi)
-merge_loc_overview$in_mi = ifelse(merge_loc_overview$left.right == "left" & merge_loc_overview$m.left.right == "right", "lr", merge_loc_overview$in_mi)
-merge_loc_overview$in_mi = ifelse(merge_loc_overview$left.right == "left" & merge_loc_overview$m.left.right == "no shift", "lno", merge_loc_overview$in_mi)
-merge_loc_overview$in_mi = ifelse(merge_loc_overview$left.right == "right" & merge_loc_overview$m.left.right == "no shift", "rno", merge_loc_overview$in_mi)
-merge_loc_overview$in_mi = ifelse(merge_loc_overview$left.right == "no shift" & merge_loc_overview$m.left.right == "left", "nol", merge_loc_overview$in_mi)
-merge_loc_overview$in_mi = ifelse(merge_loc_overview$left.right == "no shift" & merge_loc_overview$m.left.right == "right", "nor", merge_loc_overview$in_mi)
+table(km.clusters1, merge_overview$left.right)
+table(km.clusters1, merge_overview$m.left.right)
 
+## adding difference in maxima for mitosis and interphase as additional variables
+kmeans_data2 = cbind((merge_overview$global_max_rnase-merge_overview$global_max_ctrl), (merge_overview$m.global_max_rnase-merge_overview$m.global_max_ctrl), (merge_overview$ymaxc-merge_overview$ymaxr), (merge_overview$m.ymaxc-merge_overview$m.ymaxr)) 
 
-data3 = cbind(merge_overview$x.shift.frac.glo, merge_overview$m.x.shift.frac.glo)
+elbowdata2 = fviz_nbclust(kmeans_data2, kmeans, method = "wss") + labs(subtitle = "Elbow method")
 
-data3 = cbind((merge_overview$max_ctrl - merge_overview$max_rnase), (merge_overview$global_max_ctrl - merge_overview$global_max_rnase))
+km.out2 = kmeans(kmeans_data2, centers = 4, nstart = 100, iter.max = 20)
+km.clusters2 = km.out2$cluster
+clusterdata2 = fviz_cluster(km.out2, data = as.data.frame(kmeans_data2) , geom = "point")
+clusterdata2
 
-data3 = cbind((merge_overview$global_max_rnase-merge_overview$global_max_ctrl), (merge_overview$m.global_max_rnase-merge_overview$m.global_max_ctrl)) ## bestes bisher!!!!
+table(km.clusters2, merge_overview$left.right)
+table(km.clusters2, merge_overview$m.left.right)
 
-fviz_nbclust(data3, kmeans, method = "wss") + labs(subtitle = "Elbow method")
-
-km.out3 = kmeans(data3, centers = 5, nstart = 100, iter.max = 20)
-km.clusters3 = km.out3$cluster
-#rownames(data3) = paste(overview$left.right, 1:nrow(diff2), sep = "_")
-
-# ggplot data3$cluster = as.character(km.out3$cluster)
-# ggplot ggplot() +
-#  geom_point(data = data3,
-#             mapping = aes(x = , y = max_ctrl, colour = cluster))
-
-fviz_cluster(km.out3, data = as.data.frame(data3) , geom = "point")
-table(km.clusters3, merge_overview$left.right)
-table(km.clusters3, merge_overview$m.left.right)
-
-table(km.clusters3, merge_overview$x.loc.glo) 
-table(km.clusters3, merge_overview$y.loc.glo) 
-
-table(km.clusters3, merge_overview$global_max_ctrl)
-table(km.clusters3, merge_overview$global_max_rnase)
-
-
-# Internet GGPLOt
-# cls <- kmeans(x = iris_cluster, centers = 3)
-# iris_cluster$cluster <- as.character(cls$cluster)
-# head(iris_cluster)
-# ggplot() +
-#  geom_point(data = iris_cluster, 
-#             mapping = aes(x = Sepal.Length, 
-#                                  y = Petal.Length, 
-#                                  colour = cluster))
-
-
-
+## no improvement in cluster structure due to additional variable
 ```
+
+
 # Regression analysis
 ```{r}
 library(ggplot2)
-
-merge_overview$`no.shift?`= ifelse(merge_overview$`no.shift?`=="shift", TRUE, FALSE)
-merge_overview$ymaxdiffc = meanRepctrl[merge_overview$global_max_ctrl]-meanRepRNase[merge_overview$global_max_ctrl]
-
-
-plot((max_ctrl-max_rnase) ~ corr, data = merge_overview)
-cor(merge_overview$x.shift.frac.glo, merge_overview$corr) ## sollte eigentlich niedrig sein
-corr_globfrac = lm((ymaxc-ymaxr) ~ (max_ctrl-max_rnase), data = merge_overview)
-summary(corr_globfrac)
-ggplot(merge_overview,aes(y=x.shift.frac.glo,x=corr))+geom_point()+geom_smooth(method="lm")
-
-
-plot(m.x.shift.frac.glo ~ m.corr, data = merge_overview)
-cor(merge_overview$m.x.shift.frac.glo, merge_overview$m.corr) ## sollte eigentlich niedrig sein
-m.corr_globfrac = lm(m.x.shift.frac.glo ~ m.corr, data = merge_overview)
-summary(m.corr_globfrac)
-ggplot(merge_overview,aes(y=m.x.shift.frac.glo,x=m.corr))+geom_point()+geom_smooth(method="lm")
-
 
 ## split data set into training (80 % of total data set) and test data set (20 %)
 set.seed(1)
@@ -1339,8 +1244,11 @@ section = sample(1:nrow(merge_overview), 0.8 * nrow(merge_overview))
 ## train data set
 train_data = merge_overview[section,]
 
+train_data$x.shift.frac.glo = abs(train_data$x.shift.frac.glo)
+
 ## test data set
 test_data = merge_overview[-section,]
+test_data$x.shift.frac.glo = abs(test_data$x.shift.frac.glo)
 
 ## output variable: how many fractions does the global maximum of the protein shift? (x.shift.frac.glo)
 ## take multiple input variables: difference in number of maxima, pearson correlation
@@ -1349,59 +1257,35 @@ test_data = merge_overview[-section,]
 plot(x.shift.frac.glo ~ corr, data = train_data)
 cor(train_data$x.shift.frac.glo, train_data$corr) ## sollte eigentlich niedrig sein
 corr_globfrac = lm(x.shift.frac.glo ~ corr, data = test_data)
-summary(corr_globfrac)
+summary(corr_globfrac) ## 71,96 % of total variance is explained by the model
 plot(corr_globfrac)
-ggplot(train_data, aes(y=x.shift.frac.glo, x=corr, col = left.right, group = 1)) + geom_point() + geom_smooth(method ="lm")
-
-
-# difference in number of maxima
-plot(x.shift.frac.glo ~ (ymaxc - ymaxr), data = train_data)
-cor(train_data$x.shift.frac.glo, train_data$ymaxc - train_data$ymaxr) ## sollte eigentlich niedrig sein
-maxdiff_globfrac = lm(x.shift.frac.glo ~ (ymaxc - ymaxr), data = test_data)
-summary(maxdiff_globfrac)
-ggplot(train_data,aes(y=x.shift.frac.glo,x=(ymaxc - ymaxr), col = left.right, group = 1)) + geom_point() + geom_smooth(method="lm") 
-
-
-
-# y shift of global maximum of ctrl replicate
-plot(x.shift.frac.glo ~ ymaxdiffc, data = train_data)
-cor(train_data$x.shift.frac.glo, train_data$ymaxdiffc) ## sollte eigentlich niedrig sein
-ydiff_globfrac = lm(x.shift.frac.glo ~ ymaxdiffc, data = test_data)
-summary(ydiff_globfrac)
-ggplot(train_data,aes(y=x.shift.frac.glo,x=ymaxdiffc, col = left.right, group = 1)) + geom_point() + geom_smooth(method="lm") 
-
+regression_corr_globfrac = ggplot(train_data, aes(y=x.shift.frac.glo, x=corr)) + geom_point() + geom_smooth(method ="lm")
+regression_corr_globfrac
 
 
 # highest euclidean distance of meanrepctrl and meanrepRnase
 plot(x.shift.frac.glo ~ eucli, data = train_data)
 cor(train_data$x.shift.frac.glo, train_data$eucli) ## sollte eigentlich niedrig sein
 eucli_globfrac = lm(x.shift.frac.glo ~ eucli, data = test_data)
-summary(eucli_globfrac)
-ggplot(train_data,aes(y=x.shift.frac.glo,x=eucli, col = left.right, group = 1)) + geom_point() + geom_smooth(method="lm") 
+summary(eucli_globfrac) ## 71,96 % of total variance is explained by the model
+plot(eucli_globfrac)
+regression_eucli_globfrac = ggplot(train_data, aes(y=x.shift.frac.glo, x=eucli)) + geom_point() + geom_smooth(method ="lm")
+regression_eucli_globfrac
 
-
-
-# spearman correlation
-plot(x.shift.frac.glo ~ corr.s, data = train_data)
-cor(train_data$x.shift.frac.glo, train_data$corr.s) ## sollte eigentlich niedrig sein
-corrs_globfrac = lm(x.shift.frac.glo ~ corr.s, data = test_data)
-summary(corrs_globfrac)
-plot(corrs_globfrac)
-ggplot(train_data,aes(y=x.shift.frac.glo,x=corr.s, col = left.right, group = 1)) + geom_point() + geom_smooth(method="lm") 
-
-## Pearson correlation is the most significant feature when predicting the x-shift of the global maximum
+## Pearson correlation is the most significant feature when predicting the x-shift of the global maximum compared to the highest euclidean distance as explanatory variable
 
 ## Plot residuals
-ggplot(data = train_data, aes(x = corr,y = residuals(corr_globfrac))) + geom_point() + geom_smooth()
 
 plot(corr_globfrac)
+
 ## residuals VS fitted (predictions) should be a line
 ## qq plot should be a line
 
 # test data set
 
 prediction = predict(corr_globfrac, newdata = test_data)
-avg_dis = sqrt(sum((prediction) - test_data$x.shift.frac.glo)^2)/length(test_data$x.shift.frac.glo) 
+
+sd(prediction, test_data$x.shift.frac.glo)
 
 ## avg_dis = comparison of predicted value and actual value -> very small -> good 
 
