@@ -56,8 +56,7 @@ which(rowSums(mFullDat==0)==150) ##proteins with all zeros
 mFullDat = mFullDat[-(which(rowSums(mFullDat==0)==150)),] ## remove protein with all zeros
 
 
-mFullDat[mFullDat==0] = NA ##würde ich rausnehmen und nur für mean und co vllt einbauen (aplly hat kein rm.na!!!)
-
+mFullDat[which(mFullDat==0)] = NA 
 ```
 
 The data set is very large. To prepare the data for our normalization, we split the data set into smaller data frames, one data frame for each replicate resulting in 6 different data frames.
@@ -92,10 +91,6 @@ Now, we could continue with the second step of data cleaning. A protein without 
 mremo1 = which(rowSums(is.na(mTripCtrldat))==75) ##ist 0
 mremo2 = which(rowSums(is.na(mTripRnasedat))==75) ##ist 0
 mFullDat = mFullDat[-c(mremo1,mremo2),]
-
-##warum funktioniet das nicht
-##remo = function(x){x = x[-which(rowSums(is.na(TripCtrldat))==75),]}
-##remo(mFullDat)
 
 ```
 
@@ -999,7 +994,7 @@ mloc_max_shift = mloc_max_shift[- which(mid==TRUE)] ## mloc_max_shift are all pr
 sum(mid)+(length(mabs_max_shift)-sum(mid))+length(mloc_max_shift) ## 1828 proteins have a shift and might be RNA-binding or RNA-dependent
 
 ```
-We found 2107 proteins shifting in their global and/or local maxima. In the following, we will test if the shift in protein amount is significant which would result in classifying the protein as an RNA-binding or RNA-dependent protein. 
+We found 1828 proteins shifting in their global and/or local maxima. In the following, we will test if the shift in protein amount is significant which would result in classifying the protein as an RNA-binding or RNA-dependent protein. 
 
 # t-test of shift of protein amount for maximum verification (y-shift)
 
@@ -1161,13 +1156,9 @@ nrow(mproteins_only_local) ## 603 proteins only shift in local maximum
 
 ```
 
-# k-means
+# data set preparation for k-means
 
 ```{r}
-
-library(factoextra)
-library(ggplot2)
-
 
 mnumb_max_ctrl = rowSums(mmax_shift_ctrl!=0)+1 ## plus global maximum
 mnumb_max_rnase = rowSums(mmax_shift_rnase!=0)+1 ## plus global maximum
@@ -1203,26 +1194,6 @@ for(i in 1:nrow(mmeanRepctrl)){
   mcor_merge[i] = cor(mmeanRepctrl[i,], mmeanRepRNase[i,])
 }
 overview_mi$m.corr = mcor_merge
-
-
-mvgl_locshiftc = msign_loc_shiftc
-mvgl_locshiftc[mvgl_locshiftc != 0] = TRUE
-mvgl_locshiftr = msign_loc_shiftr
-mvgl_locshiftr[mvgl_locshiftr != 0] = TRUE
-mvectorsumctrl= rowSums(mvgl_locshiftc)
-mvectorsumrnase = rowSums(mvgl_locshiftr)
-mvectordiff = mvectorsumrnase - mvectorsumctrl ## count local maxima 
-mvectorlocshift = rowSums(msign_loc_shiftc[which(mvectordiff==0),]) - rowSums(msign_loc_shiftr[which(mvectordiff==0),])
-
-
-
-mloc_overview = overview_mi[which(mvectordiff==0),]
-
-mloc_overview$m.left.right = ifelse(mloc_overview$m.left.right != "left" & mloc_overview$m.left.right != "right" & mvectorlocshift > 0, "left", mloc_overview$m.left.right)
-mloc_overview$m.left.right = ifelse(mloc_overview$m.left.right != "left" & mloc_overview$m.left.right != "right" & mvectorlocshift < 0, "right", mloc_overview$m.left.right)
-mloc_overview$protein = rownames(mloc_overview)
-## data set with all proteins that have the same number of maxima in ctrl and RNase
-
 
 
 ```
