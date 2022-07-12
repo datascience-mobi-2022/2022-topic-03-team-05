@@ -226,14 +226,15 @@ for(i in 1:nrow(mtripRnasenormdat)){
   }
 }
 
+##xxxxxxxxx
 ## removing new rows with all zeros in control or RNase due to batch effect removal 
-mna_r = which(rowSums(is.na(mtripRnasenormdat))==75)
-mna_c = which(rowSums(is.na(mtripCtrlnormdat))==75)
-mna_afterbatch = c(mna_r, mna_c)
+#mna_r = which(rowSums(is.na(mtripRnasenormdat))==75)
+#mna_c = which(rowSums(is.na(mtripCtrlnormdat))==75)
+#mna_afterbatch = c(mna_r, mna_c)
 
-mFullDat = mFullDat[-mna_afterbatch,]
-mtripCtrlnormdat = mtripCtrlnormdat[-mna_afterbatch,]
-mtripRnasenormdat = mtripRnasenormdat[-mna_afterbatch,]
+#mFullDat = mFullDat[-mna_afterbatch,]
+#mtripCtrlnormdat = mtripCtrlnormdat[-mna_afterbatch,]
+#mtripRnasenormdat = mtripRnasenormdat[-mna_afterbatch,]
 
 ## convert all NAs back to zeros
 mtripRnasenormdat[is.na(mtripRnasenormdat)] = 0
