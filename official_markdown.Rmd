@@ -1160,12 +1160,13 @@ overview$x.shift.loc = ifelse(overview$count.x.shift.loc != 0, TRUE, FALSE) ## s
 overview$x.loc.glo = ifelse(overview$x.shift.glo == TRUE & overview$x.shift.loc == TRUE, TRUE, FALSE) ## TRUE/FALSE significant x-shift in global and/or local maximum
 overview$y.loc.glo = ifelse(overview$y.shift.glo == TRUE & overview$y.shift.loc == TRUE, TRUE, FALSE) ## TRUE/FALSE significant y-shift in global and/or local maximum
 
-## 
+## "right" if right shift in global maximum, "left" if left shift in global maximum, "shift" if shift only in local maximum, "no shift" if no shift
 overview$left.right = ifelse(overview$x.shift.glo == TRUE & overview$global_max_ctrl - overview$global_max_rnase > 0, "left", "no shift") 
 overview$left.right = ifelse(overview$left.right != "left" & overview$x.shift.glo == TRUE & overview$global_max_ctrl - overview$global_max_rnase < 0, "right", overview$left.right)
 overview$left.right = ifelse(overview$x.shift.glo == FALSE & overview$x.shift.loc == TRUE, "shift", overview$left.right)
-overview$x.shift.frac.glo = overview$global_max_rnase - overview$global_max_ctrl
+overview$x.shift.frac.glo = overview$global_max_ctrl - overview$global_max_rnase ## difference in fraction of global maximum between control and RNase
 
+## Compute correlation between Ctrl and RNase mean curve for each protein and store in cor_merge
 cor_merge = vector()
 for(i in 1:nrow(meanRepctrl)){
   cor_merge[i] = cor(meanRepctrl[i,], meanRepRNase[i,])
@@ -1175,6 +1176,8 @@ for(i in 1:nrow(meanRepctrl)){
   cors_merge[i] = cor(meanRepctrl[i,], meanRepRNase[i,], method = "spearman")
 }
 overview$corr.s = cors_merge
+
+## Compute euclidean distance between all values of mean Ctrl and RNase and store highest distance in eucli_merge
 eucli_merge = vector()
 for (i in 1:nrow(meanRepctrl)) {
   eu = vector()
@@ -1186,16 +1189,16 @@ for (i in 1:nrow(meanRepctrl)) {
 overview$eucli = eucli_merge
 
 
+overview$protein = rownames(overview) ## Create column with protein names
+overview$count.shift = ifelse(overview$x.shift.glo == TRUE, overview$count.x.shift.loc + 1, overview$count.x.shift.loc) ## number of shifting maxima
+
 ## preparation: data frames are merged between mitosis and interphase data set
-
-merge_loc_overview = merge(loc_overview, mloc_overview, by = "protein")
-overview$protein = rownames(overview)
-overview$count.shift = ifelse(overview$x.shift.glo == TRUE, overview$count.x.shift.loc + 1, overview$count.x.shift.loc)
-
-merge_overview = merge(overview, overview_mi, by = "protein")
+merge_overview = merge(overview, overview_mi, by = "protein") 
 ```
 
 # k-means
+
+By using k-means we aim at identifying specific groups within the data sets. We look for clusters of proteins when clustering the difference in fraction of global maximum in Ctrl and RNase of interphase with the difference in fraction of global maximum in Ctrl and RNase of mitosis. The idea of this approach is that proteins might be assigned to the same cluster if shifting in a similar way/ not in a similar way.
 
 ```{r}
 ## k-means
@@ -1204,21 +1207,27 @@ merge_overview = merge(overview, overview_mi, by = "protein")
 library(factoextra)
 library(ggplot2)
 
+## Create matrix for first clustering: difference in fraction of global maximum in Ctrl and RNase of interphase clustered with difference in fraction of global maximum in Ctrl and RNase of mitosis
 kmeans_data1 = cbind((merge_overview$global_max_rnase-merge_overview$global_max_ctrl), (merge_overview$m.global_max_rnase-merge_overview$m.global_max_ctrl)) 
 
+## elbow plot
 elbowdata1 = fviz_nbclust(kmeans_data1, kmeans, method = "wss") + labs(subtitle = "Elbow method")
+## elbow plot would suggest rather 4 than 5 clusters but for the biological question the results of 5 clusters are more significant
 
-km.out1 = kmeans(kmeans_data1, centers = 4, nstart = 100, iter.max = 20)
+## Perform k-means and visualize clusters
+km.out1 = kmeans(kmeans_data1, centers = 5, nstart = 100, iter.max = 20)
 km.clusters1 = km.out3$cluster
 clusterdata1 = fviz_cluster(km.out1, data = as.data.frame(kmeans_data1) , geom = "point")
 clusterdata1
 
+## compare clusters with right/left/shift/no shift column
 table(km.clusters1, merge_overview$left.right)
 table(km.clusters1, merge_overview$m.left.right)
 
 ## adding difference in maxima for mitosis and interphase as additional variables
 kmeans_data2 = cbind((merge_overview$global_max_rnase-merge_overview$global_max_ctrl), (merge_overview$m.global_max_rnase-merge_overview$m.global_max_ctrl), (merge_overview$ymaxc-merge_overview$ymaxr), (merge_overview$m.ymaxc-merge_overview$m.ymaxr)) 
 
+## elbow plot
 elbowdata2 = fviz_nbclust(kmeans_data2, kmeans, method = "wss") + labs(subtitle = "Elbow method")
 
 km.out2 = kmeans(kmeans_data2, centers = 4, nstart = 100, iter.max = 20)
@@ -1231,9 +1240,10 @@ table(km.clusters2, merge_overview$m.left.right)
 
 ## no improvement in cluster structure due to additional variable
 ```
-
+xxxx xxxxxx 
 
 # Regression analysis
+
 ```{r}
 library(ggplot2)
 
