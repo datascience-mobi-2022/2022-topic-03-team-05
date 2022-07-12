@@ -1167,32 +1167,6 @@ nrow(mproteins_only_local) ## 603 proteins only shift in local maximum
 
 library(factoextra)
 library(ggplot2)
-mdata_glob = mproteins_global_shift[,c(2:3)]
-
-# find optimal numbers of clusters
-fviz_nbclust(mdata_glob, kmeans, method = "wss") + labs(subtitle = "Elbow method")
-
-# k-means
-
-mkm.out1 = kmeans(mdata_glob, centers = 4, nstart = 100)
-#print(km.out)
-
-# visualize clusters
-mkm.clusters1 = mkm.out1$cluster
-rownames(mdata_glob) = paste(mproteins_global_shift$left_right, 1:nrow(mdata_glob), sep = "_")
-fviz_cluster(list(data = mdata_glob, cluster = mkm.clusters1), geom = "point")
-#for ggplot mdata_glob$cluster = as.character(mkm.out1$cluster)
-#ggplot() +
-#  geom_point(data = mdata_glob,
-#            mapping = aes(x = global_max_ctrl, y = global_max_rnase, colour = cluster))
-
-# gucken, wie viele left/right shift in welchem Cluster
-table(mkm.clusters1, mproteins_global_shift$leftorright) ## right mostly in cluster 2 and 3, left in cluster 1 and 4
-table(mkm.clusters1, mproteins_global_shift$m.global_max_rnase) ## cluster 4 first ten fractions, cluster 1 middle fractions
-table(mkm.clusters1, mproteins_global_shift$m.global_max_ctrl) ## cluster 1 last ten fractions, cluster 4 last ten fractions
-
-
-
 
 
 mnumb_max_ctrl = rowSums(mmax_shift_ctrl!=0)+1 ## plus global maximum
@@ -1201,16 +1175,6 @@ mnumb_max_rnase = rowSums(mmax_shift_rnase!=0)+1 ## plus global maximum
 mabs_max$max_ctrl = mnumb_max_ctrl
 mabs_max$max_rnase = mnumb_max_rnase
 mabs_max$left_right = ifelse(mp_loc_shift == TRUE | mabs_max$sign == TRUE, "shift", "no shift") 
-mdiff1 = mabs_max[,c(1:2,8,9)]
-
-fviz_nbclust(mdiff1, kmeans, method = "wss") + labs(subtitle = "Elbow method")
-
-mkm.out2 = kmeans(mdiff1, centers = 2, nstart = 100, iter.max = 20)
-mkm.clusters2 = mkm.out2$cluster
-fviz_cluster(list(data = mdiff1, cluster = mkm.clusters2), geom = "point") ## looks weird
-table(mkm.clusters2, mabs_max$global_max_rnase) ## in cluster 1 there are mostly proteins with rnase maxima in the first 10 fractions, in cluster 2 "equally distributed"
-table(mkm.clusters2,mabs_max$left_right) ## bringt nichts
-
 
 
 # anzahl maxima und anzahl shift gegen shift in haupt, haupt+neben oder nur nebenmaximum
@@ -1228,50 +1192,38 @@ colnames(overview_mi)[8] = "m.max_rnase"
 overview_mi$m.x.shift.loc = ifelse(overview_mi$m.count.x.shift.loc != 0, TRUE, FALSE)
 overview_mi$m.x.loc.glo = ifelse(overview_mi$m.x.shift.glo == TRUE & overview_mi$m.x.shift.loc == TRUE, TRUE, FALSE)
 overview_mi$m.y.loc.glo = ifelse(overview_mi$m.y.shift.glo == TRUE & overview_mi$m.y.shift.loc == TRUE, TRUE, FALSE)
-overview_mi$m.left.right = ifelse(overview_mi$m.x.shift.glo == TRUE & overview_mi$m.global_max_ctrl - overview_mi$m.global_max_rnase > 0, "left", overview_mi$`m.no.shift?`) 
+overview_mi$m.left.right = ifelse(overview_mi$m.x.shift.glo == TRUE & overview_mi$m.global_max_ctrl - overview_mi$m.global_max_rnase > 0, "left", "no shift") 
 overview_mi$m.left.right = ifelse(overview_mi$m.left.right != "left" & overview_mi$m.x.shift.glo == TRUE & overview_mi$m.global_max_ctrl - overview_mi$m.global_max_rnase < 0, "right", overview_mi$m.left.right)
+overview_mi$m.left.right = ifelse(overview_mi$m.x.shift.glo == FALSE & overview_mi$m.x.shift.loc == TRUE, "shift", overview_mi$m.left.right)
 overview_mi$m.x.shift.frac.glo = overview_mi$m.global_max_rnase - overview_mi$m.global_max_ctrl
 
-
-vectorsumctrl= rowSums(msign_loc_shiftc)
-vectorsumrnase = rowSums(msign_loc_shiftr)
-vectordiff = vectorsumrnase - vectorsumctrl
-
-overview_mi$m.left.right = ifelse(overview_mi$m.left.right != "left" & overview_mi$m.left.right != "right" & vectordiff > 0, "right", overview_mi$m.left.right)
-overview_mi$m.left.right = ifelse(overview_mi$m.left.right != "left" & overview_mi$m.left.right != "right" & vectordiff < 0, "left", overview_mi$m.left.right)
-
-data3 = overview_mi[,c(3,7,8,10)]
-# 3,7,8,10 ergibt 3 cluster ganz ok
-
-fviz_nbclust(data3, kmeans, method = "wss") + labs(subtitle = "Elbow method")
-
-km.out3 = kmeans(data3, centers = 3, nstart = 100, iter.max = 20)
-km.clusters3 = km.out3$cluster
-#rownames(data3) = paste(overview_mi$left.right, 1:nrow(diff2), sep = "_")
-
-# ggplot data3$cluster = as.character(km.out3$cluster)
-# ggplot ggplot() +
-#  geom_point(data = data3,
-#             mapping = aes(x = , y = max_ctrl, colour = cluster))
-
-fviz_cluster(list(data = data3, cluster = km.clusters3), geom = "point")
-table(km.clusters3, overview_mi$x.loc.glo) 
-table(km.clusters3, overview_mi$y.loc.glo) 
-table(km.clusters3, overview_mi$`no.shift?`)
-table(km.clusters3, overview_mi$left.right)
-table(km.clusters3, overview_mi$y.shift.loc)
-
-
 overview_mi$protein = rownames(overview_mi)
-# Internet GGPLOt
-# cls <- kmeans(x = iris_cluster, centers = 3)
-# iris_cluster$cluster <- as.character(cls$cluster)
-# head(iris_cluster)
-# ggplot() +
-#  geom_point(data = iris_cluster, 
-#             mapping = aes(x = Sepal.Length, 
-#                                  y = Petal.Length, 
-#                                  colour = cluster))
+mcor_merge = vector()
+for(i in 1:nrow(mmeanRepctrl)){
+  mcor_merge[i] = cor(mmeanRepctrl[i,], mmeanRepRNase[i,])
+}
+overview_mi$m.corr = mcor_merge
+
+
+mvgl_locshiftc = msign_loc_shiftc
+mvgl_locshiftc[mvgl_locshiftc != 0] = TRUE
+mvgl_locshiftr = msign_loc_shiftr
+mvgl_locshiftr[mvgl_locshiftr != 0] = TRUE
+mvectorsumctrl= rowSums(mvgl_locshiftc)
+mvectorsumrnase = rowSums(mvgl_locshiftr)
+mvectordiff = mvectorsumrnase - mvectorsumctrl ## count local maxima 
+mvectorlocshift = rowSums(msign_loc_shiftc[which(mvectordiff==0),]) - rowSums(msign_loc_shiftr[which(mvectordiff==0),])
+
+
+
+mloc_overview = overview_mi[which(mvectordiff==0),]
+
+mloc_overview$m.left.right = ifelse(mloc_overview$m.left.right != "left" & mloc_overview$m.left.right != "right" & mvectorlocshift > 0, "left", mloc_overview$m.left.right)
+mloc_overview$m.left.right = ifelse(mloc_overview$m.left.right != "left" & mloc_overview$m.left.right != "right" & mvectorlocshift < 0, "right", mloc_overview$m.left.right)
+mloc_overview$protein = rownames(mloc_overview)
+## data set with all proteins that have the same number of maxima in ctrl and RNase
+
+
 
 ```
 
