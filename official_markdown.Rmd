@@ -237,8 +237,8 @@ na_r = which(rowSums(is.na(tripRnasenormdat))==75)
 na_c = which(rowSums(is.na(tripCtrlnormdat))==75)
 na_afterbatch = c(na_r, na_c)
 
-tripCtrlnormdat = tripCtrlnormdat[-na_afterbatch,]
-tripRnasenormdat = tripRnasenormdat[-na_afterbatch,]
+if (length(na_afterbatch) != 0) {tripCtrlnormdat = tripCtrlnormdat[-na_afterbatch,]}
+if (length(na_afterbatch) != 0) {tripRnasenormdat = tripRnasenormdat[-na_afterbatch,]}
 
 ## Converting zeros back to NAs for further analysis
 tripRnasenormdat[is.na(tripRnasenormdat)] = 0
