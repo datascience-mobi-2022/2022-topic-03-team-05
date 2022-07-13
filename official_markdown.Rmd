@@ -1264,14 +1264,14 @@ test_data = merge_overview[-section,]
 test_data$x.shift.frac.glo = abs(test_data$x.shift.frac.glo)
 
 ## output variable: how many fractions does the global maximum of the protein shift? (x.shift.frac.glo)
-## take multiple input variables: difference in number of maxima, pearson correlation
+## take multiple input variables: pearson correlation, highest euclidean distance of meanrepctrl and meanrepRnase
 
-# pearson correlation
+## pearson correlation
 plot(x.shift.frac.glo ~ corr, data = train_data)
 cor(train_data$x.shift.frac.glo, train_data$corr) ## sollte eigentlich niedrig sein
-corr_globfrac = lm(x.shift.frac.glo ~ corr, data = test_data)
-summary(corr_globfrac) ## 71,96 % of total variance is explained by the model
-plot(corr_globfrac)
+corr_globfrac = lm(x.shift.frac.glo ~ corr, data = train_data)
+summary(corr_globfrac) ## 68,06 % of total variance is explained by the model
+
 regression_corr_globfrac = ggplot(train_data, aes(y=x.shift.frac.glo, x=corr)) + geom_point() + geom_smooth(method ="lm")
 regression_corr_globfrac
 
@@ -1281,26 +1281,31 @@ plot(x.shift.frac.glo ~ eucli, data = train_data)
 cor(train_data$x.shift.frac.glo, train_data$eucli) ## sollte eigentlich niedrig sein
 eucli_globfrac = lm(x.shift.frac.glo ~ eucli, data = test_data)
 summary(eucli_globfrac) ## 71,96 % of total variance is explained by the model
-plot(eucli_globfrac)
+
 regression_eucli_globfrac = ggplot(train_data, aes(y=x.shift.frac.glo, x=eucli)) + geom_point() + geom_smooth(method ="lm")
 regression_eucli_globfrac
 
 ## Pearson correlation is the most significant feature when predicting the x-shift of the global maximum compared to the highest euclidean distance as explanatory variable
 
-## Plot residuals
+## test conditions for linear regression: residuals are normally distributed and no correaltion between residuals and the explanatory variable
 
-plot(corr_globfrac)
+## residuals normally distributed?
+hist(corr_globfrac$residuals, breaks=20) 
+qqnorm(corr_globfrac$residuals); qqline(corr_globfrac$residuals) 
 
-## residuals VS fitted (predictions) should be a line
-## qq plot should be a line
+## correlation residuals x-values?
+cor(train_data$corr, corr_globfrac$residuals) ## correlation is very small
+plot(train_data$corr, corr_globfrac$residuals,pch=20)
 
-# test data set
+## predict values of x shift in global maximum for test data set using corr as explanatory variable
 
 prediction = predict(corr_globfrac, newdata = test_data)
 
-sd(prediction, test_data$x.shift.frac.glo)
-
-## avg_dis = comparison of predicted value and actual value -> very small -> good 
+## calculate root mean square error for model evaluation
+n = nrow(test_data)
+residuals = test_data$x.shift.frac.glo - prediction
+rmse.test = sqrt(1/n*sum(residuals^2))
+rmse.test
 
 ```
 
