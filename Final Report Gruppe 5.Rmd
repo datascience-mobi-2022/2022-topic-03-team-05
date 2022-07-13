@@ -77,22 +77,7 @@ Our first step was to remove rows (proteins) which only contained zeroes, as wel
 
 ### 2.2.3. Normalization
 One consequence of the experimental setup used to obtain our data was that heterogeneous amounts of proteins were used between replicates, but for further steps the compatibility of the replicates was crucial, which is why fraction-wise normalization was performed.  
-First, we adapted the amount of protein per fraction for each of the three replicates to be the mean of the two means lying closest to each other. We compared the fractionwise sum of *Ctrl* and *RNase* before normalization and visualized them with a barplot. Then the vector *mean_frac_rep* which contained the mean for each fraction in each condition and replicate was created. We used this vector to create another vector that contained the mean value of the two mean values for the protein amount of the replicates closest to each other in each fraction for RNase and control. Therefore,  we generated a *for-loop* that compared the three values by using an *if* and an *else if* condition to compare two variables at a time and check which ones are closest to each other. The normalized data was stored in *mean_rep* and again visualized with a box plot that now showed the same height for all replicates, indicating the same amount of protein. To increase interpretability, we then normalized the protein amount of each replicate for each protein to be 100 using the apply function. The amount of protein was now interpretable as a percentage, which we used when checking for local maxima and for the t-test. The values were stored in six different dataframes, one for each replicate and condition, which we later combined into the dataframes *TripCTrldat* and *TripRNasedat*, that combined the replicates for each condition. 
-
-# Add plots!
-
-```{r}
-#normalization barplot
-for (i in 37){barplot(rep_sum[i:(i+2)], main = "barplot protein amount of fraction 7 of Control (unnormalized)", ylab = "protein amount" )}
-
-```
-##### Figure 1: Barplot of the protein amount before normalization
-
-```{r}
-#normalization barplot2
-for (i in 37){barplot(rep_mean_norm[i:(i+2)] , main = "barplot protein amount of fraction 7 of Control (normalized)", ylab = "protein amount")}
-```
-##### Figure 2: Barplot of protein amount after normalization
+First, we adapted the amount of protein per fraction for each of the three replicates to be the mean of the two means lying closest to each other. We compared the fractionwise sum of *Ctrl* and *RNase* before normalization and visualized them with a barplot. Then the vector *mean_frac_rep* which contained the mean for each fraction in each condition and replicate was created. We used this vector to create another vector that contained the mean value of the two mean values for the protein amount of the replicates closest to each other in each fraction for RNase and control. Therefore,  we generated a *for-loop* that compared the three values by using an *if* and an *else if* condition to compare two variables at a time and check which ones are closest to each other. The normalized data was stored in *mean_rep* and again visualized with a box plot that now showed the same height for all replicates, indicating the same amount of protein. To increase interpretability, we then normalized the protein amount of each replicate for each protein to be 100 using the apply function. The amount of protein was now interpretable as a percentage, which we used when checking for local maxima and for the t-test. The values were stored in six different dataframes, one for each replicate and condition, which we later combined into the dataframes *TripCTrldat* and *TripRNasedat*, that combined the replicates for each condition.  
 
 
 ```{r}
@@ -130,8 +115,6 @@ For a better usability of the data, we merged the curves of the three replicates
 We then created a matrix for each condition that had value of zero for every fraction, except for the ones that contained the global and local maxima. 
 We now used the matrices *meanRepctrl1* and *meanRepRNase* to plot two curves, one of the control and one for the protein after the RNase treatment, to see if there was a shift and used the function *compare_max*. We defined a shift to be a difference of at least two fractions in the positive or negative x-direction.
 
-In the Interphase dataset we found 1118 shifts in the global maxima, 989 partial shifts, where the local maxima changed position and 2107 proteins where either the local or global maxima or both changed along the x-axis. 
-
 
 ```{r}
 for (i in c(4234)){
@@ -143,14 +126,13 @@ lines(y, meanRepRNase[i,], col = "red")
 Right: Shifting protein. The amount of protein in each fraction changes after the treatment with RNase, indicating that this protein is associated with RNA and looses interaction partners after RNase treatment, resulting in a lighter mass and a migration to the left of the sucrose gradient. The untreated sample is shown in blue, the sample after RNAse treatment in red. 
 
 ```{r}
-for (i in c(4207,4223,4232,4234,4237,4238)){
+for (i in c(4238)){
 plot(y,xlab = "fractions", ylab = "protein amount", main = "Comparison Control-RNase",type = "l",meanRepctrl[i,], col = "blue"); 
 lines(y, meanRepRNase[i,], col = "red")
 }
 ```
 ##### Figure 6: Shifting protein. The amount of protein in each fraction changes after the treatment with RNase, indicating that this protein is associated with RNA and looses interaction partners after RNase treatment, resulting in a lighter mass and a migration to the left of the sucrose gradient.The untreated sample is shown in blue, the sample after RNAse treatment in red. 
 
-As defined by Caudron et. al. , a protein is defined to be an RBP, if the amount of protein differs between the control sample and the RNase sample. To characterize the shifts, we considered the position of the maxima, as well as the direction of the shift.  Proteins could either show a full shift, where the global maximum changed position, or a partial shift, where the global maximum remained static, but the local maxima changed their position along the x-axis.
 
 
 ## 2.4. Statistical Testing
@@ -172,7 +154,6 @@ lines(y, meanRepRNase[i,], col = "red")}
 In order to avoid coding mistakes and to focus on the interpretation of our results we used the predefined *t.test* function in R. We set our significance level to be 5% and used a two-sided t-test, therefore the shift of each protein which had a p-value smaller than 0.025 was determined significant. For the t-test we looked at the global maxima and the local maxima separately. Two vectors with the maxima of the RNase and the control were created and compared. 
 
 Since we performed many t-tests in a row, we wanted to avoid the cumulation of alpha-errors, which is why we adjusted the p-value using an FDR correction. This is a method, used for correcting multiple comparisions in a statistical test, in order to avoid the accumulation of α-errrors.  
-After the implementation of the t-test and the FDR correction on the Interphase dataset, we found 1653 proteins, showing either a shift in the local and, or global maxima and 687 proteins having a significant shift in both the global and local maxima. When only looking at the significance of shifts in global maxima we found 182 significant proteins, whereas for the partial shifts, 748 shifts were significant. 
 
 
 
@@ -203,10 +184,15 @@ We tried to establish a predictive model to determine the absolute value of the 
 
 
 ## III. Results
-### 3.1. RBPs
-After analyzing the amount of protein in each fraction, normalizing the replicates and comparing the RNase and control sample we found 2107 proteins shifting in the x-axis during Interphase, out of those proteins 1653 also had a significant shift in the y-direction. 
+### 3.1. RBPs 
+
+The main focus of this analysis was to determine whether a protein is RNA binding or not. For this we plotted the amount of protein in each fraction before and RNase treatment of the sample into one graph, to see if there would be a difference.
+As defined by Caudron et. al. , a protein is defined to be an RBP, if the amount of protein differs between the control sample and the RNase sample. To characterize the shifts, we considered the position of the maxima, as well as the direction of the shift.  Proteins could either show a full shift, where the global maximum changed position, or a partial shift, where the global maximum remained static, but the local maxima changed their position along the x-axis.
+To avoid overinterpreation or false-positives we then performed a t-test on the shift in the y-direction to conclude if the shift is significant. This t-test
 
 
+After Data Cleanup and Data Reduction we were able to find 1118 shifts in the global maxima, 989 partial shifts, where the local maxima changed position and 2107 proteins where either the local or global maxima or both changed along the x-axis, for the Interphase dataset. We then analyzed whether the shifts were significant, by looking at their y-dimension. 
+After the implementation of the t-test and the FDR correction on the Interphase dataset, we found 1653 proteins, showing either a shift in the local and, or global maxima and 687 proteins having a significant shift in both the global and local maxima. When only looking at the significance of shifts in global maxima we found 182 significant proteins, whereas for the partial shifts, 748 shifts were significant. 
 
 
 
@@ -214,6 +200,8 @@ After analyzing the amount of protein in each fraction, normalizing the replicat
 After the analysis of the Interphase dataset we implemented the same method for the Mitosis dataset, a dataset. All steps were were performed the same way for both datasets. 
 
 In the Mitosis dataset we were able to identify 1828 proteins which either showed an x-shift in the global or local maxima, 1045 proteins with a full shift and 722 proteins with a local shift. After statistical testing, in regards to the y-shifts 641 proteins, which had a significant shift in the global and or local maxima remained. 
+
+### 3.3. Comparison with the R-DeeP and the UniProt Database
 
 After performing these steps, we wanted to see, whether our determination method for RBPs was  accurate in comparison with other databases. For reference we used the R-DeeP database and the proteins which had a full shift in the global maximum in the Interphase dataset. 
 The results of this comparison are as following. In total we analyzed 1118 proteins. In x-cases R-DeeP identified the protein as an RBP as well, while for x-proteins not data was available. 
@@ -227,13 +215,15 @@ Compared with R-DeeP we had an accuracy of % for these proteins.  This accuracy 
 
 
 
-## 3.3. Comparison with the R-DeeP and the UniProt Database  
-The aim of the database comparison was to see if we instead of merely identifying whether a protein is an RBP and the direction of its shift, we could find common features. For this we looked at domains or functions which were shared by the majority of RBP. We wanted to see if we had identified RBPs that were associated with actin and therefore important in the organization of the cytoskeleton.  For this we first compared the RBPs we found with the R-DeeP database, which provided a visualization of protein shifts and gave a score how many times the protein had already been identified as an RBP. Moreover, the data was obtained by the exact same experimental method and we were able to compare the existence and direction of the shift. When comparing our RBPs with R-DeeP we found matches for several of them, meanwhile for some proteins there was no data yet, or the protein was not identified as an RBP by R-DeeP, the latter probably being due to differences in the statistical testing and predefined conditions for an RBP. For further analysis, we focused on the proteins which had a shift in the local maximum and had also been identified as an RBP by R-DeeP. We found that right-shifts were rare and were often also associated with precipitated proteins, the majority of our proteins had a left-shift, indicating a loss of interaction partners after RNase treatment.  
+ 
+When comparing the proteins we identified, the aim of the comparison was to see if we instead of merely identifying whether a protein is an RBP and the direction of its shift, we could find common features. For this we looked at domains or functions which were shared by the majority of RBP. We wanted to see if we had identified RBPs that were associated with actin and therefore important in the organization of the cytoskeleton.  For this we first compared the RBPs we found with the R-DeeP database, which provided a visualization of protein shifts and gave a score how many times the protein had already been identified as an RBP. Moreover, the data was obtained by the exact same experimental method and we were able to compare the existence and direction of the shift. When comparing our RBPs with R-DeeP we found matches for several of them, meanwhile for some proteins there was no data yet, or the protein was not identified as an RBP by R-DeeP, the latter probably being due to differences in the statistical testing and predefined conditions for an RBP. For further analysis, we focused on the proteins which had a shift in the local maximum and had also been identified as an RBP by R-DeeP. We found that right-shifts were rare and were often also associated with precipitated proteins, the majority of our proteins had a left-shift, indicating a loss of interaction partners after RNase treatment.  
 Right shifts indicate a positive change in the density of the protein. This might be that the absence of RNA causes new binding sites in the proteins to become available and the protein gains interaction partners after the loss of RNA or could form complexes. These proteins might be RNA dependent rather than RNA binding, while left shifts indicate a loss of interaction partners, due to the digestion of RNA by the RNase treatment.  
 Using UniProt to compare domains and the function we were unable to see many proteins, that were associated with actin, although we saw that many proteins had important functions in chromatin reorganization, transcription and translation or the transition of phases in the cell cycle. We found several RBPs that were important for the function and the organization of the nucleosome but also for the organization of cytoskeletal keratin, brain and neural development, as well as the function of the ribosome. Looking at the pathology of these proteins it was evident, that a dysregulation often leads to cancer, for example in the case of H2A1A_HUMAN, where a monoubiquitinylation is hypothesized to be involved in the development of breast cancer. The lack of function of RBPs was also associated with other diseases such as Ehlers-Danlos Syndrome or neurodevelopmental disorders.  
 The interaction of RBPs is modulated by chemical moieties between proteins and RNA nucleotides and are highly dynamic and change in response to cellular and environmental stimuli. When analyzing their molecular domains, we were able to find similarities in the composition.   
 Most RBPs had a compositional bias towards basic and acidic amino acid residues.  Even if no specific RNA binding domains, almost every protein contains disordered regions, which have previously been identified to be able to act as RNA-binding domains (Corley, Burns et al. 2020). They are unstructured and show no clear preference for specific RNA sequence, their interaction is most likely driven by electrostatic interactions (Balcerak et al., 2019). The RRM (RNA recognition motif) which we expected as it is the most common RNA binding domain was found in several cases. This domain is comprised of 90 amino acids and forms two α-Helices against an antiparallel β-sheet and interacts with single stranded RNA. The proteins that contained a Zinc finger domain were also able to bind DNA as well, and occurred mostly in transcription factors and proteins regulating gene expression. They recognize stem-loop elements in RNAa and can interact with dsRNA and ssRNA (Corley, Burns et al. 2020). The DEAD box or DEAH box, describes a Helicase domain, which is involved in metabolic processes concerning RNA, such as pre-mRNA splicing and translation initiation and is a highly conserved motif.  
-Lastly, many RBPs contained a coiled ccoroil motif, which are highly dynamic and allow for a quick adaption to changes in environmental stimuli and allow flexible interactions of the RBP, which is why they could be associated with RNA dependent proteins (Ford et al. 2017).  
+Lastly, many RBPs contained a coiled ccoroil motif, which are highly dynamic and allow for a quick adaption to changes in environmental stimuli and allow flexible interactions of the RBP, which is why they could be associated with RNA dependent proteins (Ford et al. 2017). We were able to find out that all the proteins contained disordered regions, other domains we found frequently were the RRM, the Zinc finger domain and a coiled coil. We further were able to identify a clear compositional amino acid bias, most of the proteins contained acidic and basic residues. For our previous hypothesis regarding RBPs associated with Actin we were unable to find evidence. In total when looking at the shifts of the global maxima we were able to find 10 proteins, whose function hat to do with Actin. The proteins , e.g. **ACL6B_HUMAN, AMOT_HUMAN, MYH0_HUMAN- add more examples** etc. are involved in the organization of the Actin cytoskeleton, cell division or had Actin binding domains,  however as the number of proteins whose function is associated with Actin is low this is most likely a coincidence and not a significant finding. 
+**Add Examples from Kiren**
+
 
 
 ## IV. Discussion  
@@ -246,11 +236,9 @@ A protein was considered to be an RBP, when the maxima changed positions of at l
 **K means and regression**
 ** Second dataset**
 
-## Comparison with R-DeeP and UniProt
-In addition to our statistical analysis we compared the proteins we found with both the R-DeeP and the UniProt database. For this step we decided to focus on the RBPs with total shifts. We were able to find out that all the proteins contained disordered regions, other domains we found frequently were the RRM, the Zinc finger domain and a coiled coil. We further were able to identify a clear compositional amino acid bias, most of the proteins contained acidic and basic residues. For our previous hypothesis regarding RBPs associated with Actin we were unable to find evidence. In total when looking at the shifts of the global maxima we were able to find 10 proteins, whose function hat to do with Actin. The proteins , e.g. **ACL6B_HUMAN, AMOT_HUMAN, MYH0_HUMAN- add more examples** etc. are involved in the organization of the Actin cytoskeleton, cell division or had Actin binding domains,  however as the number of proteins whose function is associated with Actin is low this is most likely a coincidence and not a significant finding. 
-**Add Examples from Kiren**
+
 In conclusion our analysis was successful, but has room for improvement. With more experience an additional Gaussian fitting could have been performed with the curves to determine the shifts more accurately. Moreover, when choosing parameters, such as the y-threshold for the determination of local maxima we were aware this might have led to a loss of potential RBPs, however we decided to rather risk omitting potential candidates, instead of falsely identifying RBPs, which is why we set more strict conditions. 
-Perhaps more Proteins associated with Actin could have been found, when also analyzing the proteins that showed shifts in the local maxima, or when comparing both datasets. What we were able to find however, was that the function of a lot of proteins had to do with chromatin assembly or the cytoskeleton, which also essential for cell cycle
+Perhaps more Proteins associated with Actin could have been found, when also analyzing the proteins that showed shifts in the local maxima, or when comparing both datasets. What we were able to find however, was that the function of a lot of proteins had to do with chromatin assembly or the cytoskeleton, which also essential for cell cycle. 
 This quantitative approach of identifying RBPs lead us to identify ** 54  (Zahl Kiren ** RBPs that, as told by R-DeeP had not been identified previously as RBPs, which once more shows the study gap in RBP research. Taking everything into consideration, RNA-dependent proteins were shown to be involved in almost all cellular processes, mainly in functions performed by RNA, such as transcription, translation and the function of the ribosome, but also in brain development, the regulation of the cell cycle and many others, showing their diverse range and therefore the importance of research on RNA dependent and RNA associated proteins, which continues to be a promising field of research. 
 
 
@@ -280,6 +268,10 @@ Lunde, B.M., Moore, C., and Varani, G. (2007). RNA-binding proteins: modular des
 Nelson, D.L., Cox, Michael M. , Hoskins Aron A. . (2021). Lehninger principles of biochemistry, Eight edition Edition.  
 
 Sternburg, E.L., and Karginov, F.V. (2020). Global approaches in studying RNA-binding protein interaction networks. Trends in Biochemical Sciences 45, 593-603.  
+
+The UniProt Consortium
+UniProt: the universal protein knowledgebase in 2021
+Nucleic Acids Res. 49:D1 (2021)
 
 
 
