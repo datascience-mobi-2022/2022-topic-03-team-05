@@ -179,7 +179,7 @@ mtripCtrlnormdat = cbind(mrep1ctrlnormDataframe, mrep2ctrlnormDataframe, mrep3ct
 mtripRnasenormdat = cbind(mrep1rnasenormDataframe, mrep2rnasenormDataframe, mrep3rnasenormDataframe)
 
 ## check if protein amount == 100
-sum(mrep1ctrlnormData[1,]) # == 100
+sum(mrep1ctrlnormData[1,]) ## == 100
 ```
 
 # Creating batch-effect free data frames
