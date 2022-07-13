@@ -6,9 +6,6 @@ date: "11 7 2022"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 
 
@@ -37,7 +34,10 @@ II.	Methods
 2.4.	k-means Clustering  
 2.5.	Regression Analysis  
 III.	Results  
-3.1.	Comparison with the R-DeeP and CORUM database  
+3.1.  RNA-biding proteins
+3.2.  Analysis of the HeLa Mitosis dataset
+3.3. Comparison with the R-DeeP and UniProt database
+3.4. Conclusion
 IV.	Discussion  
 V.	Literature  
 
@@ -184,7 +184,7 @@ We tried to establish a predictive model to determine the absolute value of the 
 
 
 ## III. Results
-### 3.1. RBPs 
+### 3.1. RNA-binding proteins
 
 The main focus of this analysis was to determine whether a protein is RNA binding or not. For this we plotted the amount of protein in each fraction before and RNase treatment of the sample into one graph, to see if there would be a difference.
 As defined by Caudron et. al. , a protein is defined to be an RBP, if the amount of protein differs between the control sample and the RNase sample. To characterize the shifts, we considered the position of the maxima, as well as the direction of the shift.  Proteins could either show a full shift, where the global maximum changed position, or a partial shift, where the global maximum remained static, but the local maxima changed their position along the x-axis.
@@ -235,6 +235,7 @@ A protein was considered to be an RBP, when the maxima changed positions of at l
 
 **K means and regression**
 ** Second dataset**
+
 
 
 In conclusion our analysis was successful, but has room for improvement. With more experience an additional Gaussian fitting could have been performed with the curves to determine the shifts more accurately. Moreover, when choosing parameters, such as the y-threshold for the determination of local maxima we were aware this might have led to a loss of potential RBPs, however we decided to rather risk omitting potential candidates, instead of falsely identifying RBPs, which is why we set more strict conditions. 
