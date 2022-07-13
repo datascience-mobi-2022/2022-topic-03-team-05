@@ -1,6 +1,6 @@
 ---
 title: "Proteome-wide screen for RNA-dependent proteins_Group5_Interphase"
-author: "Marie Lulu Salein, Kiren Nadiem, Katharina Lotter "
+author: "Marie Lulu Salein, Kiren Nadeem, Katharina Lotter "
 date: "18 7 2022"
 output: html_document
 ---
@@ -17,7 +17,7 @@ We start by analyzing the HeLa Interphase data set. For later parts of the code 
 
 ## Insert own location of data set
 ## FullDat <- read.table("C:/Dokumente/Uni/FS 4/Data Analysis/RDeeP_HeLa_Interphase.csv", header = TRUE, row.names=1, sep = ";") 
-save(FullDat, file = "FullDat.Rdata")
+## save(FullDat, file = "FullDat.Rdata")
 
 load("FullDat.Rdata") 
 dim(FullDat)
@@ -77,7 +77,12 @@ We transform all zeros into NAs and use is.na to look for rows in which the cont
 ```{r}
 remo1 = which(rowSums(is.na(TripCtrldat))==75) 
 remo2 = which(rowSums(is.na(TripRnasedat))==75) 
-FullDat = FullDat[-c(remo1,remo2),]
+if (length(remo1) != 0 ){
+  FullDat = FullDat[-remo1,]
+}
+if (length(remo2) != 0){
+  FullDat = FullDat[-remo1,]
+}
 
 ```
 
