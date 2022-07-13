@@ -1,7 +1,7 @@
 ---
-title: "Analysis_Mitosis_RDeeP"
-author: "MSalein"
-date: "5 7 2022"
+title: "Proteome-wide screen for RNA-dependent proteins_Group5_Mitosis"
+author: "Katharina Lotter, Kiren Nadeem, Laura Herrfurth, Marie Lulu Salein"
+date: "18 7 2022"
 output: html_document
 ---
 
@@ -9,38 +9,24 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
----
-title: "RDeeP_HeLa_Interphase"
-author: "MSalein"
-date: "23 5 2022"
-output: html_document
----
+# Analysis of mitosis data set
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+We start our project by analyzing the HeLa mitosis data set. The goal is to identify both RNA-binding and RNA-dependent proteins, properties they have in common and compare our results to data bases. In order to work with the data set, we have to load it first. 
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-
-
-We are starting our project by analyzing the HeLa Interphase data set. The goal is to identify both RNA-binding and RNA-dependent proteins, properties they have in common and compare our results to data bases. In order to work with the data set, we have to load it first. 
-
-
-ACHTUNG GENAU GLEICHER CODE!!!!!!
 ```{r}
-mFullDat <- read.table("C:/Dokumente/Uni/FS 4/Data Analysis/RDeeP_HeLa_Mitosis.csv", header = TRUE, row.names=1, sep = ";") 
-#save(mFullDat, file = "mFullDat.Rdata")
+# load data set
 
-#load("mFullDat.Rdata") ##nur den ausführen bei R-Datei von jemand anderem
+## load data by inserting own location of data set
+## mFullDat <- read.table("C:/Dokumente/Uni/FS 4/Data Analysis/RDeeP_HeLa_Mitosis.csv", header = TRUE, row.names=1, sep = ";") 
+## save(mFullDat, file = "mFullDat.Rdata")
+
+load("mFullDat.Rdata") 
 dim(mFullDat)
 ```
 
-The data set has 7086 rows representing the proteins and 150 columns (3 replicates with 25 fractions for both control and RNase samples).
+The data set has 7159 rows representing the proteins and 150 columns (3 replicates with 25 fractions for both control and RNase samples).
 
-It is important that all of the values are stored as numerics. If not, this will cause problems in calculations and further analysis. As the data set contains doubles, we checked every value for being stored as a double. 
+It is important that all of the values are stored as numerics. If not, this will cause problems in calculations and further analysis. As the data set contains doubles, we check every value for being stored as a double. 
 
 ```{r}
 sum(apply(mFullDat, 2, is.double))
@@ -48,16 +34,16 @@ sum(apply(mFullDat, 2, is.double))
 ```
 As we can see, all values are stored as doubles.
 
+# Data clean-up
 
-Our data clean-up consists of two parts: removing all rows containing all zeros and removing rows where all of the Control or the RNase values are zero. In the first step of data cleaning, we searched for rows (proteins) that had only zeros. We deleted this row (FHOD3_HUMAN) because it does not contain any information. Thereby, the data set is reduced to 7085 rows. NExt, we transformed all zeros to NA.
+Our data clean-up consists of two parts: removing all rows containing all zeros and removing rows where all of the Control or the RNase values are zero. In the first step of data cleaning, we search for rows (proteins) that had only zeros. We delete this row (KLD10_HUMAN) because it does not contain any information. Thereby, the data set is reduced to 7158 rows. Next, we transformed all zeros to NA.
 
 ```{r}
-which(rowSums(mFullDat==0)==150) ##proteins with all zeros
+which(rowSums(mFullDat==0)==150) ## proteins with all zeros
 mFullDat = mFullDat[-(which(rowSums(mFullDat==0)==150)),] ## remove protein with all zeros
 
-
-mFullDat[mFullDat==0] = NA ##würde ich rausnehmen und nur für mean und co vllt einbauen (aplly hat kein rm.na!!!)
-
+## replace all zeros with NA for further cleaning steps
+mFullDat[mFullDat==0] = NA 
 ```
 
 The data set is very large. To prepare the data for our normalization, we split the data set into smaller data frames, one data frame for each replicate resulting in 6 different data frames.
@@ -66,9 +52,9 @@ The data set is very large. To prepare the data for our normalization, we split 
 colRep1ctrl = seq(1, 150, 6) ##all columns with measurements from rep1 control sample 
 colRep2ctrl = seq(2, 150, 6) ##all columns with measurements from rep2 control sample
 colRep3ctrl = seq(3, 150, 6) ##all columns with measurements from rep3 control sample
-colRep1rnase = seq(4, 150, 6) ##all columns with measurements from rep1 rnase sample
-colRep2rnase = seq(5, 150, 6) ##all columns with measurements from rep2 rnase sample
-colRep3rnase = seq(6, 150, 6) ##all columns with measurements from rep3 rnase sample
+colRep1rnase = seq(4, 150, 6) ##all columns with measurements from rep1 RNase sample
+colRep2rnase = seq(5, 150, 6) ##all columns with measurements from rep2 RNase sample
+colRep3rnase = seq(6, 150, 6) ##all columns with measurements from rep3 RNase sample
 
 
 mrep1ctrldat = mFullDat[,colRep1ctrl] 
@@ -79,49 +65,48 @@ mrep2rnasedat = mFullDat[,colRep2rnase]
 mrep3rnasedat = mFullDat[,colRep3rnase]
 ```
 
-Three of the six data frames are part of the Control and the RNase experiments respectively. We combined them in order to get one data set for each condition by joining them per column.
+Three of the six data frames are part of the control and the RNase experiments respectively. We combine them in order to get one data set for each condition by joining them per column.
 
 ```{r}
 mTripCtrldat = cbind(mrep1ctrldat, mrep2ctrldat, mrep3ctrldat)
 mTripRnasedat = cbind(mrep1rnasedat, mrep2rnasedat, mrep3rnasedat)
 ```
 
-Now, we could continue with the second step of data cleaning. A protein without any values in either the control or the RNase tests cannot be compared the other condition, thus giving us no information and can be deleted. As all zeros were turned to NA in a previous step, we used is.na to look for rows in both the control and the RNase data frame containing all zeros (NAs). As the data sets have 75 columns, the NAs in a row without a value must sum up to 75. This step results in a data set with 7081 rows (4 proteins less). 
+Now, we continue with the second step of data cleaning. A protein without any values in either the control or the RNase tests cannot be compared the other condition, thus giving us no information and can be removed. As all zeros were turned to NA in a previous step, we used is.na to look for rows - in both the control and the RNase data frame - containing all zeros (NAs). As the data sets have 75 columns, the NAs in a row without a value must sum up to 75. This step results in a data set with 7156 rows (2 proteins less). 
 
 ```{r}
 mremo1 = which(rowSums(is.na(mTripCtrldat))==75) ##ist 0
 mremo2 = which(rowSums(is.na(mTripRnasedat))==75) ##ist 0
 mFullDat = mFullDat[-c(mremo1,mremo2),]
 
-##warum funktioniet das nicht
-##remo = function(x){x = x[-which(rowSums(is.na(TripCtrldat))==75),]}
-##remo(mFullDat)
-
 ```
 
 # Normalization fraction-wise 
 
-For the analysis, it is crucial that the replicates for each condition are comparable. When we looked at the data set, we noticed that all replicates were performed with different amounts of protein. Therefore, we performed a fraction-wise and protein-wise normalization step. First, we adapted the amount of protein per fraction for the three replicates (Ctrl and RNase separately) to be the mean of the two means lying closest to each other between the three replicates.The aim of this step is making the three replicates comparable to each other to check for the reproducibility later on. 
+For the analysis, it is crucial that the replicates for each condition are comparable. When we look at the data set, we notice that all replicates were performed with different amounts of protein. Therefore, we perform a fraction-wise and protein-wise normalization step. First, we adapt the amount of protein per fraction for the three replicates (Ctrl and RNase separately) to be the mean of the two means lying closest to each other between the three replicates.The aim of this step is making the three replicates comparable to each other to check for the reproducibility later on. 
 
 ```{r}
+## turn NA to zero
 mFullDat[is.na(mFullDat)] = 0
+
+## Ctrl sum fraction-wise before normalization to compare the protein amount between the replicates
 mrep_sum = apply(mFullDat, 2, sum)
-#Ctrl sum fraction-wise before normalization
+
 for (i in colRep1ctrl){
   barplot(mrep_sum[i:(i+2)])}
 
-#RNase sum fraction-wise before normalization
+## RNase sum fraction-wise before normalization to compare the protein amount between the replicates
 for (i in colRep1rnase){
   barplot(mrep_sum[i:(i+2)])
 }
 
-#vector with mean for each fraction, each condition and each replicate (= 150 values)
+## vector with mean and sd for each fraction, each condition and each replicate (= 150 values)
 mmean_frac_rep = apply(mFullDat, 2, mean)
 msd_frac_rep = apply(mFullDat,2, sd)
 
-#normalization fraction-wise
+## normalization fraction-wise
 col_frac_per_condition = sort(c(colRep1ctrl, colRep1rnase))
-mmean_rep = vector() ##vector with mean value of two mean values that are closest to each other in each fraction of each condition (comparing mean values of triplicates)
+mmean_rep = vector() ## vector with mean value of two mean values that are closest to each other in each fraction of each condition (comparing mean values of triplicates)
 for (i in 1:50){
   a = mmean_frac_rep[col_frac_per_condition[i]]
   b = mmean_frac_rep[col_frac_per_condition[i]+1]
@@ -131,7 +116,7 @@ for (i in 1:50){
       else{mmean_rep[i] = mean(c(a,c))}
 }
 
-#normalization to mean values stored in mean_rep
+## normalization to mean values (stored in mean_rep)
 mFullDat_fracnorm = data.frame(mFullDat)
 for (i in 1:50) {
   for (j in col_frac_per_condition[i]:(col_frac_per_condition[i]+2)){
@@ -145,14 +130,15 @@ for (i in 1:50) {
 
 ```
 
-#testing if all fraction-wise sums/means are equal after fraction-wise normalization
+# Testing if all fraction-wise sums/means are equal after fraction-wise normalization
+
 ```{r}
+## Ctrl sum fraction-wise after  normalization
 mrep_sum_norm = apply(mFullDat_fracnorm, 2, sum)
-#Ctrl sum fraction-wise before normalization
 for (i in colRep1ctrl){
   barplot(mrep_sum_norm[i:(i+2)])}
 
-#RNase sum fraction-wise before normalization
+## RNase sum fraction-wise after normalization
 for (i in colRep1rnase){
   barplot(mrep_sum_norm[i:(i+2)])
 }
@@ -166,7 +152,9 @@ for (i in colRep1rnase) {
 }
 ```
 
-Then, we normalized the protein amount to 100 for each protein for every replicate using the apply function and saved the resulting values in six different data frames.
+# Normalization protein-wise (per replicate)
+
+Then, we normalize the protein amount to 100 for each protein for every replicate using the apply function and saved the resulting values in six different data frames. We multiply every value with 100 divided by the sum of the protein amount replicate.
 
 ```{r}
 mFullDat = mFullDat_fracnorm
@@ -185,23 +173,25 @@ mrep1rnasenormDataframe = as.data.frame(mrep1rnasenormData)
 mrep2rnasenormDataframe = as.data.frame(mrep2rnasenormData)
 mrep3rnasenormDataframe = as.data.frame(mrep3rnasenormData)
 
+## join the three replicates into two data sets (one for control, one for RNase)
 mtripCtrlnormdat = cbind(mrep1ctrlnormDataframe, mrep2ctrlnormDataframe, mrep3ctrlnormDataframe)
 mtripRnasenormdat = cbind(mrep1rnasenormDataframe, mrep2rnasenormDataframe, mrep3rnasenormDataframe)
 
-# check if amount == 100 as example
+## check if protein amount == 100
 sum(mrep1ctrlnormData[1,]) # == 100
 ```
 
-#Creating batch-effect free data frames
+# Creating batch-effect free data frames
 
 Batch effects are variations in the data caused by technical factors. They are not relevant for the biological question and may even lead to different or false conclusions. Thus, we analyze the data set looking for batch-effects by comparing the values of the three replicates for each fraction and each condition:
 If there is a protein that contains two zeros (NA) and one value in a fraction, the value will be set to zero.
 If there is a protein showing two values and one zero, the zero is replaced by the mean of the two others.
 
 ```{r}
-
+## turn all zeros into NA
 mtripRnasenormdat[mtripRnasenormdat==0] = NA
 mtripCtrlnormdat[mtripCtrlnormdat==0] = NA
+
 for(i in 1:nrow(mtripCtrlnormdat)){
   for (j in 1:25){
     mtestctrl = c(mtripCtrlnormdat[i,j],mtripCtrlnormdat[i,j+25], mtripCtrlnormdat[i,j+50])
@@ -236,7 +226,8 @@ for(i in 1:nrow(mtripRnasenormdat)){
   }
 }
 
-
+##xxxxxxxxx
+## removing new rows with all zeros in control or RNase due to batch effect removal 
 #mna_r = which(rowSums(is.na(mtripRnasenormdat))==75)
 #mna_c = which(rowSums(is.na(mtripCtrlnormdat))==75)
 #mna_afterbatch = c(mna_r, mna_c)
@@ -245,9 +236,12 @@ for(i in 1:nrow(mtripRnasenormdat)){
 #mtripCtrlnormdat = mtripCtrlnormdat[-mna_afterbatch,]
 #mtripRnasenormdat = mtripRnasenormdat[-mna_afterbatch,]
 
+## convert all NAs back to zeros
 mtripRnasenormdat[is.na(mtripRnasenormdat)] = 0
 mtripCtrlnormdat[is.na(mtripCtrlnormdat)] = 0
 
+
+## splitting into 6 data frames for the 6 different replicates
 mrep1ctrlnormDataframe = mtripCtrlnormdat[,1:25]
 mrep2ctrlnormDataframe = mtripCtrlnormdat[,26:50]
 mrep3ctrlnormDataframe = mtripCtrlnormdat[,51:75]
@@ -259,13 +253,14 @@ mrep3rnasenormDataframe = mtripRnasenormdat[,51:75]
 ```
 There are 14 proteins that have a replicate value being a batch effect. The issue was solved as explained before. 
 
-#Reproducibility
+# Reproducibility
 
-It is crucial to verify that the data is reproducible. Our approach is to compare the maxima (global and local) between the replicates. We determined that maxima are allowed to differ one fraction. 
+It is crucial to verify that the data is reproducible. Our approach is to compare the maxima (global and local) between the replicates. We determined that maxima are allowed to differ one fraction to be reproducible. 
+
+# Global maxima
 
 ```{r}   
- 
-# global maxima with which.max returning the highest value in the row (protein)
+## global maxima with which.max returning the highest value in the row (protein)
 mfraction_abs_max = data.frame(row.names = rownames(mrep1ctrlnormDataframe))
 
 for (i in 1:nrow(mrep1ctrlnormDataframe)){
@@ -276,30 +271,35 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
   mfraction_abs_max[i,5] = which.max(mrep2rnasenormDataframe[i,])
   mfraction_abs_max[i,6] = which.max(mrep3rnasenormDataframe[i,])
 }
-# mfraction_abs_max: data frame where global values are stored for each protein and each replicate (first column -> first replicate ctrl, second column -> second replicate ctrl...)
+## mfraction_abs_max: data frame where global values are stored for each protein and each replicate (first column -> first replicate ctrl, second column -> second replicate ctrl...)
 
-# verifying if global maximum shifts more than one fraction between the replicates (TRUE means they do not, thus reproducible)
+## verifying if global maximum shifts more than one fraction between the replicates (TRUE means they do not, thus reproducible)
 isTRUE(all.equal(mfraction_abs_max[,1], mfraction_abs_max[,2], tolerance = 1.1))
 isTRUE(all.equal(mfraction_abs_max[,2], mfraction_abs_max[,3], tolerance = 1.1))
 isTRUE(all.equal(mfraction_abs_max[,1], mfraction_abs_max[,3], tolerance = 1.1))
 isTRUE(all.equal(mfraction_abs_max[,4], mfraction_abs_max[,5], tolerance = 1.1))
 isTRUE(all.equal(mfraction_abs_max[,5], mfraction_abs_max[,6], tolerance = 1.1))
 isTRUE(all.equal(mfraction_abs_max[,4], mfraction_abs_max[,6], tolerance = 1.1))
+## all global maxima are reproducible
+```
 
 
-#local maxima
+# Local maxima
 
-#wenn die Werte jeweils ein, zwei, drei Fraktionen daneben kleiner sind, der wert selbst mind. 3, 5 oder 7 % der gesamtproteinmenge ausmacht
+Definition local maxima: each of the two values right and the two values left next to the maximum are smaller than the value of the maximum and the local maximum consits of at least 3, 5 or 7% of the whole protein amount of the specific protein
 
-#Threshold 3 % of total protein amount
-#control
+For the marginal values we only look at the existing values next to them. For example, for the first fraction we only compare the protein amounts in the two fractions right to fraction 1. We had to specially implement conditions for the marginal values.
+
+```{r}
+## Threshold 3 % of total protein amount
+## control
 mmaxctrl1_3 = matrix(0, nrow=nrow(mrep1ctrlnormDataframe), ncol=25)
 mmaxctrl2_3 = matrix(0, nrow=nrow(mrep1ctrlnormDataframe), ncol=25)
 mmaxctrl3_3 = matrix(0, nrow=nrow(mrep1ctrlnormDataframe), ncol=25)
 
 for (i in 1:nrow(mrep1ctrlnormDataframe)){
   
-  for (j in 1){ #marginal value 1; weiterer threshold für Randwerte?
+  for (j in 1){ ## marginal value 1
     if(j != mfraction_abs_max[i,1] && mrep1ctrlnormDataframe[i,j] > 3 &&  mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j+1)]){
       mmaxctrl1_3[i,j] = j
     }
@@ -311,8 +311,7 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
     }
   }
  
-   
-  for(j in 2){ #marginal value 2
+  for(j in 2){ ## marginal value 2
     if(j != mfraction_abs_max[i,1] && mrep1ctrlnormDataframe[i,j] > 3 &&  mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j-1)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j+1)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j+2)]){
       mmaxctrl1_3[i,j] = j
     }
@@ -336,8 +335,7 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
     }
   }
   
-  
-  for(j in 24){ #marginal value 3
+  for(j in 24){ ## marginal value 3
     if(j != mfraction_abs_max[i,1] && mrep1ctrlnormDataframe[i,j] > 3 &&  mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j+1)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j-1)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j-2)]){
       mmaxctrl1_3[i,j] = j
     }
@@ -349,7 +347,7 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
     }
   }
   
-  for (j in 25){ #marginal value 4
+  for (j in 25){ ## marginal value 4
     if(j != mfraction_abs_max[i,1] && mrep1ctrlnormDataframe[i,j] > 3 &&  mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j-1)]){
       mmaxctrl1_3[i,j] = j
     }
@@ -360,17 +358,17 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
       mmaxctrl3_3[i,j] = j
     }
   }
-  
 }
 
-#rnase
+
+## RNase
 mmaxrnase1_3 = matrix(0, nrow=nrow(mrep1rnasenormDataframe), ncol=25)
 mmaxrnase2_3 = matrix(0, nrow=nrow(mrep1rnasenormDataframe), ncol=25)
 mmaxrnase3_3 = matrix(0, nrow=nrow(mrep1rnasenormDataframe), ncol=25)
 
 for (i in 1:nrow(mrep1rnasenormDataframe)){
   
-  for (j in 1){ #marginal value 1; weiterer threshold für Randwerte?
+  for (j in 1){ ## marginal value 1
     if(j != mfraction_abs_max[i,4] && mrep1rnasenormDataframe[i,j] > 3 &&  mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j+1)]){
       mmaxrnase1_3[i,j] = j
     }
@@ -382,8 +380,7 @@ for (i in 1:nrow(mrep1rnasenormDataframe)){
     }
   }
  
-   
-  for(j in 2){ #marginal value 2
+  for(j in 2){ ## marginal value 2
     if(j != mfraction_abs_max[i,4] && mrep1rnasenormDataframe[i,j] > 3 &&  mrep1rnasenormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j-1)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j+1)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j+2)]){
       mmaxrnase1_3[i,j] = j
     }
@@ -394,8 +391,6 @@ for (i in 1:nrow(mrep1rnasenormDataframe)){
       mmaxrnase3_3[i,j] = j
     }
   }
-  
-  
   
   for (j in 3:23){
     if(j != mfraction_abs_max[i,4] && mrep1rnasenormDataframe[i,j] > 3 && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j-1)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j+1)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j+2)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j-2)]) {
@@ -409,8 +404,7 @@ for (i in 1:nrow(mrep1rnasenormDataframe)){
     }
   }
   
-  
-  for(j in 24){ #marginal value 3
+  for(j in 24){ ## marginal value 3
     if(j != mfraction_abs_max[i,4] && mrep1rnasenormDataframe[i,j] > 3 &&  mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j+1)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j-1)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j-2)]){
       mmaxrnase1_3[i,j] = j
     }
@@ -433,20 +427,18 @@ for (i in 1:nrow(mrep1rnasenormDataframe)){
       mmaxrnase3_3[i,j] = j
     }
   }
-  
 }
 
 
-#Threshold 5 % of total protein amount
-#control
+## Threshold 5 % of total protein amount
+## control
 mmaxctrl1_5 = matrix(0, nrow=nrow(mrep1ctrlnormDataframe), ncol=25)
 mmaxctrl2_5 = matrix(0, nrow=nrow(mrep1ctrlnormDataframe), ncol=25)
 mmaxctrl3_5 = matrix(0, nrow=nrow(mrep1ctrlnormDataframe), ncol=25)
 
-
 for (i in 1:nrow(mrep1ctrlnormDataframe)){
   
-  for (j in 1){ #marginal value 1
+  for (j in 1){ ## marginal value 1
     if(j != mfraction_abs_max[i,1] && mrep1ctrlnormDataframe[i,j] > 5 &&  mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j+1)]){
       mmaxctrl1_5[i,j] = j
     }
@@ -458,7 +450,7 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
     }
   }
 
-  for(j in 2){ #marginal value 2
+  for(j in 2){ ## marginal value 2
     if(j != mfraction_abs_max[i,1] && mrep1ctrlnormDataframe[i,j] > 5 &&  mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j-1)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j+1)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j+2)]){
       mmaxctrl1_5[i,j] = j
     }
@@ -469,7 +461,6 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
       mmaxctrl3_5[i,j] = j
     }
   }
-
     
   for (j in 3:23){
     if(j != mfraction_abs_max[i,1] && mrep1ctrlnormDataframe[i,j] > 5 && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j-1)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j+1)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j+2)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j-2)]) {
@@ -483,8 +474,7 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
     }
   }
   
-  
-  for(j in 24){ #marginal value 3
+  for(j in 24){ ## marginal value 3
     if(j != mfraction_abs_max[i,1] && mrep1ctrlnormDataframe[i,j] > 5 &&  mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j+1)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j-1)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j-2)]){
       mmaxctrl1_5[i,j] = j
     }
@@ -496,7 +486,7 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
     }
   }
   
-  for (j in 25){ #marginal value 4
+  for (j in 25){ ## marginal value 4
     if(j != mfraction_abs_max[i,1] && mrep1ctrlnormDataframe[i,j] > 5 &&  mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j-1)]){
       mmaxctrl1_5[i,j] = j
     }
@@ -507,17 +497,17 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
       mmaxctrl3_5[i,j] = j
     }
   }
-  
 }
 
-#rnase
+
+## RNase
 mmaxrnase1_5 = matrix(0, nrow=nrow(mrep1rnasenormDataframe), ncol=25)
 mmaxrnase2_5 = matrix(0, nrow=nrow(mrep1rnasenormDataframe), ncol=25)
 mmaxrnase3_5 = matrix(0, nrow=nrow(mrep1rnasenormDataframe), ncol=25)
 
 for (i in 1:nrow(mrep1rnasenormDataframe)){
   
-  for (j in 1){ #marginal value 1; weiterer threshold für Randwerte?
+  for (j in 1){ ## marginal value 1
     if(j != mfraction_abs_max[i,4] && mrep1rnasenormDataframe[i,j] > 5 &&  mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j+1)]){
       mmaxrnase1_5[i,j] = j
     }
@@ -528,9 +518,8 @@ for (i in 1:nrow(mrep1rnasenormDataframe)){
       mmaxrnase3_5[i,j] = j
     }
   }
- 
    
-  for(j in 2){ #marginal value 2
+  for(j in 2){ ## marginal value 2
     if(j != mfraction_abs_max[i,4] && mrep1rnasenormDataframe[i,j] > 5 &&  mrep1rnasenormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j-1)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j+1)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j+2)]){
       mmaxrnase1_5[i,j] = j
     }
@@ -541,8 +530,6 @@ for (i in 1:nrow(mrep1rnasenormDataframe)){
       mmaxrnase3_5[i,j] = j
     }
   }
-  
-  
   
   for (j in 3:23){
     if(j != mfraction_abs_max[i,4] && mrep1rnasenormDataframe[i,j] > 5 && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j-1)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j+1)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j+2)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j-2)]) {
@@ -556,8 +543,7 @@ for (i in 1:nrow(mrep1rnasenormDataframe)){
     }
   }
   
-  
-  for(j in 24){ #marginal value 3
+  for(j in 24){ ## marginal value 3
     if(j != mfraction_abs_max[i,4] && mrep1rnasenormDataframe[i,j] > 5 &&  mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j+1)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j-1)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j-2)]){
       mmaxrnase1_5[i,j] = j
     }
@@ -569,7 +555,7 @@ for (i in 1:nrow(mrep1rnasenormDataframe)){
     }
   }
   
-  for (j in 25){ #marginal value 4
+  for (j in 25){ ## marginal value 4
     if(j != mfraction_abs_max[i,4] && mrep1rnasenormDataframe[i,j] > 5 &&  mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j-1)]){
       mmaxrnase1_5[i,j] = j
     }
@@ -580,19 +566,18 @@ for (i in 1:nrow(mrep1rnasenormDataframe)){
       mmaxrnase3_5[i,j] = j
     }
   }
-  
 }
 
 
-
-#Threshold 7 % of total protein amount
+## Threshold 7 % of total protein amount
+## control
 mmaxctrl1_7 = matrix(0, nrow=nrow(mrep1ctrlnormDataframe), ncol=25)
 mmaxctrl2_7 = matrix(0, nrow=nrow(mrep1ctrlnormDataframe), ncol=25)
 mmaxctrl3_7 = matrix(0, nrow=nrow(mrep1ctrlnormDataframe), ncol=25)
 
 for (i in 1:nrow(mrep1ctrlnormDataframe)){
   
-  for (j in 1){ #marginal value 1
+  for (j in 1){ ## marginal value 1
     if(j != mfraction_abs_max[i,1] && mrep1ctrlnormDataframe[i,j] > 7 &&  mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j+1)]){
       mmaxctrl1_7[i,j] = j
     }
@@ -604,7 +589,7 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
     }
   }
   
-  for(j in 2){ #marginal value 2
+  for(j in 2){ ## marginal value 2
     if(j != mfraction_abs_max[i,1] && mrep1ctrlnormDataframe[i,j] > 7 &&  mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j-1)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j+1)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j+2)]){
       mmaxctrl1_7[i,j] = j
     }
@@ -628,8 +613,7 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
     }
   }
   
-  
-  for(j in 24){ #marginal value 3
+  for(j in 24){ ## marginal value 3
     if(j != mfraction_abs_max[i,1] && mrep1ctrlnormDataframe[i,j] > 7 &&  mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j+1)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j-1)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j-2)]){
       mmaxctrl1_7[i,j] = j
     }
@@ -641,7 +625,7 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
     }
   }
   
-  for (j in 25){ #marginal value 4
+  for (j in 25){ ## marginal value 4
     if(j != mfraction_abs_max[i,1] && mrep1ctrlnormDataframe[i,j] > 7 &&  mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j-1)]){
       mmaxctrl1_7[i,j] = j
     }
@@ -652,17 +636,16 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
       mmaxctrl3_7[i,j] = j
     }
   }
-  
 }
 
-#rnase
+## RNase
 mmaxrnase1_7 = matrix(0, nrow=nrow(mrep1rnasenormDataframe), ncol=25)
 mmaxrnase2_7 = matrix(0, nrow=nrow(mrep1rnasenormDataframe), ncol=25)
 mmaxrnase3_7 = matrix(0, nrow=nrow(mrep1rnasenormDataframe), ncol=25)
 
 for (i in 1:nrow(mrep1rnasenormDataframe)){
   
-  for (j in 1){ #marginal value 1; weiterer threshold für Randwerte?
+  for (j in 1){ ## marginal value 1
     if(j != mfraction_abs_max[i,4] && mrep1rnasenormDataframe[i,j] > 7 &&  mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j+1)]){
       mmaxrnase1_7[i,j] = j
     }
@@ -673,9 +656,8 @@ for (i in 1:nrow(mrep1rnasenormDataframe)){
       mmaxrnase3_7[i,j] = j
     }
   }
- 
    
-  for(j in 2){ #marginal value 2
+  for(j in 2){ ## marginal value 2
     if(j != mfraction_abs_max[i,4] && mrep1rnasenormDataframe[i,j] > 7 &&  mrep1rnasenormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j-1)] && mrep1ctrlnormDataframe[i,j] > mrep1ctrlnormDataframe[i, (j+1)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j+2)]){
       mmaxrnase1_7[i,j] = j
     }
@@ -686,8 +668,6 @@ for (i in 1:nrow(mrep1rnasenormDataframe)){
       mmaxrnase3_7[i,j] = j
     }
   }
-  
-  
   
   for (j in 3:23){
     if(j != mfraction_abs_max[i,4] && mrep1rnasenormDataframe[i,j] > 7 && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j-1)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j+1)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j+2)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j-2)]) {
@@ -701,8 +681,7 @@ for (i in 1:nrow(mrep1rnasenormDataframe)){
     }
   }
   
-  
-  for(j in 24){ #marginal value 3
+  for(j in 24){ ## marginal value 3
     if(j != mfraction_abs_max[i,4] && mrep1rnasenormDataframe[i,j] > 7 &&  mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j+1)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j-1)] && mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j-2)]){
       mmaxrnase1_7[i,j] = j
     }
@@ -714,7 +693,7 @@ for (i in 1:nrow(mrep1rnasenormDataframe)){
     }
   }
   
-  for (j in 25){ #marginal value 4
+  for (j in 25){ ## marginal value 4
     if(j != mfraction_abs_max[i,4] && mrep1rnasenormDataframe[i,j] > 7 &&  mrep1rnasenormDataframe[i,j] > mrep1rnasenormDataframe[i, (j-1)]){
       mmaxrnase1_7[i,j] = j
     }
@@ -725,13 +704,12 @@ for (i in 1:nrow(mrep1rnasenormDataframe)){
       mmaxrnase3_7[i,j] = j
     }
   }
-  
 }
 
+## Now we have three data sets for the different thresholds which contain only zeros except on the positions where we found a maximum
 
-# jetzt haben wir drei Datensätze mit 0 außer an den Fraktionen, wo ein Maximum ist
-# Vergleich
-# matrix that is TRUE if local maximum shifted at least two fractions, otherwise FALSE
+## Comparison thresholds
+## matrix that is TRUE if local maximum shifted at least two fractions, otherwise FALSE
 compare_max = function(a,b){
 vgl = matrix(FALSE, ncol = 25, nrow = nrow(mrep1ctrlnormDataframe))
 row.names(vgl) = rownames(mrep1ctrlnormDataframe)
@@ -740,7 +718,6 @@ for (i in 1:nrow(vgl)){
   
   for (j in 1) {
     if(a[i,j]==b[i,j]){
-      
     } 
     else if(a[i,j]==0 && b[i,j]!=0){
         if(a[i,(j+1)] != 0){
@@ -752,12 +729,11 @@ for (i in 1:nrow(vgl)){
         }
            else {vgl[i,j] = TRUE}
       }
-    
   }
+  
   for (j in 2:24){
     if(a[i,j]==b[i,j]){
-      
-    } 
+      } 
     else if(a[i,j]==0 && b[i,j]!=0){
         if(a[i,(j+1)] != 0 || a[i,(j-1)] != 0){
         }
@@ -768,11 +744,10 @@ for (i in 1:nrow(vgl)){
         }
            else {vgl[i,j] = TRUE}
       }
-      
   }
+  
   for (j in 25) {
     if(a[i,j]==b[i,j]){
-      
     } 
     else if(a[i,j]==0 && b[i,j]!=0){
         if(a[i,(j-1)] != 0){
@@ -784,18 +759,17 @@ for (i in 1:nrow(vgl)){
         }
            else {vgl[i,j] = TRUE}
       }
-      
   }
+  
   truesum[i] = sum(vgl[i,]) 
 }
 
 return(truesum)
 }
 
-# returns vector that tells for each protein how many maxima are more than one fraction different between the compared data frames
+## compare_max returns vector that tells for each protein how many maxima are more than one fraction different between the compared data frames
 
 compare_max(mmaxctrl2_3, mmaxctrl3_3)
-
 comp_rep = function(a,b,c){
 
 rows_rep = vector()
@@ -805,10 +779,9 @@ rows_rep = cbind(rows_rep, compare_max(b,c))
 row.names(rows_rep) = rownames(mrep1ctrlnormDataframe)
 
 return(rows_rep)
-
 }
 
-# matrix with number of at least one fraction local maxima differences for comparison of each two replicates out of three (different thresholds of total protein amount 3 %, 5 %, 7 %)
+## matrix with number of at least one fraction local maxima differences for comparison of each two replicates out of three (different thresholds of total protein amount 3%, 5%, 7%)
 mloc_max_ctrl3 = as.data.frame(comp_rep(mmaxctrl1_3, mmaxctrl2_3, mmaxctrl3_3))
 mloc_max_ctrl5 = as.data.frame(comp_rep(mmaxctrl1_5, mmaxctrl2_5, mmaxctrl3_5))
 mloc_max_ctrl7 = as.data.frame(comp_rep(mmaxctrl3_3, mmaxctrl3_5, mmaxctrl3_7))
@@ -817,9 +790,7 @@ mloc_max_rnase5 = as.data.frame(comp_rep(mmaxrnase1_5, mmaxrnase2_5, mmaxrnase3_
 mloc_max_rnase7 = as.data.frame(comp_rep(mmaxrnase1_7, mmaxrnase2_7, mmaxrnase3_7))
 
 
-
-# counting proteins that show at least one fraction shift when comparing all replicates in Ctrl and/or RNase 
-
+## counting proteins that show at least one fraction shift when comparing all replicates in Ctrl and/or RNase 
 not_repro = function(a,b) {
   u = vector()
   for (i in 1:nrow(mloc_max_ctrl3)) {
@@ -833,14 +804,14 @@ return(u)
 
   
 mthres_3 = not_repro(mloc_max_ctrl3, mloc_max_rnase3)
-sum(mthres_3) # remove 594 proteins with threshold 3%
+sum(mthres_3) ## we would remove 594 proteins with threshold 3%
 mthres_5 = not_repro(mloc_max_ctrl5, mloc_max_rnase5)
-sum(mthres_5) # remove 498 proteins with threshold 5%
+sum(mthres_5) ## we would remove 498 proteins with threshold 5%
 mthres_7 = not_repro(mloc_max_ctrl7, mloc_max_rnase7)
-sum(mthres_7) # remove 303 proteins with threshold 7% (wahrscheinlich jetzt anders)
+sum(mthres_7) ## we would remove 303 proteins with threshold 7% 
 
-# decide to go with maximum has to contain at least 5 % of total protein amount
-# remove proteins that are not reproducible
+## we decide to go with maximum has to contain at least 5 % of total protein amount
+## remove proteins that are not reproducible from all data sets
 mFullDat = mFullDat[- which(mthres_5 == TRUE),]
 mrep1ctrlnormDataframe = mrep1ctrlnormDataframe[- which(mthres_5 == TRUE),]
 mrep2ctrlnormDataframe = mrep2ctrlnormDataframe[- which(mthres_5 == TRUE),]
@@ -853,16 +824,18 @@ mtripRnasenormdat = mtripRnasenormdat[- which(mthres_5==TRUE),]
 
 ```
 
-The next step is taking the mean of all three replicates for each condition to receive an average curve of the protein's distribution with and without RNase. Our normalization has the advantage that all values of the resulting curve will sum up to 100. Thus, they are interpretable as percentages.  
+# Mean curves
+
+The next step is taking the mean of all three replicates for each condition to receive an average curve of the protein's distribution with and without RNase. Our normalization has the advantage that all values of the resulting curve sum up to 100. Thus, they are interpretable as percentages.  
 
 ```{r}
-#mean of control replicates of all proteins  
+## mean of control replicates of all proteins  
 mmeanRepctrl = matrix(nrow= nrow(mFullDat), ncol = 25)
 for (j in 1:nrow(mFullDat)){ 
   for (i in 1:25){
     mmeanRepctrl[j,i] = (mrep1ctrlnormDataframe[j,i] + mrep2ctrlnormDataframe[j,i] + mrep3ctrlnormDataframe[j,i])/3}}
 
-#mean of rnase replicates of all proteins 
+## mean of rnase replicates of all proteins 
 mmeanRepRNase = matrix(nrow= nrow(mFullDat), ncol = 25)
 for (j in 1:nrow(mFullDat)){ 
   for (i in 1:25){
@@ -876,19 +849,21 @@ Now we have two curves for the two conditions. Our goal is to determine the maxi
 ```{r} 
 y = 1:25
 
-for (i in 55:65){
+for (i in 1:10){
   plot(y, mmeanRepctrl[i,], type ="o", pch = 20, ylab = "percentage of protein amount", xlab = "fractions of sucrose density gradient", col = "cyan")
   lines(y,mmeanRepRNase[i,], type = "o", pch = 20, col = "magenta")
 }
 
-## 57 Beispiel für nur nebenmaximum shift (weitere: 62, 42, 74)
 
 ```
-# Maxima for mean Ctrl and mean RNase values 
-## Global maxima
+# Maxima for mean Ctrl and mean RNase values
+
+Both global and local maxima of the averged curves are calculated as described in the reproducibility part.
+
+# Global maxima
 
 ```{r}
-# absolute maxima
+## calculating global maxima
 mabs_max = data.frame(row.names = rownames(mrep1ctrlnormDataframe))
 
 for (i in 1:nrow(mrep1ctrlnormDataframe)){
@@ -899,21 +874,21 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
 
 mabs_max$compare = ifelse(abs(mabs_max$V1-mabs_max$V2) > 1, TRUE, FALSE)
 sum(mabs_max$compare)
-## there are 1118 proteins whose global maximum shifts at least 2 fractions (x-shift)
+## there are 1045 proteins whose global maximum shifts at least 2 fractions (x-shift)
 mabs_max_shift = rownames (mabs_max) [mabs_max$compare==TRUE] ## proteins x-shifting in global maximum
 ```
-## Local maxima
+
+# Local maxima
 
 ```{r}
 
-# local maxima
-
+## calculating local maxima
 mmax_shift_ctrl = matrix(0, nrow = nrow(mrep1ctrlnormDataframe), ncol = 25)
 mmax_shift_rnase = matrix(0, nrow = nrow(mrep1ctrlnormDataframe), ncol = 25)
 
 for (i in 1:nrow(mrep1ctrlnormDataframe)){
   
-  for (j in 1){ #marginal value 1
+  for (j in 1){ ## marginal value 1
     if(j != mabs_max[i,1] && mmeanRepctrl[i,j] > 5 &&  mmeanRepctrl[i,j] > mmeanRepctrl[i, (j+1)]){
       mmax_shift_ctrl[i,j] = j
     }
@@ -922,7 +897,7 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
     }
   }
 
-  for(j in 2){ #marginal value 2
+  for(j in 2){ ## marginal value 2
     if(j != mabs_max[i,1] && mmeanRepctrl[i,j] > 5 &&  mmeanRepctrl[i,j] > mmeanRepctrl[i, (j-1)] && mmeanRepctrl[i,j] > mmeanRepctrl[i, (j+1)] && mmeanRepctrl[i,j] > mmeanRepctrl[i, (j+2)]){
       mmax_shift_ctrl[i,j] = j
     }
@@ -931,7 +906,6 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
     }
   }
 
-    
   for (j in 3:23){
     if(j != mabs_max[i,1] && mmeanRepctrl[i,j] > 5 && mmeanRepctrl[i,j] > mmeanRepctrl[i, (j-1)] && mmeanRepctrl[i,j] > mmeanRepctrl[i, (j+1)] && mmeanRepctrl[i,j] > mmeanRepctrl[i, (j+2)] && mmeanRepctrl[i,j] > mmeanRepctrl[i, (j-2)]) {
       mmax_shift_ctrl[i,j] = j
@@ -941,8 +915,7 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
     }
   }
   
-  
-  for(j in 24){ #marginal value 3
+  for(j in 24){ ## marginal value 3
     if(j != mabs_max[i,1] && mmeanRepctrl[i,j] > 5 &&  mmeanRepctrl[i,j] > mmeanRepctrl[i, (j+1)] && mmeanRepctrl[i,j] > mmeanRepctrl[i, (j-1)] && mmeanRepctrl[i,j] > mmeanRepctrl[i, (j-2)]){
       mmax_shift_ctrl[i,j] = j
     }
@@ -951,7 +924,7 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
     }
   }
   
-  for (j in 25){ #marginal value 4
+  for (j in 25){ ## marginal value 4
     if(j != mabs_max[i,1] && mmeanRepctrl[i,j] > 5 &&  mmeanRepctrl[i,j] > mmeanRepctrl[i, (j-1)]){
       mmax_shift_ctrl[i,j] = j
     }
@@ -964,18 +937,8 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
 mcount_shift = compare_max(mmax_shift_ctrl, mmax_shift_rnase)
 length(which(mcount_shift!=0))
 mloc_max_shift = rownames(mrep1ctrlnormDataframe)[which(mcount_shift!=0)] ## x-shift
-row.names(mmax_shift_ctrl) = rownames(mrep1ctrlnormDataframe)
-row.names(mmax_shift_rnase) = rownames(mrep1ctrlnormDataframe)
-mmax_shift_ctrl = as.data.frame(mmax_shift_ctrl)
-mmax_shift_rnase = as.data.frame(mmax_shift_rnase)
-mmax_shift_ctrl$count = mcount_shift
-mmax_shift_rnase$count = mcount_shift
-#mmax_shift_ctrl = mmax_shift_ctrl[which(mmax_shift_ctrl$count > 0),]
-#mmax_shift_rnase = mmax_shift_rnase[which(mmax_shift_rnase$count > 0),]
-#mproteins_local_shift = as.data.frame(cbind(mmax_shift_ctrl, mmax_shift_rnase))
-#mproteins_local_shift$count = mcount_shift
 
-# compare shifts in absolute and local maxima as there are proteins shifting in both
+## compare x-shifts in absolute and local maxima as there are proteins shifting in both
 
 mid = vector()
 for (i in 1:length(mloc_max_shift)) {
@@ -988,33 +951,36 @@ for (i in 1:length(mloc_max_shift)) {
         mid[i] = TRUE
         break
       }
-    
   }
 }
-sum(mid)
-# 772 proteins are both found in absolute and local maxima shifts
+sum(mid) ## 772 proteins are both found in absolute and local maxima shifts
 mloc_max_shift = mloc_max_shift[- which(mid==TRUE)] ## mloc_max_shift are all proteins shifting in local maximum excluded those also shifting in global maximum
 
-# number of shifting proteins
+## number of shifting proteins
 sum(mid)+(length(mabs_max_shift)-sum(mid))+length(mloc_max_shift) ## 1828 proteins have a shift and might be RNA-binding or RNA-dependent
 
 ```
-We found 2107 proteins shifting in their global and/or local maxima. In the following, we will test if the shift in protein amount is significant which would result in classifying the protein as an RNA-binding or RNA-dependent protein. 
+We find 1828 proteins shifting in their global and/or local maxima. In the following, we test if the shift in protein amount is significant which would result in classifying the protein as an RNA-binding or RNA-dependent protein. 
 
 # t-test of shift of protein amount for maximum verification (y-shift)
 
+# Global maximum 
+
 ```{r}
-# absolute maxima
+## calculating global maxima
 mabs_max_yc = vector()
 mabs_max_yr = vector()
+## two vectors (control and RNase) containing the y-value (protein amount) of the global maximum
 for (i in 1:nrow(mabs_max)) {
   mabs_max_yc[i] = mmeanRepctrl[i, mabs_max[i,1]]
   mabs_max_yr[i] = mmeanRepRNase[i, mabs_max[i,2]]
 }
 
+## add vectors as new column to global maxima data frame (mabs_max)
 mabs_max$ymaxc = mabs_max_yc
 mabs_max$ymaxr = mabs_max_yr
 
+## vector ml contains p-value for each global maximum with a shift (mabs_max[i,3] == TRUE), otherwise for distinction random number larger than 1 (10)
 ml = vector()
 for (i in 1:nrow(mabs_max)) { 
   if(mabs_max[i,3]==TRUE) {
@@ -1026,29 +992,31 @@ for (i in 1:nrow(mabs_max)) {
 
 mabs_max$pvalue = ml
 mabs_max$sign = ifelse(mabs_max$pvalue >= 0.025, FALSE, TRUE) ## 0.025 due to two-sided t-test
-sum(mabs_max$sign) ## how many proteins have a significant shift in protein amount in their global maximum 
+sum(mabs_max$sign) ## how many proteins have a significant shift in protein amount in their global maximum (xxxxx out of xxxxxx)
 
 colnames(mabs_max)[1] = "m.global_max_ctrl"
 colnames(mabs_max)[2] = "m.global_max_rnase"
-mproteins_global_shift = data.frame(mabs_max[(which(mabs_max$sign == TRUE)),])
+mproteins_global_shift = data.frame(mabs_max[(which(mabs_max$sign == TRUE)),]) ## data frame containing all proteins that shift in global maximum before fdr-correction
+
+## create new column containing fdr corrected p-value
 mproteins_global_shift$p_adjusted = p.adjust(mproteins_global_shift$pvalue, method = "fdr")
 mproteins_global_shift$sign_ad = ifelse(mproteins_global_shift$p_adjusted >= 0.025, FALSE, TRUE)
 sum(mproteins_global_shift$sign_ad) ## all 641 proteins with shift identified are still significant after fdr-correction
 
+## create new column containing information about right or left shift (difference of control and RNase global maximum fractions)
 mproteins_global_shift$leftorright = ifelse(mproteins_global_shift$m.global_max_ctrl < mproteins_global_shift$m.global_max_rnase, "right", "left")
+```
 
+# Local maxima
 
-
-# local maxima
-
-mmax_shift_ctrl = mmax_shift_ctrl[,-26]
-mmax_shift_rnase = mmax_shift_rnase[,-26]
-
-mp_loc_max = matrix(10, ncol = 25, nrow = nrow(mrep1ctrlnormDataframe))
+```{r}
+## calculating local maxima
+## generate matrices for statistical testing of local maxima 
+mp_loc_max = matrix(10, ncol = 25, nrow = nrow(mrep1ctrlnormDataframe)) ## matrix for adjusted p-values
 row.names(mp_loc_max) = rownames(mrep1ctrlnormDataframe)
-mp_loc_shift = vector(length = nrow(mrep1ctrlnormDataframe))
-msign_loc_shiftc = matrix(0, ncol = 25, nrow = nrow(mrep1ctrlnormDataframe))
-msign_loc_shiftr = matrix(0, ncol = 25, nrow = nrow(mrep1ctrlnormDataframe))
+mp_loc_shift = vector(length = nrow(mrep1ctrlnormDataframe)) ## vector distinguish significant and not significant y-shift
+msign_loc_shiftc = matrix(0, ncol = 25, nrow = nrow(mrep1ctrlnormDataframe)) ## matrix for fractions of shifting local maximum
+msign_loc_shiftr = matrix(0, ncol = 25, nrow = nrow(mrep1ctrlnormDataframe)) ## matrix for fractions of shfiting local maximum
 
 for (i in 1:nrow(mp_loc_max)) {
   if(mcount_shift[i] > 0){  
@@ -1075,8 +1043,8 @@ for (i in 1:nrow(mp_loc_max)) {
                if(mp_loc_max[i,j] < 0.025) { mp_loc_shift[i]=TRUE }
                  }
         }
-      
     }
+    
     for (j in 2:24){
       if(mmax_shift_ctrl[i,j]==mmax_shift_rnase[i,j]){
          
@@ -1100,8 +1068,8 @@ for (i in 1:nrow(mp_loc_max)) {
                if(mp_loc_max[i,j] < 0.025) { mp_loc_shift[i]=TRUE }
              }
         }
-        
     }
+    
     for (j in 25) {
       if(mmax_shift_ctrl[i,j]==mmax_shift_rnase[i,j]){
           
@@ -1125,7 +1093,6 @@ for (i in 1:nrow(mp_loc_max)) {
                if(mp_loc_max[i,j] < 0.025) { mp_loc_shift[i]=TRUE }
              }
         }
-        
     }
   }    
 }
@@ -1134,25 +1101,25 @@ for (i in 1:nrow(mp_loc_max)) {
 mp_loc_max = as.data.frame(mp_loc_max) ## data frame with all 10 only at shifting position adjusted p-value
 mp_loc_max$count = mcount_shift
 mproteins_local_shift = mp_loc_max[which(mp_loc_shift==TRUE),] ## proteins that shift in local maximum
-dim(mproteins_local_shift) ## 1471 proteins shift in local maximum
+dim(mproteins_local_shift) ## xxxxxxx proteins shift in local maximum
 mproteins_local_shift = cbind(rownames(mproteins_local_shift), mproteins_local_shift)
 colnames(mproteins_local_shift)[1] = "protein"
 
 
 mproteins_global_shift = cbind(rownames(mproteins_global_shift), mproteins_global_shift)
 colnames(mproteins_global_shift)[1] = "protein"
-mproteins_both_shift = merge(mproteins_global_shift, mproteins_local_shift, by = "protein") ## data sets merged by row names
+mproteins_both_shift = merge(mproteins_global_shift, mproteins_local_shift, by = "protein") ## data sets merged by protein names (column "protein")
 mproteins_both_shift = mproteins_both_shift[,-(11:36)]
-dim(mproteins_both_shift) ## 687 proteins shift in both global and local maximum
-mproteins_shifting = merge(mproteins_global_shift, mproteins_local_shift, by = "protein", all = TRUE) ## 1653 proteins have a shift in either local and/or global maximum
+dim(mproteins_both_shift) ## xxxxxx proteins shift in both global and local maximum
+mproteins_shifting = merge(mproteins_global_shift, mproteins_local_shift, by = "protein", all = TRUE) ## xxxxxx proteins have a shift in either local and/or global maximum
 mproteins_shifting = mproteins_shifting[,-(12:36)]
-# get names with mproteins_shifting[,1]
+
 mproteins_shifting$glo_loc = ifelse(is.na(mproteins_shifting[,11]), "only local", "global")
 mproteins_shifting$sign_ad[is.na(mproteins_shifting$sign_ad)] = 0
 mproteins_shifting$count[is.na(mproteins_shifting$count)] = 0
 mproteins_shifting$mcount_shift = ifelse(mproteins_shifting$sign_ad == 1, (mproteins_shifting$count +1), mproteins_shifting$count)
 
-#install.packages(dplyr)
+## install.packages(dplyr) if necessary
 library(dplyr)
 mproteins_only_global = anti_join(mproteins_global_shift, mproteins_both_shift, by = "protein") 
 nrow(mproteins_only_global) ## 163 proteins only shift in global maximum
@@ -1161,69 +1128,51 @@ nrow(mproteins_only_local) ## 603 proteins only shift in local maximum
 
 ```
 
-# k-means
+# Data set preparation for k-means
 
 ```{r}
+## build overview_mi data frame with possibly useful information of previous analysis
+## vectors with number of maxima
+mnumb_max_ctrl = rowSums(mmax_shift_ctrl!=0)+1 ## +1 -> plus global maximum
+mnumb_max_rnase = rowSums(mmax_shift_rnase!=0)+1 ## +1 -> plus global maximum
 
-library(factoextra)
-library(ggplot2)
-
-
-mnumb_max_ctrl = rowSums(mmax_shift_ctrl!=0)+1 ## plus global maximum
-mnumb_max_rnase = rowSums(mmax_shift_rnase!=0)+1 ## plus global maximum
-
+## add to mabs_max data frame
 mabs_max$max_ctrl = mnumb_max_ctrl
 mabs_max$max_rnase = mnumb_max_rnase
-mabs_max$left_right = ifelse(mp_loc_shift == TRUE | mabs_max$sign == TRUE, "shift", "no shift") 
+mabs_max$shift = ifelse(mp_loc_shift == TRUE | mabs_max$sign == TRUE, "shift", "no shift") 
 
 
 # anzahl maxima und anzahl shift gegen shift in haupt, haupt+neben oder nur nebenmaximum
 
 overview_mi = cbind(mabs_max[, c(1,2,3,4,5,7,8,9,10)], mcount_shift, mp_loc_shift)
-colnames(overview_mi)[3] = "m.x.shift.glo"
-colnames(overview_mi)[6] = "m.y.shift.glo"
-colnames(overview_mi)[9] = "m.no.shift?"
-colnames(overview_mi)[10] = "m.count.x.shift.loc"
-colnames(overview_mi)[11] = "m.y.shift.loc"
-colnames(overview_mi)[4] = "m.ymaxc"
-colnames(overview_mi)[5] = "m.ymaxr"
-colnames(overview_mi)[7] = "m.max_ctrl"
-colnames(overview_mi)[8] = "m.max_rnase"
-overview_mi$m.x.shift.loc = ifelse(overview_mi$m.count.x.shift.loc != 0, TRUE, FALSE)
-overview_mi$m.x.loc.glo = ifelse(overview_mi$m.x.shift.glo == TRUE & overview_mi$m.x.shift.loc == TRUE, TRUE, FALSE)
-overview_mi$m.y.loc.glo = ifelse(overview_mi$m.y.shift.glo == TRUE & overview_mi$m.y.shift.loc == TRUE, TRUE, FALSE)
+colnames(overview_mi)[3] = "m.x.shift.glo" ## TRUE/FALSE significant x-shift in global maximum
+colnames(overview_mi)[6] = "m.y.shift.glo" ## TRUE/FALSE significant y-shift in global maximum
+colnames(overview_mi)[9] = "m.no.shift?" ## "shift" or "no shift"
+colnames(overview_mi)[10] = "m.count.x.shift.loc" ## how many local maxima shift
+colnames(overview_mi)[11] = "m.y.shift.loc" ## TRUE/FALSE significant y-shift at least one local maximum
+colnames(overview_mi)[4] = "m.ymaxc" ## y-value of global maximum of mean control
+colnames(overview_mi)[5] = "m.ymaxr" ## y-value of global maximum of mean RNase
+colnames(overview_mi)[7] = "m.max_ctrl" ## number of maxima in mean control
+colnames(overview_mi)[8] = "m.max_rnase" ## number of maxima in mean RNase
+overview_mi$m.x.shift.loc = ifelse(overview_mi$m.count.x.shift.loc != 0, TRUE, FALSE) ## TRUE/FALSE significant x-shift in local maximum
+overview_mi$m.x.loc.glo = ifelse(overview_mi$m.x.shift.glo == TRUE & overview_mi$m.x.shift.loc == TRUE, TRUE, FALSE) ## TRUE/FALSE significant x-shift in global and/or local maximum
+overview_mi$m.y.loc.glo = ifelse(overview_mi$m.y.shift.glo == TRUE & overview_mi$m.y.shift.loc == TRUE, TRUE, FALSE) ## TRUE/FALSE significant y-shift in global and/or local maximum
+
+## "right" if right shift in global maximum, "left" if left shift in global maximum, "shift" if shift only in local maximum, "no shift" if no shift
 overview_mi$m.left.right = ifelse(overview_mi$m.x.shift.glo == TRUE & overview_mi$m.global_max_ctrl - overview_mi$m.global_max_rnase > 0, "left", "no shift") 
 overview_mi$m.left.right = ifelse(overview_mi$m.left.right != "left" & overview_mi$m.x.shift.glo == TRUE & overview_mi$m.global_max_ctrl - overview_mi$m.global_max_rnase < 0, "right", overview_mi$m.left.right)
 overview_mi$m.left.right = ifelse(overview_mi$m.x.shift.glo == FALSE & overview_mi$m.x.shift.loc == TRUE, "shift", overview_mi$m.left.right)
-overview_mi$m.x.shift.frac.glo = overview_mi$m.global_max_rnase - overview_mi$m.global_max_ctrl
+overview_mi$m.x.shift.frac.glo = overview_mi$m.global_max_ctrl - overview_mi$m.global_max_rnase ## difference in fraction of global maximum between control and RNase
 
+## create column with protein names
 overview_mi$protein = rownames(overview_mi)
+
+## compute correlation between control and RNase mean curve for each protein and store in mcor_merge
 mcor_merge = vector()
 for(i in 1:nrow(mmeanRepctrl)){
   mcor_merge[i] = cor(mmeanRepctrl[i,], mmeanRepRNase[i,])
 }
 overview_mi$m.corr = mcor_merge
-
-
-mvgl_locshiftc = msign_loc_shiftc
-mvgl_locshiftc[mvgl_locshiftc != 0] = TRUE
-mvgl_locshiftr = msign_loc_shiftr
-mvgl_locshiftr[mvgl_locshiftr != 0] = TRUE
-mvectorsumctrl= rowSums(mvgl_locshiftc)
-mvectorsumrnase = rowSums(mvgl_locshiftr)
-mvectordiff = mvectorsumrnase - mvectorsumctrl ## count local maxima 
-mvectorlocshift = rowSums(msign_loc_shiftc[which(mvectordiff==0),]) - rowSums(msign_loc_shiftr[which(mvectordiff==0),])
-
-
-
-mloc_overview = overview_mi[which(mvectordiff==0),]
-
-mloc_overview$m.left.right = ifelse(mloc_overview$m.left.right != "left" & mloc_overview$m.left.right != "right" & mvectorlocshift > 0, "left", mloc_overview$m.left.right)
-mloc_overview$m.left.right = ifelse(mloc_overview$m.left.right != "left" & mloc_overview$m.left.right != "right" & mvectorlocshift < 0, "right", mloc_overview$m.left.right)
-mloc_overview$protein = rownames(mloc_overview)
-## data set with all proteins that have the same number of maxima in ctrl and RNase
-
-
 
 ```
 
