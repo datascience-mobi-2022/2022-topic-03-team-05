@@ -75,9 +75,10 @@ mTripRnasedat = cbind(mrep1rnasedat, mrep2rnasedat, mrep3rnasedat)
 Now, we continue with the second step of data cleaning. A protein without any values in either the control or the RNase tests cannot be compared the other condition, thus giving us no information and can be removed. As all zeros were turned to NA in a previous step, we used is.na to look for rows - in both the control and the RNase data frame - containing all zeros (NAs). As the data sets have 75 columns, the NAs in a row without a value must sum up to 75. This step results in a data set with 7156 rows (2 proteins less). 
 
 ```{r}
-mremo1 = which(rowSums(is.na(mTripCtrldat))==75) ##ist 0
-mremo2 = which(rowSums(is.na(mTripRnasedat))==75) ##ist 0
-mFullDat = mFullDat[-c(mremo1,mremo2),]
+mremo1 = which(rowSums(is.na(mTripCtrldat))==75)
+mremo2 = which(rowSums(is.na(mTripRnasedat))==75)
+if (length(mremo1) != 0) {mFullDat = mFullDat[-mremo1,]}
+if (length(mremo2) != 0) {mFullDat = mFullDat[-mremo2,]}
 
 ```
 
@@ -178,7 +179,7 @@ mtripCtrlnormdat = cbind(mrep1ctrlnormDataframe, mrep2ctrlnormDataframe, mrep3ct
 mtripRnasenormdat = cbind(mrep1rnasenormDataframe, mrep2rnasenormDataframe, mrep3rnasenormDataframe)
 
 ## check if protein amount == 100
-sum(mrep1ctrlnormData[1,]) # == 100
+sum(mrep1ctrlnormData[1,]) ## == 100
 ```
 
 # Creating batch-effect free data frames
@@ -226,15 +227,15 @@ for(i in 1:nrow(mtripRnasenormdat)){
   }
 }
 
-##xxxxxxxxx
 ## removing new rows with all zeros in control or RNase due to batch effect removal 
-#mna_r = which(rowSums(is.na(mtripRnasenormdat))==75)
-#mna_c = which(rowSums(is.na(mtripCtrlnormdat))==75)
-#mna_afterbatch = c(mna_r, mna_c)
+mna_r = which(rowSums(is.na(mtripRnasenormdat))==75)
+mna_c = which(rowSums(is.na(mtripCtrlnormdat))==75)
+mna_afterbatch = c(mna_r, mna_c)
 
-#mFullDat = mFullDat[-mna_afterbatch,]
-#mtripCtrlnormdat = mtripCtrlnormdat[-mna_afterbatch,]
-#mtripRnasenormdat = mtripRnasenormdat[-mna_afterbatch,]
+if (length(mna_afterbatch) != 0) {
+  mFullDat = mFullDat[-mna_afterbatch,]
+  mtripCtrlnormdat = mtripCtrlnormdat[-mna_afterbatch,]
+  mtripRnasenormdat = mtripRnasenormdat[-mna_afterbatch,]}
 
 ## convert all NAs back to zeros
 mtripRnasenormdat[is.na(mtripRnasenormdat)] = 0
@@ -1101,7 +1102,7 @@ for (i in 1:nrow(mp_loc_max)) {
 mp_loc_max = as.data.frame(mp_loc_max) ## data frame with all 10 only at shifting position adjusted p-value
 mp_loc_max$count = mcount_shift
 mproteins_local_shift = mp_loc_max[which(mp_loc_shift==TRUE),] ## proteins that shift in local maximum
-dim(mproteins_local_shift) ## xxxxxxx proteins shift in local maximum
+dim(mproteins_local_shift) ## 1081 proteins shift in local maximum
 mproteins_local_shift = cbind(rownames(mproteins_local_shift), mproteins_local_shift)
 colnames(mproteins_local_shift)[1] = "protein"
 
@@ -1110,8 +1111,8 @@ mproteins_global_shift = cbind(rownames(mproteins_global_shift), mproteins_globa
 colnames(mproteins_global_shift)[1] = "protein"
 mproteins_both_shift = merge(mproteins_global_shift, mproteins_local_shift, by = "protein") ## data sets merged by protein names (column "protein")
 mproteins_both_shift = mproteins_both_shift[,-(11:36)]
-dim(mproteins_both_shift) ## xxxxxx proteins shift in both global and local maximum
-mproteins_shifting = merge(mproteins_global_shift, mproteins_local_shift, by = "protein", all = TRUE) ## xxxxxx proteins have a shift in either local and/or global maximum
+dim(mproteins_both_shift) ## 478 proteins shift in both global and local maximum
+mproteins_shifting = merge(mproteins_global_shift, mproteins_local_shift, by = "protein", all = TRUE) ## 1244 proteins have a shift in either local and/or global maximum
 mproteins_shifting = mproteins_shifting[,-(12:36)]
 
 mproteins_shifting$glo_loc = ifelse(is.na(mproteins_shifting[,11]), "only local", "global")

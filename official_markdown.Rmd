@@ -1,6 +1,6 @@
 ---
 title: "Proteome-wide screen for RNA-dependent proteins_Group5_Interphase"
-author: "Marie Lulu Salein, Kiren Nadiem, Katharina Lotter "
+author: "Marie Lulu Salein, Kiren Nadeem, Katharina Lotter "
 date: "18 7 2022"
 output: html_document
 ---
@@ -17,7 +17,7 @@ We start by analyzing the HeLa Interphase data set. For later parts of the code 
 
 ## Insert own location of data set
 ## FullDat <- read.table("C:/Dokumente/Uni/FS 4/Data Analysis/RDeeP_HeLa_Interphase.csv", header = TRUE, row.names=1, sep = ";") 
-save(FullDat, file = "FullDat.Rdata")
+## save(FullDat, file = "FullDat.Rdata")
 
 load("FullDat.Rdata") 
 dim(FullDat)
@@ -77,7 +77,12 @@ We transform all zeros into NAs and use is.na to look for rows in which the cont
 ```{r}
 remo1 = which(rowSums(is.na(TripCtrldat))==75) 
 remo2 = which(rowSums(is.na(TripRnasedat))==75) 
-FullDat = FullDat[-c(remo1,remo2),]
+if (length(remo1) != 0 ){
+  FullDat = FullDat[-remo1,]
+}
+if (length(remo2) != 0){
+  FullDat = FullDat[-remo1,]
+}
 
 ```
 
@@ -232,8 +237,9 @@ na_r = which(rowSums(is.na(tripRnasenormdat))==75)
 na_c = which(rowSums(is.na(tripCtrlnormdat))==75)
 na_afterbatch = c(na_r, na_c)
 
-tripCtrlnormdat = tripCtrlnormdat[-na_afterbatch,]
-tripRnasenormdat = tripRnasenormdat[-na_afterbatch,]
+if (length(na_afterbatch) != 0) {tripCtrlnormdat = tripCtrlnormdat[-na_afterbatch,]}
+if (length(na_afterbatch) != 0) {tripRnasenormdat = tripRnasenormdat[-na_afterbatch,]}
+if (length(na_afterbatch) != 0) {FullDat = FullDat[-na_afterbatch,]}
 
 ## Converting zeros back to NAs for further analysis
 tripRnasenormdat[is.na(tripRnasenormdat)] = 0
@@ -1171,21 +1177,18 @@ cor_merge = vector()
 for(i in 1:nrow(meanRepctrl)){
   cor_merge[i] = cor(meanRepctrl[i,], meanRepRNase[i,])
 }
+overview$corr = cor_merge
 cors_merge = vector()
-for(i in 1:nrow(meanRepctrl)){
-  cors_merge[i] = cor(meanRepctrl[i,], meanRepRNase[i,], method = "spearman")
-}
-overview$corr.s = cors_merge
 
 ## Compute euclidean distance between all values of mean Ctrl and RNase and store highest distance in eucli_merge
 eucli_merge = vector()
+eu = matrix(0,ncol = ncol(meanRepctrl), nrow = nrow(meanRepctrl))
 for (i in 1:nrow(meanRepctrl)) {
-  eu = vector()
   for (j in 1:ncol(meanRepctrl)) {
-    eu[j] = sqrt((meanRepctrl[i,j] - meanRepRNase[i,j])^2)
+    eu[i,j] = sqrt((meanRepctrl[i,j] - meanRepRNase[i,j])^2)
   }
-  eucli_merge[i] = eu[which.max(eu)]
 }
+eucli_merge = apply(eu,1, which.max)
 overview$eucli = eucli_merge
 
 
@@ -1215,8 +1218,8 @@ elbowdata1 = fviz_nbclust(kmeans_data1, kmeans, method = "wss") + labs(subtitle 
 ## elbow plot would suggest rather 4 than 5 clusters but for the biological question the results of 5 clusters are more significant
 
 ## Perform k-means and visualize clusters
-km.out1 = kmeans(kmeans_data1, centers = 5, nstart = 100, iter.max = 20)
-km.clusters1 = km.out3$cluster
+km.out1 = kmeans(kmeans_data1, centers = 4, nstart = 100, iter.max = 20)
+km.clusters1 = km.out1$cluster
 clusterdata1 = fviz_cluster(km.out1, data = as.data.frame(kmeans_data1) , geom = "point")
 clusterdata1
 
@@ -1261,46 +1264,48 @@ test_data = merge_overview[-section,]
 test_data$x.shift.frac.glo = abs(test_data$x.shift.frac.glo)
 
 ## output variable: how many fractions does the global maximum of the protein shift? (x.shift.frac.glo)
-## take multiple input variables: difference in number of maxima, pearson correlation
+## take multiple input variables: pearson correlation, highest euclidean distance of meanrepctrl and meanrepRnase
 
-# pearson correlation
+## pearson correlation
 plot(x.shift.frac.glo ~ corr, data = train_data)
 cor(train_data$x.shift.frac.glo, train_data$corr) ## sollte eigentlich niedrig sein
-corr_globfrac = lm(x.shift.frac.glo ~ corr, data = test_data)
-summary(corr_globfrac) ## 71,96 % of total variance is explained by the model
-plot(corr_globfrac)
+corr_globfrac = lm(x.shift.frac.glo ~ corr, data = train_data)
+summary(corr_globfrac) ## 68,06 % of total variance is explained by the model
+
 regression_corr_globfrac = ggplot(train_data, aes(y=x.shift.frac.glo, x=corr)) + geom_point() + geom_smooth(method ="lm")
 regression_corr_globfrac
 
 
-# highest euclidean distance of meanrepctrl and meanrepRnase
+## highest euclidean distance of meanrepctrl and meanrepRnase
 plot(x.shift.frac.glo ~ eucli, data = train_data)
 cor(train_data$x.shift.frac.glo, train_data$eucli) ## sollte eigentlich niedrig sein
 eucli_globfrac = lm(x.shift.frac.glo ~ eucli, data = test_data)
 summary(eucli_globfrac) ## 71,96 % of total variance is explained by the model
-plot(eucli_globfrac)
+
 regression_eucli_globfrac = ggplot(train_data, aes(y=x.shift.frac.glo, x=eucli)) + geom_point() + geom_smooth(method ="lm")
 regression_eucli_globfrac
 
 ## Pearson correlation is the most significant feature when predicting the x-shift of the global maximum compared to the highest euclidean distance as explanatory variable
 
-## Plot residuals
+## test conditions for linear regression: residuals are normally distributed and no correaltion between residuals and the explanatory variable
 
-plot(corr_globfrac)
+## residuals normally distributed?
+hist(corr_globfrac$residuals, breaks=20) 
+qqnorm(corr_globfrac$residuals); qqline(corr_globfrac$residuals) 
 
-## residuals VS fitted (predictions) should be a line
-## qq plot should be a line
+## correlation residuals x-values?
+cor(train_data$corr, corr_globfrac$residuals) ## correlation is very small
+plot(train_data$corr, corr_globfrac$residuals,pch=20)
 
-# test data set
+## predict values of x shift in global maximum for test data set using corr as explanatory variable
 
 prediction = predict(corr_globfrac, newdata = test_data)
 
-sd(prediction, test_data$x.shift.frac.glo)
+## calculate root mean square error for model evaluation
+n = nrow(test_data)
+residuals = test_data$x.shift.frac.glo - prediction
+rmse.test = sqrt(1/n*sum(residuals^2))
+rmse.test
 
-## avg_dis = comparison of predicted value and actual value -> very small -> good 
-
-par(mfrow=c(1,1))
-plot(test_data$x.shift.frac.glo, exp(prediction))
-## does not look good?? oder gut?
 ```
 
