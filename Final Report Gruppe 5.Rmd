@@ -179,7 +179,7 @@ The ellbow plot did not showed a kink between four and five clusters, when looki
 
 Regression analysis was performed with an overlap of proteins from the two different datasets.  
 The idea was that when determining the correlation between the curves of the mean of the replicates from the RNase treatment and the control samples, the correlation should be lower if the proteins did not show a shift, as the curves would change only slightly in comparision to shifting proteins, where the curves had a larger difference.  
-We tried to establish a predictive model to determine the absolute value of the x-shift of the global maximum from the correlation value between *meanRepRNase* and *meanRepControl*. The wider the x-shift the lower the correlation value should be. 
+We tried to establish a predictive model to determine the absolute value of the x-shift of the global maximum from the correlation value between *meanRepRNase* and *meanRepCtrl*. The wider the x-shift the lower the correlation value should be. 
 
 
 
@@ -194,6 +194,9 @@ To avoid overinterpreation or false-positives we then performed a t-test on the 
 After Data Cleanup and Data Reduction we were able to find 1118 shifts in the global maxima, 989 partial shifts, where the local maxima changed position and 2107 proteins where either the local or global maxima or both changed along the x-axis, for the Interphase dataset. We then analyzed whether the shifts were significant, by looking at their y-dimension. 
 After the implementation of the t-test and the FDR correction on the Interphase dataset, we found 1653 proteins, showing either a shift in the local and, or global maxima and 687 proteins having a significant shift in both the global and local maxima. When only looking at the significance of shifts in global maxima we found 182 significant proteins, whereas for the partial shifts, 748 shifts were significant. 
 
+### k-means clustering
+
+Following the result of the elbow plot which is always subjective to a certain level, the k-means clustering led to four different clusters. They lie relatively close together due to similar input variable values, but are distinct from each other. Cluster 2 contains 171 RBPs that shift left in both cell cycle phases indicating that these proteins are constitutively expressed with the same function and binding behaviour in interphase and mitosis. It would be interesting to further examine these proteins concerning features and functions to find out if and what they have in common. In cluster 1 there are proteins that show the characteristic of an RBP during mitosis, but split up to all different kinds of categories of our shift analysis. For cluster 3 it acts the other way around. All of these proteins differ in their properties of RNA-binding dependent on the cell cycle phase. Adding the difference in the number of maxima between Ctrl and RNase for interphase and mitosis as additional variables, does not result in a clearer structure. The last cluster cannot be interpretated as well. It contains most of the proteins that do not shift (no RBPs). This is why we hypothesize that shifting proteins lying in cluster 4 show a smaller number of fractions their global maximum shifted, explaining why they are clustered with the ones without a shift. 
 
 
 ### 3.2. Analysis of the HeLa Mitosis Dataset
