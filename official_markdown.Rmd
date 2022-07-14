@@ -1151,7 +1151,7 @@ numb_max_rnase = rowSums(max_shift_rnase!=0)+1 ## +1 -> plus global maximum
 abs_max$max_ctrl = numb_max_ctrl
 abs_max$max_rnase = numb_max_rnase
 abs_max$left_right = ifelse(p_loc_shift == TRUE | abs_max$sign == TRUE, "shift", "no shift") 
-
+## create overview data frame from abs_max (col 1: global maximum fraction control, col 2: global maximum fraction RNase, col 3: TRUE if difference is at least 2 fractions, col 4: y-value of global maximum control, col 5: y-value of global maximum RNase, col 7: TRUE if significant y-shift in global maximum, col 8: number of maxima in Ctrl, col 9: number of maxima in RNase, col 10: shift if significant y-shift in global and/ or local maximum)
 overview = cbind(abs_max[, c(1,2,3,4,5,7,8,9,10)], count_shift, p_loc_shift)
 colnames(overview)[3] = "x.shift.glo" ## TRUE/FALSE significant x-shift in global maximum
 colnames(overview)[6] = "y.shift.glo" ## TRUE/FALSE significant y-shift in global maximum
@@ -1159,9 +1159,7 @@ colnames(overview)[9] = "no.shift?" ## "shift" or "no shift"
 colnames(overview)[10] = "count.x.shift.loc" ## how many local maxima shifts
 colnames(overview)[11] = "y.shift.loc" ## TRUE/FALSE significant y-shift at least one local maximum
 
-#xxxxxxxxxxx ymaxc, ymaxr, max_ctrl, max_rnase?
-
-
+## adding additional columns indicating TRUE/ FALSE for global and local maximum shifts
 overview$x.shift.loc = ifelse(overview$count.x.shift.loc != 0, TRUE, FALSE) ## significant x-shift in local maximum
 overview$x.loc.glo = ifelse(overview$x.shift.glo == TRUE & overview$x.shift.loc == TRUE, TRUE, FALSE) ## TRUE/FALSE significant x-shift in global and/or local maximum
 overview$y.loc.glo = ifelse(overview$y.shift.glo == TRUE & overview$y.shift.loc == TRUE, TRUE, FALSE) ## TRUE/FALSE significant y-shift in global and/or local maximum
@@ -1191,7 +1189,7 @@ for (i in 1:nrow(meanRepctrl)) {
 eucli_merge = apply(eu,1, which.max)
 overview$eucli = eucli_merge
 
-
+## adding columns with protein names (as the rownames are lost when using the merge function in the next step) and number of shifting maxima
 overview$protein = rownames(overview) ## Create column with protein names
 overview$count.shift = ifelse(overview$x.shift.glo == TRUE, overview$count.x.shift.loc + 1, overview$count.x.shift.loc) ## number of shifting maxima
 
@@ -1201,7 +1199,7 @@ merge_overview = merge(overview, overview_mi, by = "protein")
 
 # k-means
 
-By using k-means we aim at identifying specific groups within the data sets. We look for clusters of proteins when clustering the difference in fraction of global maximum in Ctrl and RNase of interphase with the difference in fraction of global maximum in Ctrl and RNase of mitosis. The idea of this approach is that proteins might be assigned to the same cluster if shifting in a similar way/ not in a similar way.
+By using k-means we aim at identifying specific groups within the data sets. First, we look for clusters of proteins when clustering the difference in fraction of global maximum in Ctrl and RNase of interphase with the difference in fraction of global maximum in Ctrl and RNase of mitosis. The idea of this approach is that proteins might be assigned to the same cluster if shifting in a similar way/ not in a similar way. As the clustering might be more significant the more variables are used as input, a second step constists of adding the difference in number of maxima between Ctrl and RNase for interphase and mitosis as additional information and check if the cluster structure improves. 
 
 ```{r}
 ## k-means
@@ -1243,9 +1241,11 @@ table(km.clusters2, merge_overview$m.left.right)
 
 ## no improvement in cluster structure due to additional variable
 ```
-xxxx xxxxxx 
+We receive four clusters and check them for the shifting behaviour of the proteins in interphase and mitosis. Cluster 2 contains 171 proteins that shift left in both cell cycle phases indicating that these proteins might be constitutively expressed. In general, we can see a cluster structure, but lying relatively close together, they are not as distinct from each other. Adding the difference in the number of maxima between Ctrl and RNase for interphase and mitosis as additional variables, does not result in a clearer structure. 
 
 # Regression analysis
+
+For performing a linear regression, we split our data set into two sets, the training and the test data (80 %/ 20%). Our goal is to predict the number of fractions the global maximum of a given protein shifts. We compared two different information as explanatory variables: the Pearson correlation of the mean curve of control and RNase and the highest euclidean distance between the two average curves. After that, the x shift is predicted for the test data set using the more significant explanatory variable. The model can be evaluated looking at the R^2 value and the p-value of the F-test. 
 
 ```{r}
 library(ggplot2)
@@ -1254,7 +1254,7 @@ library(ggplot2)
 set.seed(1)
 section = sample(1:nrow(merge_overview), 0.8 * nrow(merge_overview))
 
-## train data set
+## training data set
 train_data = merge_overview[section,]
 
 train_data$x.shift.frac.glo = abs(train_data$x.shift.frac.glo)
@@ -1308,4 +1308,4 @@ rmse.test = sqrt(1/n*sum(residuals^2))
 rmse.test
 
 ```
-
+The x-shift of the global maximum can be approximated using the correlation between the average Ctrl and RNase curve. The model explains 68.06 % of the total variance, so relatively good. Testing it on the data set test_data results in a root mean square error of 1.91. 
