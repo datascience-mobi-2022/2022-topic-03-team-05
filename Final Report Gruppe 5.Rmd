@@ -146,9 +146,10 @@ For k-means clustering we used information obtained from the analysis of both da
 We clustered the global x-shifts during interphase against the global x-shift during mitosis, in order to see if the proteins showed a different behaviour during the cell cycle. For interpretation the clusters were compared within each other corncerning proteins that shift left or right in their global maximum, shift in a local maximum or do not shift.  
 
 
-# Regression Analysis
+# Linear regression Analysis
 
-Regression analysis was performed with an overlap of proteins from the two different datasets.  
+The idea of linear regression is to predict a variable (y) from one or more explanatory variables (x) based on the linear relation between the input and output variable (y = mx + b). 
+The regression analysis was performed with an overlap of proteins from the two different datasets.  
 The idea was that when determining the correlation between the curves of the mean of the replicates from the RNase treatment and the control samples, the correlation should be lower if the proteins did not show a shift, as the curves would change only slightly in comparision to shifting proteins, where the curves had a larger difference.  
 We tried to establish a predictive model to determine the absolute value of the x-shift of the global maximum from the correlation value between *meanRepRNase* and *meanRepCtrl*. The wider the x-shift the lower the correlation value should be. To further examine the relevance of the regression we checked that the residuals are normally distributed and that there is no correlation between the residuals and our explanatory variable. The root mean square error was used to evaluate the results. 
 
@@ -170,12 +171,14 @@ After the implementation of the t-test and the FDR correction on the Interphase 
 
 Following the result of the elbow plot which showed a kink the number of four clusters, the k-means clustering led to four different clusters. They lie relatively close together due to similar input variable values, but are distinct from each other. When looking at tabels that gave us the number of proteins with a left shift, right shift and a shift in the local maxima as additional info, it stands out that cluster 2 contains 171 RBPs that shift left in both cell cycle phases. In cluster 1 there are proteins that show the characteristic of an RBP during mitosis, but split up to all different kinds of categories of our shift analysis during interphase. For cluster 3 it behaves the opposite way. Adding the difference in the number of maxima between Ctrl and RNase for interphase and mitosis as additional variables, does not result in a clearer structure. The last cluster cannot be interpretated that well. It contains most of the proteins that do not shift (no RBPs). 
 
+xxxxxxxxxxxx Plot k-means Figure x: k-means clustering. The shift of the global maximum of the proteins during interphase was clustered against the shift during mitosis to compare the RNA interactome between the cell cycle phases.
 
 .
 ### Regression analysis
 
 Computing the pearson correlation against the x-shifts of the global maxima for our training data set resulted in an value of - 0.82 showing the negative linear relation of these two variables. A low correlation results in a bigger x-shift and the other way around. The application of our model based on the training data set onto the test data set showed that 68.06% of the total variance is explained by our model. Further examination showed that the residuals are normally distributed and that there is almost no correlation between the residuals and our explanatory variable. These are conditions essential for a linear regression model. The root mean square error has a value of 1.91.
 
+xxxxxxxxxxxxxxxx Plot regression Figure x: Linear regression analysis. The absolute value of the x-shift of the global maximum was predicted with the correlation of the averaged curves for RNase and control. The plot shows the data points and the regression line (y = 14.21x - 14.29)
 
 ### 3.2. Analysis of the HeLa Mitosis Dataset
 After the analysis of the Interphase dataset we implemented the same method for the Mitosis dataset, a dataset. All steps were were performed the same way for both datasets. 
