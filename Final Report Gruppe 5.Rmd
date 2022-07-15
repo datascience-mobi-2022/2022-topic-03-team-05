@@ -80,20 +80,12 @@ One consequence of the experimental setup used to obtain our data was that heter
 First, we adapted the amount of protein per fraction for each of the three replicates to be the mean of the two means lying closest to each other. We compared the fractionwise sum of *Ctrl* and *RNase* before normalization and visualized them with a barplot. Then the vector *mean_frac_rep* which contained the mean for each fraction in each condition and replicate was created. We used this vector to create another vector that contained the mean value of the two mean values for the protein amount of the replicates closest to each other in each fraction for RNase and control. Therefore,  we generated a *for-loop* that compared the three values by using an *if* and an *else if* condition to compare two variables at a time and check which ones are closest to each other. The normalized data was stored in *mean_rep* and again visualized with a box plot that now showed the same height for all replicates, indicating the same amount of protein. To increase interpretability, we then normalized the protein amount of each replicate for each protein to be 100 using the apply function. The amount of protein was now interpretable as a percentage, which we used when checking for local maxima and for the t-test. The values were stored in six different dataframes, one for each replicate and condition, which we later combined into the dataframes *TripCTrldat* and *TripRNasedat*, that combined the replicates for each condition.  
 
 
-```{r}
-# before normalization
-y=1:25
-plot(y, xlab = "fractions", ylab= "protein amount", main = "Replicates 1-3 of protein 4000 of Control (unnormalized)",FullDat[4000,colRep1rnase], type = "o", col = "blue"); lines(y,FullDat[4000,colRep2rnase], col = "green"); lines(y, FullDat[4000,colRep3rnase], col="red")
-
-```
-##### Figure 3: Protein amount in fractions 1:25 in all three replicates before normalization. The amount varies in each replicate
+![Figure 3: Protein amount in fractions 1:25 in all three replicates before normalization. The amount varies in each replicate](Images/Figure3.JPG){#id .class width=30% height=30%}
 
 
-```{r} 
-# after normalization
-plot(y, xlab = "fractions", ylab= "protein amount", main = "Replicates 1-3 of Protein 4000 of Control (normalized)",rep1ctrlnormDataframe[4000,], type = "o", col = "blue"); lines(y,rep2ctrlnormDataframe[4000,], col = "green"); lines(y, rep3ctrlnormDataframe[4000,], col="red")
-```
-##### Figure 4: Protein amount in fractions 1:25 in all three replicates before normalization. The three replicates can now be compared better, as the amount of protein in each replicate is set to the same value. 
+
+![Figure 4: Protein amount in fractions 1:25 in all three replicates before normalization. The three replicates can now be compared better, as the amount of protein in each replicate is set to the same value.](Images/Figure4 proteins normalized.JPG){#id .class width=30% height=30%}
+
 
 
 ### 2.2.4. Removal of Batch Effects  
@@ -116,22 +108,15 @@ We then created a matrix for each condition that had value of zero for every fra
 We now used the matrices *meanRepctrl1* and *meanRepRNase* to plot two curves, one of the control and one for the protein after the RNase treatment, to see if there was a shift and used the function *compare_max*. We defined a shift to be a difference of at least two fractions in the positive or negative x-direction.
 
 
-```{r}
-for (i in c(4234)){
-plot(y,xlab = "fractions", ylab = "protein amount", main = "Comparison Control-RNase",type = "l",meanRepctrl[i,], col = "blue"); 
-lines(y, meanRepRNase[i,], col = "red")
-}
-```
+![Figure 5: Non-shifting protein. There is no change in position in the sucrose gradient after the treatment with RNase, indicating that this protein is not an RBP](Images/Figure5_noshift.JPG){#id .class width=30% height=30%}
+
 ##### Figure 5: Non-shifting protein. There is no change in position in the sucrose gradient after the treatment with RNase, indicating that this protein is not an RBP
 Right: Shifting protein. The amount of protein in each fraction changes after the treatment with RNase, indicating that this protein is associated with RNA and looses interaction partners after RNase treatment, resulting in a lighter mass and a migration to the left of the sucrose gradient. The untreated sample is shown in blue, the sample after RNAse treatment in red. 
 
-```{r}
-for (i in c(4238)){
-plot(y,xlab = "fractions", ylab = "protein amount", main = "Comparison Control-RNase",type = "l",meanRepctrl[i,], col = "blue"); 
-lines(y, meanRepRNase[i,], col = "red")
-}
-```
-##### Figure 6: Shifting protein. The amount of protein in each fraction changes after the treatment with RNase, indicating that this protein is associated with RNA and looses interaction partners after RNase treatment, resulting in a lighter mass and a migration to the left of the sucrose gradient.The untreated sample is shown in blue, the sample after RNAse treatment in red. 
+
+
+![Figure 6: Shifting protein. The amount of protein in each fraction changes after the treatment with RNase, indicating that this protein is associated with RNA and looses interaction partners after RNase treatment, resulting in a lighter mass and a migration to the left of the sucrose gradient.The untreated sample is shown in blue, the sample after RNAse treatment in red.](Images/Figure6_shift.JPG){#id .class width=30% height=30%}
+
 
 
 
@@ -140,14 +125,8 @@ Statistical testing was used to provide a more objective predication whether or 
 
 
 
+![ Figure 7: Protein with a left shift on the x-axis and a y-shift in fraction 16 and 17. The idea of this statistical testing was to evaluate significance based on the y-shift. The untreated sample is shown in blue, the sample after RNAse treatment in red.](Images/Figure7_ttest.JPG){#id .class width=30% height=30%}
 
-```{r}
-# y-shift
-for (i in c(4223)){
-plot(y,xlab = "fractions", ylab = "protein amount", main = "Comparison Control-RNase",type = "l",meanRepctrl[i,], col = "blue"); 
-lines(y, meanRepRNase[i,], col = "red")}
-```
-##### Figure 7 Protein with a left shift on the x-axis and a y-shift in fraction 16 and 17. The idea of this statistical testing was to evaluate significance based on the y-shift. The untreated sample is shown in blue, the sample after RNAse treatment in red. 
 
 
 
