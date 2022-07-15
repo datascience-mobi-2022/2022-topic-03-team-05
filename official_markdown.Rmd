@@ -1268,7 +1268,7 @@ test_data$x.shift.frac.glo = abs(test_data$x.shift.frac.glo)
 
 ## pearson correlation
 plot(x.shift.frac.glo ~ corr, data = train_data)
-cor(train_data$x.shift.frac.glo, train_data$corr) ## sollte eigentlich niedrig sein
+cor(train_data$x.shift.frac.glo, train_data$corr) ## -0.82 -> shows negative linear relation between the variables 
 corr_globfrac = lm(x.shift.frac.glo ~ corr, data = train_data)
 summary(corr_globfrac) ## 68,06 % of total variance is explained by the model
 
@@ -1280,7 +1280,7 @@ regression_corr_globfrac
 plot(x.shift.frac.glo ~ eucli, data = train_data)
 cor(train_data$x.shift.frac.glo, train_data$eucli) ## sollte eigentlich niedrig sein
 eucli_globfrac = lm(x.shift.frac.glo ~ eucli, data = test_data)
-summary(eucli_globfrac) ## 71,96 % of total variance is explained by the model
+summary(eucli_globfrac) 
 
 regression_eucli_globfrac = ggplot(train_data, aes(y=x.shift.frac.glo, x=eucli)) + geom_point() + geom_smooth(method ="lm")
 regression_eucli_globfrac
