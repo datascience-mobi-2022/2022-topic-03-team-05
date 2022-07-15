@@ -10,6 +10,7 @@ output: html_document
 
 
 
+
 # Final Report  
 ## Proteome-wide screen for RNA-dependent proteins  
 ## Supervisor: Dr Maiwen Caudron Herger  
@@ -19,6 +20,8 @@ output: html_document
 ### 19.07.2022
 
 
+
+\newpage
 ## Table of Contents
 I.	Introduction  
 1.1.	RNA-binding Proteins  
@@ -43,7 +46,7 @@ V.	Literature
 
 
 
-
+\newpage
 ## I. Introduction  
 ### 1.1. RNA-binding proteins  
 RNA plays a fundamental role in cellular processes, ranging from protein localization, to translating mRNA and post transcriptional alterations. The interaction of RNA and proteins enables a fine-tuned regulation of RNA via degradation and stabilization (Alberts 2015; Nelson 2021). In recent years the field of proteomics, which describes the analysis of proteins in a cell or tissue at a given time under specific conditions (Ginsburg and Willard 2009), has begun to focus on the discovery and understanding of molecular mechanisms related to RNA-dependent proteins. However, there are still many processes not yet fully understood, especially regarding the role of non-coding RNA (Caudron-Herger, Rusin et al. 2019).  
@@ -155,6 +158,7 @@ We tried to establish a predictive model to determine the absolute value of the 
 
 
 
+\newpage
 ## III. Results
 
 ### 3.1. RNA-binding proteins
@@ -210,6 +214,7 @@ Lastly, many RBPs contained a coiled ccoroil motif, which are highly dynamic and
 
 
 
+\newpage
 ## IV. Discussion  
 During this project by using R-Studio we determined which proteins in a dataset were RBPs, by analyzing and comparing the shift in the amount of protein before and after RNase treatment in interphase and mitosis. 
 In several steps decisions regarding the statistical analysis had to be made, which influenced the outcome. In the beginning when doing Data Reduction, we decided against implementing a threshold for zero values, as this might have led to the loss of proteins which show only very narrow peaks, and therefore the loss of important RBPs.  An alternative we considered when proving the reproducibility of the data, was using the correlation. Our theory was that the protein amount in the fractions had to be highly similar in case of reproducibility and would therefore yield values of r close to 1. This approach was replaced with the analysis of the x-positions of the maxima, since setting an arbitrary threshold for an R-value for correlation could have led to the loss of too many proteins, and the determination of maxima positions would be used for the shift analysis as well, therefore checking reproducibility with the maxima was thought to be more efficient. 
@@ -223,6 +228,7 @@ Perhaps more Proteins associated with Actin could have been found, when also ana
 This quantitative approach of identifying RBPs lead us to identify ** 54  (Zahl Kiren ** RBPs that, as told by R-DeeP had not been identified previously as RBPs, which once more shows the study gap in RBP research. Taking everything into consideration, RNA-dependent proteins were shown to be involved in almost all cellular processes, mainly in functions performed by RNA, such as transcription, translation and the function of the ribosome, but also in brain development, the regulation of the cell cycle and many others, showing their diverse range and therefore the importance of research on RNA-dependent and RNA associated proteins, which continues to be a promising field of research. 
 
 
+\newpage
 ## V. Literature
 
 Alberts, B. (2015). Molecular Biology of the cell (Garland Science).  
