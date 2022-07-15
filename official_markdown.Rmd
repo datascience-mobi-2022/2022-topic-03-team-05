@@ -771,7 +771,6 @@ return(truesum)
 
 ## compare_max returns vector that tells for each protein how many maxima are more than one fraction different between the compared data frames
 
-compare_max(maxctrl2_3, maxctrl3_3)
 comp_rep = function(a,b,c){
 
 rows_rep = vector()
@@ -1213,7 +1212,7 @@ kmeans_data1 = cbind((merge_overview$global_max_rnase-merge_overview$global_max_
 
 ## elbow plot
 elbowdata1 = fviz_nbclust(kmeans_data1, kmeans, method = "wss") + labs(subtitle = "Elbow method")
-## elbow plot would suggest rather 4 than 5 clusters but for the biological question the results of 5 clusters are more significant
+## elbow plot would suggest 4 clusters 
 
 ## Perform k-means and visualize clusters
 km.out1 = kmeans(kmeans_data1, centers = 4, nstart = 100, iter.max = 20)
