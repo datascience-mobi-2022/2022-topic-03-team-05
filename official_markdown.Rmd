@@ -1292,7 +1292,7 @@ regression_corr_globfrac
 
 ## highest euclidean distance of meanrepctrl and meanrepRnase
 plot(x.shift.frac.glo ~ eucli, data = train_data)
-cor(train_data$x.shift.frac.glo, train_data$eucli) ## sollte eigentlich niedrig sein
+cor(train_data$x.shift.frac.glo, train_data$eucli) 
 eucli_globfrac = lm(x.shift.frac.glo ~ eucli, data = test_data)
 summary(eucli_globfrac) 
 
