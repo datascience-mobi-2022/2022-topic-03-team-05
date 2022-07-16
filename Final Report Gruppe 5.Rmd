@@ -62,6 +62,7 @@ Malfunctions in RBPs have severe consequences and are associated with a wide var
 During this project our aim was firstly to find out which proteins from the data set are RBPs by analyzing the shifts between the RNase and the control samples. We then wanted to see, if we could find RBPs associated with Actin, as it is an important protein for the cytoskeleton, which has to be regulated during the cell cycle (Alberts 2015). Lastly,  we compared the RBPs we found to the R-DeeP database and the UniProt database, to analyze further properties of the RBPs with full shifts, such as common domains and functions.   
 
 
+\newpage
 ## II. Methods
 ### 2.1. Experimental Setup
 The data we used was created during experiments with HeLa cells synchronized in interphase. During mitosis the chromosomes, which have been replicated previously are divided into two new nuclei while interphase is mainly characterized by cell growth, DNA replication and preparation for mitosis (Alberts 2015).  
@@ -154,8 +155,6 @@ The idea was that when determining the correlation between the curves of the mea
 We tried to establish a predictive model to determine the absolute value of the x-shift of the global maximum from the correlation value between *meanRepRNase* and *meanRepCtrl*. The wider the x-shift the lower the correlation value should be. To further examine the relevance of the regression we checked that the residuals are normally distributed and that there is no correlation between the residuals and our explanatory variable. The root mean square error was used to evaluate the results. 
 
 
-
-\newpage
 ## III. Results
 
 ### Data Cleanup 
@@ -206,7 +205,6 @@ The lack of function of RBPs was also involved in Ehlers-Danlos Syndrome or neur
 For our previous hypothesis regarding RBPs associated with Actin we were unable to find evidence. In total when looking at the shifts of the global maxima during Interphase we were able to find 18 proteins. The proteins , e.g. **ACL6B_HUMAN, AMOT_HUMAN, MYH0_HUMAN** etc. are involved in the organization of the actin cytoskeleton, cell division or had actin binding domains,  however as the number of proteins whose function is associated with Actin is low this is most likely a coincidence and not a significant finding. 
 
 
-\newpage
 ## IV. Discussion  
 During this project by using R-Studio we determined which proteins in a dataset were RBPs, by analyzing and comparing the shift in the amount of protein before and after RNase treatment in interphase and mitosis.  
 In several steps decisions regarding the statistical analysis had to be made, which influenced the outcome. In the beginning when doing Data Reduction, we decided against implementing a threshold for zero values, as this might have led to the loss of proteins which show only very narrow peaks, and therefore the loss of important RBPs.  An alternative we considered when proving the reproducibility of the data, was using the correlation. Our theory was that the protein amount in the fractions had to be highly similar in case of reproducibility and would therefore yield values of r close to 1. This approach was replaced with the analysis of the x-positions of the maxima, since setting an arbitrary threshold for an R-value for correlation could have led to the loss of too many proteins, and the determination of maxima positions would be used for the shift analysis as well, therefore checking reproducibility with the maxima was thought to be more efficient.  
