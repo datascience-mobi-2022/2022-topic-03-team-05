@@ -1164,6 +1164,7 @@ overview_mi$m.left.right = ifelse(overview_mi$m.x.shift.glo == TRUE & overview_m
 overview_mi$m.left.right = ifelse(overview_mi$m.left.right != "left" & overview_mi$m.x.shift.glo == TRUE & overview_mi$m.global_max_ctrl - overview_mi$m.global_max_rnase < 0, "right", overview_mi$m.left.right)
 overview_mi$m.left.right = ifelse(overview_mi$m.x.shift.glo == FALSE & overview_mi$m.x.shift.loc == TRUE, "shift", overview_mi$m.left.right)
 overview_mi$m.x.shift.frac.glo = overview_mi$m.global_max_ctrl - overview_mi$m.global_max_rnase ## difference in fraction of global maximum between control and RNase
+overview_mi$m.count.shift = ifelse(overview_mi$m.x.shift.glo == TRUE, overview_mi$m.count.x.shift.loc + 1, overview_mi$m.count.x.shift.loc)
 
 ## create column with protein names
 overview_mi$protein = rownames(overview_mi)
