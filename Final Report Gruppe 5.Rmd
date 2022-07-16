@@ -8,7 +8,7 @@ author: |
   ### Group 5:    Marie Lulu Salein, Laura Herrfurth, Katharina Lotter, Kiren Nadeem\
   ### Supervisor: Dr Maiwen Caudron Herger\
   ### University of Heidelberg Summer Term 2022\
-date: "17.07.2022"
+date: "<style> {text-align: justify right}</style>19.07.2022"
 output: html_document
 ---
 
@@ -76,9 +76,9 @@ One consequence of the experimental setup used to obtain our data was that heter
 First, we adapted the amount of protein per fraction for each of the three replicates to be the mean of the two means lying closest to each other. We compared the fraction-wise sum of *Ctrl* and *RNase* before normalization and visualized them with a bar plot. Then the vector *mean_frac_rep* which contained the mean for each fraction in each condition and replicate was created. We used this vector to create another vector that contained the mean value of the two mean values for the protein amount of the replicates closest to each other in each fraction for RNase and control. Therefore,  we generated a *for-loop* that compared the three values by using an *if* and an *else if* condition to compare two variables at a time and check which ones are closest to each other. The normalized data was stored in *mean_rep* and again visualized with a bar plot that now showed the same height for all replicates, indicating the same amount of protein. To increase interpretability of the replicates of a protein, we then normalized the protein amount of each replicate for each protein to be 100 using the apply function. The amount of protein was now interpretable as a percentage, which we used when checking for local maxima and for the t-test. The values were stored in six different dataframes, one for each replicate and condition, which we later combined into the dataframes *TripCTrldat* and *TripRNasedat*, that combined the replicates for each condition.  
 
 
-<center>![Figure 1: Protein amount in fractions 1:25 in all three replicates before normalization. The amount varies in each replicate.](Images/Figure1.JPG){#id .class width=50% height=50%}<center>
+<center>![Figure 1: Protein amount in fractions 1:25 in all three replicates before normalization. The amount varies in each replicate.](Images/Figure1.JPG){#id .class width=50% height=50%}</center>
 
-![Figure 2: Protein amount in fractions 1:25 in all three replicates before normalization. The three replicates can now be compared better, as the amount of protein in each replicate is set to the same value.](Images/Figure2 proteins normalized.JPG){#id .class width=50% height=50%}
+<center>![Figure 2: Protein amount in fractions 1:25 in all three replicates before normalization. The three replicates can now be compared better, as the amount of protein in each replicate is set to the same value.](Images/Figure2 proteins normalized.JPG){#id .class width=50% height=50%}</center>
 
 
 
@@ -103,10 +103,10 @@ We then created a matrix for each condition that had value of zero for every fra
 We now used the matrices *meanRepctrl1* and *meanRepRNase* to plot two curves, one of the control and one for the protein after the RNase treatment, to visualize if there was a shift. For the examination of the local maxima, we created the function *compare_max* that gave us a matrix with the value *TRUE* at all positions where the local maximum shifted at least two fractions. We defined a shift to be a difference of at least two fractions in the positive or negative x-direction.
 
 
-<center>![Figure 3: Non-shifting protein. There is no change in position in the sucrose gradient after the treatment with RNase, indicating that this protein is not an RBP.](Images/Figure3_noshift.JPG){#id .class width=50% height=50%}<center>
+<center>![Figure 3: Non-shifting protein. There is no change in position in the sucrose gradient after the treatment with RNase, indicating that this protein is not an RBP.](Images/Figure3_noshift.JPG){#id .class width=50% height=50%}</center>
 
 
-<center>![Figure 4: Shifting protein. The amount of protein in each fraction changes after the treatment with RNase, indicating that this protein is associated with RNA and looses interaction partners after RNase treatment, resulting in a lighter mass and a migration to the left of the sucrose gradient.The untreated sample is shown in blue, the sample after RNAse treatment in red.](Images/Figure4_shift.JPG){#id .class width=50% height=50%}<center>
+<center>![Figure 4: Shifting protein. The amount of protein in each fraction changes after the treatment with RNase, indicating that this protein is associated with RNA and looses interaction partners after RNase treatment, resulting in a lighter mass and a migration to the left of the sucrose gradient.The untreated sample is shown in blue, the sample after RNAse treatment in red.](Images/Figure4_shift.JPG){#id .class width=50% height=50%}</center>
 
 
 
@@ -116,7 +116,7 @@ Statistical testing was used to provide a more objective predication whether or 
 
 
 
-<center>![ Figure 5: Protein with a left shift on the x-axis and a y-shift in fraction 16 and 17. The idea of this statistical testing was to evaluate significance based on the y-shift. The untreated sample is shown in blue, the sample after RNAse treatment in red.](Images/Figure5_ttest.JPG){#id .class width=50% height=50%}<center>
+<center>![ Figure 5: Protein with a left shift on the x-axis and a y-shift in fraction 16 and 17. The idea of this statistical testing was to evaluate significance based on the y-shift. The untreated sample is shown in blue, the sample after RNAse treatment in red.](Images/Figure5_ttest.JPG){#id .class width=50% height=50%}</center>
 
 
 In order to avoid coding mistakes and to focus on the interpretation of our results we used the predefined *t.test* function in R. We set our significance level to be 5% and used a two-sided t-test, therefore the shift of each protein which had a p-value smaller than 0.025 was determined significant. For the t-test we looked at the global maxima and the local maxima separately. Two vectors with the maxima of the RNase and the control were created and compared. 
@@ -168,14 +168,14 @@ After the analysis of the Interphase dataset we implemented the same method for 
 
 Following the result of the elbow plot, the k-means clustering led to four different clusters. They lie relatively close together due to similar input variable values, but are distinct from each other. When looking at tables that gave us the number of proteins with a left shift, right shift and a shift in the local maxima as additional info, it stands out that cluster 2 contains 171 RBPs that shift left in both cell cycle phases. In cluster 1 there are proteins that show the characteristic of an RBP during mitosis, but split up to all different kinds of categories of our shift analysis during interphase. For cluster 3 it behaves the opposite way. Adding the difference in the number of maxima between *Ctrl* and *RNase* for interphase and mitosis as additional variables, does not result in a clearer structure. The last cluster cannot be interpretated clearly. It contains most of the proteins that do not shift (no RBPs). 
 
-<center>![Figure 6: k-means clustering. The shift of the global maximum of the proteins during interphase was clustered against the shift during mitosis to compare the RNA interactome between the cell cycle phases.](Images/kmeans clustering plot.png){#id .class width=50% height=50%}<center>
+<center>![Figure 6: k-means clustering. The shift of the global maximum of the proteins during interphase was clustered against the shift during mitosis to compare the RNA interactome between the cell cycle phases.](Images/kmeans clustering plot.png){#id .class width=50% height=50%}</center>
 
 
 ### 3.3.  Regression analysis
 
 Computing the pearson correlation against the x-shifts of the global maxima for our training data set resulted in a  value of - 0.82 showing the negative linear relation of these two variables. A low correlation results in a bigger x-shift and the other way around. The multiple R-squared value was 0.068. The application of our model based on the training data set onto the test data set showed that 68.06% of the total variance is explained by our model. Further examination showed that the residuals are normally distributed and that there is almost no correlation between the residuals and our explanatory variable. The root mean square error has a value of 1.91.
 
-<center>![Figure 7: Linear regression analysis. The absolute value of the x-shift of the global maximum was predicted with the correlation of the averaged curves for RNase and control. The plot shows the data points and the regression line (y = 14.21x - 14.29)](Images/Figure7_Regression.jpg){#id .class width=50% height=50%}<center>
+<center>![Figure 7: Linear regression analysis. The absolute value of the x-shift of the global maximum was predicted with the correlation of the averaged curves for RNase and control. The plot shows the data points and the regression line (y = 14.21x - 14.29)](Images/Figure7_Regression.jpg){#id .class width=50% height=50%}</center>
 
 
 
