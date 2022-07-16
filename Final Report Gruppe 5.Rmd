@@ -122,7 +122,7 @@ Statistical testing was used to provide a more objective predication whether or 
 
 In order to avoid coding mistakes and to focus on the interpretation of our results we used the predefined *t.test* function in R. We set our significance level to be 5% and used a two-sided t-test, therefore the shift of each protein which had a p-value smaller than 0.025 was determined significant. For the t-test we looked at the global maxima and the local maxima separately. Two vectors with the maxima of the RNase and the control were created and compared. 
 
-Since we performed many t-tests in a row, we wanted to avoid the cumulation of alpha-errors, which is why we adjusted the p-value using an FDR correction. This is a method, used for correcting multiple comparisions in a statistical test, in order to avoid the accumulation of α-errrors.  
+Since we performed many t-tests in a row, we wanted to avoid the accumulation of alpha-errors, which is why we adjusted the p-value using an FDR correction. This is a method, used for correcting multiple comparisons in a statistical test, in order to avoid the accumulation of α-errors.  
 
 
 
