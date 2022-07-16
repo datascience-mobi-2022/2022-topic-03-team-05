@@ -1216,7 +1216,7 @@ colnames(kmeans_data1) = c("x.shift.mitosis", "x.shift.interphase")
 
 ## elbow plot
 wss1 = sapply(1:8,function(k) { 
-  kmeans(x= kmeans_data1, centers = k)$tot.withinss
+  kmeans(x = kmeans_data1, centers = k)$tot.withinss
 })
 plot(1:8,wss1,type='b',pch=19,xlab="Number of clusters K", ylab="Total within-clusters sum of squares", main = "Elbow plot")
 ## elbow plot would suggest 4 clusters 
