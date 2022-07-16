@@ -1,0 +1,36 @@
+---
+title: "README"
+author: "Laura Herrfurth, Katharina Lotter, Kiren Nadeem, Marie Lulu Salein"
+date: "19 7 2022"
+output: html_document
+---
+
+# Topic 3: Proteome-wide screen for RNA-dependent proteins
+## Team 5: HeLa Cells during Mitosis and Interphase
+
+
+## Overview
+
+### Experiment 
+
+### Our project
+
+The aim of our project is to identify RNA-binding and -dependent proteins. We worked on two different data sets, one examinating the RNA-protein interactome in mitosis, the other one during interphase. The procedure was the same for both of them: The experimental data was cleaned and normalized to make a comparison between the proteins possible. In a second step the reproducibility was tested by verifying if all global and local maxima does not shift more than one fraction between the three replicates of each condition.
+
+## Getting started
+
+### Preparation
+
+In order to execute the code, you need to save both our data sets first. It will be necessary to insert you own directory at the beginning of both Markdowns xxxxxxxx Dateinnamen einfügen xxxxxxxx to load the data in R. 
+
+### Executing program
+
+Start with executing the xxxxxxxxMitosis. The code consists of the data cleanup, normalization, maxima and shift determination and testing for the mitosis data set.
+The code for the interphase data set includes the k-means clustering and the linear regression analysis we performed. For k-means clustering, R has to access data from the mitosis data set analysis which is why it is essential to keep the data after the execution of the first code in the R environment.
+
+## Team members
+
+- Laura Herrfurth
+- Katharina Lotter
+- Kiren Nadeem
+- Marie Lulu Salein
