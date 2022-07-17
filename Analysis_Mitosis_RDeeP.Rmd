@@ -17,10 +17,10 @@ We start our project by analyzing the HeLa mitosis data set. The goal is to iden
 # load data set
 
 ## load data by inserting own location of data set
-## mFullDat <- read.table("C:/Dokumente/Uni/FS 4/Data Analysis/RDeeP_HeLa_Mitosis.csv", header = TRUE, row.names=1, sep = ";") 
+mFullDat <- read.table("C:/Dokumente/Uni/FS 4/Data Analysis/RDeeP_HeLa_Mitosis.csv", header = TRUE, row.names=1, sep = ";") 
 ## save(mFullDat, file = "mFullDat.Rdata")
 
-load("mFullDat.Rdata") 
+##load("mFullDat.Rdata") 
 dim(mFullDat)
 ```
 
@@ -875,7 +875,7 @@ for (i in 1:nrow(mrep1ctrlnormDataframe)){
 
 mabs_max$compare = ifelse(abs(mabs_max$V1-mabs_max$V2) > 1, TRUE, FALSE)
 sum(mabs_max$compare)
-## there are 1045 proteins whose global maximum shifts at least 2 fractions (x-shift)
+## there are 1118 proteins whose global maximum shifts at least 2 fractions (x-shift)
 mabs_max_shift = rownames (mabs_max) [mabs_max$compare==TRUE] ## proteins x-shifting in global maximum
 ```
 
@@ -954,14 +954,14 @@ for (i in 1:length(mloc_max_shift)) {
       }
   }
 }
-sum(mid) ## 772 proteins are both found in absolute and local maxima shifts
+sum(mid) ## 913 proteins are both found in absolute and local maxima shifts
 mloc_max_shift = mloc_max_shift[- which(mid==TRUE)] ## mloc_max_shift are all proteins shifting in local maximum excluded those also shifting in global maximum
 
 ## number of shifting proteins
-sum(mid)+(length(mabs_max_shift)-sum(mid))+length(mloc_max_shift) ## 1828 proteins have a shift and might be RNA-binding or RNA-dependent
+sum(mid)+(length(mabs_max_shift)-sum(mid))+length(mloc_max_shift) ## 1673 proteins have a shift and might be RNA-binding or RNA-dependent
 
 ```
-We find 1828 proteins shifting in their global and/or local maxima. In the following, we test if the shift in protein amount is significant which would result in classifying the protein as an RNA-binding or RNA-dependent protein. 
+We find 1673 proteins shifting in their global and/or local maxima. In the following, we test if the shift in protein amount is significant which would result in classifying the protein as an RNA-binding or RNA-dependent protein. 
 
 # t-test of shift of protein amount for maximum verification (y-shift)
 
@@ -993,7 +993,7 @@ for (i in 1:nrow(mabs_max)) {
 
 mabs_max$pvalue = ml
 mabs_max$sign = ifelse(mabs_max$pvalue >= 0.025, FALSE, TRUE) ## 0.025 due to two-sided t-test
-sum(mabs_max$sign) ## how many proteins have a significant shift in protein amount in their global maximum (xxxxx out of xxxxxx)
+sum(mabs_max$sign) ## how many proteins have a significant shift in protein amount in their global maximum (869 out of 6665)
 
 colnames(mabs_max)[1] = "m.global_max_ctrl"
 colnames(mabs_max)[2] = "m.global_max_rnase"
@@ -1002,7 +1002,7 @@ mproteins_global_shift = data.frame(mabs_max[(which(mabs_max$sign == TRUE)),]) #
 ## create new column containing fdr corrected p-value
 mproteins_global_shift$p_adjusted = p.adjust(mproteins_global_shift$pvalue, method = "fdr")
 mproteins_global_shift$sign_ad = ifelse(mproteins_global_shift$p_adjusted >= 0.025, FALSE, TRUE)
-sum(mproteins_global_shift$sign_ad) ## all 641 proteins with shift identified are still significant after fdr-correction
+sum(mproteins_global_shift$sign_ad) ## all 869 proteins with shift identified are still significant after fdr-correction
 
 ## create new column containing information about right or left shift (difference of control and RNase global maximum fractions)
 mproteins_global_shift$leftorright = ifelse(mproteins_global_shift$m.global_max_ctrl < mproteins_global_shift$m.global_max_rnase, "right", "left")
@@ -1102,7 +1102,7 @@ for (i in 1:nrow(mp_loc_max)) {
 mp_loc_max = as.data.frame(mp_loc_max) ## data frame with all 10 only at shifting position adjusted p-value
 mp_loc_max$count = mcount_shift
 mproteins_local_shift = mp_loc_max[which(mp_loc_shift==TRUE),] ## proteins that shift in local maximum
-dim(mproteins_local_shift) ## 1081 proteins shift in local maximum
+dim(mproteins_local_shift) ## 1471 proteins shift in local maximum
 mproteins_local_shift = cbind(rownames(mproteins_local_shift), mproteins_local_shift)
 colnames(mproteins_local_shift)[1] = "protein"
 
@@ -1111,8 +1111,8 @@ mproteins_global_shift = cbind(rownames(mproteins_global_shift), mproteins_globa
 colnames(mproteins_global_shift)[1] = "protein"
 mproteins_both_shift = merge(mproteins_global_shift, mproteins_local_shift, by = "protein") ## data sets merged by protein names (column "protein")
 mproteins_both_shift = mproteins_both_shift[,-(11:36)]
-dim(mproteins_both_shift) ## 478 proteins shift in both global and local maximum
-mproteins_shifting = merge(mproteins_global_shift, mproteins_local_shift, by = "protein", all = TRUE) ## 1244 proteins have a shift in either local and/or global maximum
+dim(mproteins_both_shift) ## 687 proteins shift in both global and local maximum
+mproteins_shifting = merge(mproteins_global_shift, mproteins_local_shift, by = "protein", all = TRUE) ## 1653 proteins have a shift in either local and/or global maximum
 mproteins_shifting = mproteins_shifting[,-(12:36)]
 
 mproteins_shifting$glo_loc = ifelse(is.na(mproteins_shifting[,11]), "only local", "global")
@@ -1123,9 +1123,9 @@ mproteins_shifting$mcount_shift = ifelse(mproteins_shifting$sign_ad == 1, (mprot
 ## install.packages(dplyr) if necessary
 library(dplyr)
 mproteins_only_global = anti_join(mproteins_global_shift, mproteins_both_shift, by = "protein") 
-nrow(mproteins_only_global) ## 163 proteins only shift in global maximum
+nrow(mproteins_only_global) ## 182 proteins only shift in global maximum
 mproteins_only_local = anti_join(mproteins_local_shift, mproteins_both_shift, by = "protein") 
-nrow(mproteins_only_local) ## 603 proteins only shift in local maximum
+nrow(mproteins_only_local) ## 784 proteins only shift in local maximum
 
 ```
 
