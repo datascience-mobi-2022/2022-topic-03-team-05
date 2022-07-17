@@ -811,7 +811,7 @@ sum(thres_3) ## we would remove 502 proteins with threshold 3%
 thres_5 = not_repro(loc_max_ctrl5, loc_max_rnase5)
 sum(thres_5) ## we would remove 411 proteins with threshold 5%
 thres_7 = not_repro(loc_max_ctrl7, loc_max_rnase7)
-sum(thres_7) ## we would remove 365 proteins with threshold 7%
+sum(thres_7) ## we would remove 361 proteins with threshold 7%
 
 ## We decide to go with the definition that the maximum has to contain at least 5% of total protein amount
 ## remove proteins that are not reproducible from all data sets
