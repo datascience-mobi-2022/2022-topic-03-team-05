@@ -1209,10 +1209,11 @@ By using k-means we aim at identifying specific groups within the data sets. Fir
 library(ggplot2)
 library(ggforce)
 library(concaveman)
+library(cluster)
 
 ## Create matrix for first clustering: difference in fraction of global maximum in Ctrl and RNase of interphase clustered with difference in fraction of global maximum in Ctrl and RNase of mitosis
 kmeans_data1 = as.data.frame(cbind((merge_overview$global_max_ctrl-merge_overview$global_max_rnase), (merge_overview$m.global_max_ctrl-merge_overview$m.global_max_rnase))) 
-colnames(kmeans_data1) = c("x.shift.mitosis", "x.shift.interphase")
+colnames(kmeans_data1) = c("x.shift.interphase", "x.shift.mitosis")
 
 ## elbow plot
 set.seed(1)
