@@ -98,11 +98,11 @@ rep_sum = apply(FullDat, 2, sum)## sum of protein amounts per column
 
 ## Ctrl sum fraction-wise before normalization
 for (i in colRep1ctrl){
-  barplot(rep_sum[i:(i+2)], main = "protein amount per Ctrl replicate before normalization", cex.names = .7)}
+  barplot(rep_sum[i:(i+2)], main = "protein amount per Ctrl replicate before normalization", cex.names = .8)}
 
 ## RNase sum fraction-wise before normalization
 for (i in colRep1rnase){
-  barplot(rep_sum[i:(i+2)], main = "protein amount per RNase replicate before normalization", cex.names = .7)}
+  barplot(rep_sum[i:(i+2)], main = "protein amount per RNase replicate before normalization", cex.names = .8)}
 
 ## vector with mean for each fraction, each condition and each replicate (= 150 values)
 mean_frac_rep = apply(FullDat, 2, mean)
@@ -142,11 +142,11 @@ rep_sum_norm = apply(FullDat_fracnorm, 2, sum)
 
 ## Ctrl sum fraction-wise before normalization and visualize protein amount
 for (i in colRep1ctrl){
-  barplot(rep_sum_norm[i:(i+2)], main = "protein amount per Ctrl replicate after normalization", cex.names = .7)}
+  barplot(rep_sum_norm[i:(i+2)], main = "protein amount per Ctrl replicate after normalization", cex.names = .8)}
 
 ## RNase sum fraction-wise before normalization and visualize protein amount
 for (i in colRep1rnase){
-  barplot(rep_sum_norm[i:(i+2)], main = "protein amount per RNase replicate after normalization", cex.names = .7)
+  barplot(rep_sum_norm[i:(i+2)], main = "protein amount per RNase replicate after normalization", cex.names = .8)
 }
 
 ## Ctrl sum fraction-wise after normalization 
