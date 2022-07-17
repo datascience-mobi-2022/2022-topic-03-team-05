@@ -160,10 +160,10 @@ As defined by Caudron et. al., a protein is defined to be an RBP, if the amount 
 To avoid overinterpreation or false-positives we then performed a t-test on the shift in the y-direction to conclude if the shift is significant.  
 
 
-After Data Cleanup and Data Reduction of the Interphase dataset we were able to find 1181 shifts in the global maxima, 989 partial shifts, where the local maxima changed position and 2107 proteins where either the local or global maxima or both changed along the x-axis. We then analyzed whether the shifts were significant, by looking at their y-dimension. 
-After the implementation of the t-test and the FDR correction on the Interphase dataset, we found 1653 proteins, showing either a significant y-shift in the local and, or global maxima and 687 proteins having a significant y-shift in both the global and local maxima. When only looking at the significance of shifts in global maxima we found 182 significant proteins, whereas for the partial shifts, 784 y-shifts were significant. 
+After Data Cleanup and Data Reduction of the Interphase dataset we were able to find 1118 shifts in the global maxima, 1902 partial shifts, where the local maxima changed position and 2107 proteins where either the local or global maxima or both changed along the x-axis. We then analyzed whether the shifts were significant, by looking at their y-dimension. 
+After the implementation of the t-test and the FDR correction on the Interphase dataset, we found 869 shifting proteins with a significant y-shift in the global maximum, 1471 significant shifts in the local maxima and 1653 proteins, showing either a significant shift in the local and, or global maxima.
 
-After the analysis of the Interphase dataset we implemented the same method for the Mitosis dataset. All steps were were performed the same way. In the Mitosis dataset we were able to identify 1673 proteins which either showed an x-shift in the global and or local maxima, 1045 proteins with a full shift and 913 proteins with a partial shift. After statistical testing, in regards to the y-shifts 869 proteins, which had a significant shift in the global and or local maxima remained. </div> 
+After the analysis of the Interphase dataset we implemented the same method for the Mitosis dataset. All steps were were performed the same way. In the Mitosis dataset we were able to identify 1828 proteins which either showed an x-shift in the global and or local maxima, 1045 proteins with a full shift and 913 proteins with a partial shift. After statistical testing, in regards to the y-shifts 1244 proteins, which had a significant shift in the global and or local maxima remained. </div> 
 
 
 ### 3.2. k-means clustering
