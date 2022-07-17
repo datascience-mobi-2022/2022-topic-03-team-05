@@ -1102,7 +1102,7 @@ for (i in 1:nrow(mp_loc_max)) {
 mp_loc_max = as.data.frame(mp_loc_max) ## data frame with all 10 only at shifting position adjusted p-value
 mp_loc_max$count = mcount_shift
 mproteins_local_shift = mp_loc_max[which(mp_loc_shift==TRUE),] ## proteins that shift in local maximum
-dim(mproteins_local_shift) ## 1471 proteins shift in local maximum
+dim(mproteins_local_shift) ## 1081 proteins shift in local maximum
 mproteins_local_shift = cbind(rownames(mproteins_local_shift), mproteins_local_shift)
 colnames(mproteins_local_shift)[1] = "protein"
 
