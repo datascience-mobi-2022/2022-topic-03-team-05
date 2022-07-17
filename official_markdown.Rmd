@@ -1211,7 +1211,7 @@ library(ggforce)
 library(concaveman)
 
 ## Create matrix for first clustering: difference in fraction of global maximum in Ctrl and RNase of interphase clustered with difference in fraction of global maximum in Ctrl and RNase of mitosis
-kmeans_data1 = as.data.frame(cbind((merge_overview$global_max_rnase-merge_overview$global_max_ctrl), (merge_overview$m.global_max_rnase-merge_overview$m.global_max_ctrl))) 
+kmeans_data1 = as.data.frame(cbind((merge_overview$global_max_ctrl-merge_overview$global_max_rnase), (merge_overview$m.global_max_ctrl-merge_overview$m.global_max_rnase))) 
 colnames(kmeans_data1) = c("x.shift.mitosis", "x.shift.interphase")
 
 ## elbow plot
@@ -1235,7 +1235,7 @@ table(kmeans_data1$cluster, merge_overview$m.left.right)
 km.out1$tot.withinss ## compute total wws
 
 ## adding number of shifts in maxima for mitosis and interphase as additional variables
-kmeans_data2 = as.data.frame(cbind((merge_overview$global_max_rnase-merge_overview$global_max_ctrl), (merge_overview$m.global_max_rnase-merge_overview$m.global_max_ctrl), (merge_overview$count.shift), (merge_overview$m.count.shift)))
+kmeans_data2 = as.data.frame(cbind((merge_overview$global_max_ctrl-merge_overview$global_max_rnase), (merge_overview$m.global_max_ctrl-merge_overview$m.global_max_rnase), (merge_overview$count.shift), (merge_overview$m.count.shift)))
 colnames(kmeans_data2) = c ("x.shift.interphase", "x.shift.mitosis", "count.shift.interphase", "count.shift.mitosis")
 
 ## elbow plot
@@ -1247,7 +1247,7 @@ plot(1:8,wss2,type='b',pch=19,xlab="Number of clusters K",
      ylab="Total within-clusters sum of squares", main = "Elbow plot")
 
 ## perform k-means and visualize clusters
-km.out2 = kmeans(kmeans_data2, centers = 4, nstart = 100)
+km.out2 = kmeans(kmeans_data2, centers = 3, nstart = 100)
 kmeans_data2$cluster = as.character(km.out2$cluster)
 cluster2 = ggplot(data = kmeans_data2, aes(x = x.shift.interphase, y = x.shift.mitosis, colour = cluster)) +
   geom_point() +
@@ -1256,7 +1256,7 @@ cluster2 = ggplot(data = kmeans_data2, aes(x = x.shift.interphase, y = x.shift.m
 table(kmeans_data2$cluster, merge_overview$left.right)
 table(kmeans_data2$cluster, merge_overview$m.left.right)
 km.out2$tot.withinss
-## no improvement in cluster structure due to additional variable (higher wws for first clustering approach)
+## no improvement in cluster structure due to additional variable (higher total wws for first clustering approach)
 ```
 We receive four clusters and check them for the shifting behaviour of the proteins in interphase and mitosis. One cluster contains 171 proteins that shift left in both cell cycle phases indicating that these proteins might be constitutively expressed. In general, we can see a cluster structure, but lying relatively close together, they are not as distinct from each other. Adding the number of shifts of maxima for interphase and mitosis as additional variables, does not result in a clearer structure which was tested by computing the total within-cluster sum of squares. 
 
