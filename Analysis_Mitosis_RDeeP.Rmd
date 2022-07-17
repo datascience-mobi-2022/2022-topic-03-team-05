@@ -1111,7 +1111,7 @@ mproteins_global_shift = cbind(rownames(mproteins_global_shift), mproteins_globa
 colnames(mproteins_global_shift)[1] = "protein"
 mproteins_both_shift = merge(mproteins_global_shift, mproteins_local_shift, by = "protein") ## data sets merged by protein names (column "protein")
 mproteins_both_shift = mproteins_both_shift[,-(11:36)]
-dim(mproteins_both_shift) ## 687 proteins shift in both global and local maximum
+dim(mproteins_both_shift) ## 478 proteins shift in both global and local maximum
 mproteins_shifting = merge(mproteins_global_shift, mproteins_local_shift, by = "protein", all = TRUE) ## 1244 proteins have a shift in either local and/or global maximum
 mproteins_shifting = mproteins_shifting[,-(12:36)]
 
