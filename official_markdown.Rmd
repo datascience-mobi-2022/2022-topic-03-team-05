@@ -1228,6 +1228,7 @@ kmeans_data1$cluster = as.character(km.out1$cluster)
 cluster1 = ggplot(data = kmeans_data1, aes(x = x.shift.interphase, y = x.shift.mitosis, color = cluster)) +
   geom_point() +
   geom_mark_hull(expand = 0.01, aes(fill = cluster))
+cluster1
 
 ## compare clusters with right/left/shift/no shift column
 table(kmeans_data1$cluster, merge_overview$left.right)
@@ -1252,6 +1253,7 @@ kmeans_data2$cluster = as.character(km.out2$cluster)
 cluster2 = ggplot(data = kmeans_data2, aes(x = x.shift.interphase, y = x.shift.mitosis, colour = cluster)) +
   geom_point() +
   geom_mark_hull(expand = 0.01, aes(fill = cluster))
+cluster2
 
 table(kmeans_data2$cluster, merge_overview$left.right)
 table(kmeans_data2$cluster, merge_overview$m.left.right)
