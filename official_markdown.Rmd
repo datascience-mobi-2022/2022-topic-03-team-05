@@ -1219,8 +1219,7 @@ set.seed(1)
 wss1 = sapply(1:8,function(k) { 
   kmeans(x = kmeans_data1, centers = k)$tot.withinss
 })
-plot(1:8,wss1,type='b',pch=19,xlab="Number of clusters K", ylab="Total within-clusters sum of squares", main = "Elbow plot")
-## elbow plot would suggest 4 clusters 
+plot(1:8,wss1,type='b',pch=19,xlab="Number of clusters K", ylab="Total within-clusters sum of squares", main = "Elbow plot") ## elbow plot would suggest 4 clusters 
 
 ## Perform k-means and visualize clusters
 km.out1 = kmeans(kmeans_data1, centers = 4, nstart = 100)
@@ -1244,7 +1243,7 @@ wss2 = sapply(1:8,function(k) {
   kmeans(x= kmeans_data2, centers = k)$tot.withinss
 })
 plot(1:8,wss2,type='b',pch=19,xlab="Number of clusters K",
-     ylab="Total within-clusters sum of squares", main = "Elbow plot")
+     ylab="Total within-clusters sum of squares", main = "Elbow plot") ## elbow plot would suggest 3 clusters
 
 ## perform k-means and visualize clusters
 km.out2 = kmeans(kmeans_data2, centers = 3, nstart = 100)
