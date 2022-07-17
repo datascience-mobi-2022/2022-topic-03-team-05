@@ -18,10 +18,10 @@ We start by analyzing the HeLa Interphase data set. For later parts of the code 
 # Load data set
 
 ## Insert own location of data set
-## FullDat <- read.table("C:/Dokumente/Uni/FS 4/Data Analysis/RDeeP_HeLa_Interphase.csv", header = TRUE, row.names=1, sep = ";") 
+FullDat <- read.table("C:/Dokumente/Uni/FS 4/Data Analysis/RDeeP_HeLa_Interphase.csv", header = TRUE, row.names=1, sep = ";") xxxxxxxxx
 ## save(FullDat, file = "FullDat.Rdata")
 
-load("FullDat.Rdata") 
+## load("FullDat.Rdata")  
 dim(FullDat)
 ```
 
@@ -959,14 +959,14 @@ for (i in 1:length(loc_max_shift)) {
   }
 }
 
-sum(id) ## 910 proteins are both found in absolute and local maxima shifts
-loc_max_shift = loc_max_shift[- which(id==TRUE)] ## loc_max_shift are all proteins shifting in local maximum excluded those also shifting in global maximum
+sum(id) ## 913 proteins are both found in absolute and local maxima x-shifts
+loc_max_shift = loc_max_shift[- which(id==TRUE)] ## loc_max_shift are all proteins x-shifting in local maximum excluded those also shifting in global maximum (989)
 
 ## number of shifting proteins
-sum(id)+(length(abs_max_shift)-sum(id))+length(loc_max_shift) ## 2479 proteins have a shift and might be RNA-binding or RNA-dependent
+sum(id)+(length(abs_max_shift)-sum(id))+length(loc_max_shift) ## 2107 proteins have a shift and might be RNA-binding or RNA-dependent
 
 ```
-We find 2471 proteins shifting in their global and/or local maxima. In the following, we test if the shift in protein amount is significant which would result in classifying the protein as an RNA-binding or RNA-dependent protein. 
+We find 2107 proteins shifting in their global and/or local maxima. In the following, we test if the shift in protein amount is significant which would result in classifying the protein as an RNA-binding or RNA-dependent protein. 
 
 # t-test of shift of protein amount for maximum verification (y-shift)
 
@@ -1303,7 +1303,7 @@ regression_eucli_globfrac
 
 ## Pearson correlation is the most significant feature when predicting the x-shift of the global maximum compared to the highest euclidean distance as explanatory variable
 
-## test conditions for linear regression: residuals are normally distributed and no correaltion between residuals and the explanatory variable
+## test conditions for linear regression: residuals are normally distributed and no correlation between residuals and the explanatory variable
 
 ## residuals normally distributed?
 hist(corr_globfrac$residuals, breaks=20) 
