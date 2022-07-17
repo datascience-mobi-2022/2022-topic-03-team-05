@@ -4,7 +4,7 @@ author: "Marie Lulu Salein, Kiren Nadeem, Katharina Lotter "
 date: "18 7 2022"
 output: html_document
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -18,7 +18,7 @@ We start by analyzing the HeLa Interphase data set. For later parts of the code 
 # Load data set
 
 ## Insert own location of data set
-FullDat <- read.table("C:/Dokumente/Uni/FS 4/Data Analysis/RDeeP_HeLa_Interphase.csv", header = TRUE, row.names=1, sep = ";") xxxxxxxxx
+FullDat <- read.table("C:/Dokumente/Uni/FS 4/Data Analysis/RDeeP_HeLa_Interphase.csv", header = TRUE, row.names=1, sep = ";") 
 ## save(FullDat, file = "FullDat.Rdata")
 
 ## load("FullDat.Rdata")  
@@ -98,11 +98,11 @@ rep_sum = apply(FullDat, 2, sum)## sum of protein amounts per column
 
 ## Ctrl sum fraction-wise before normalization
 for (i in colRep1ctrl){
-  barplot(rep_sum[i:(i+2)])}
+  barplot(rep_sum[i:(i+2)], main = "protein amount per Ctrl replicate before normalization", cex.names = .7)}
 
 ## RNase sum fraction-wise before normalization
 for (i in colRep1rnase){
-  barplot(rep_sum[i:(i+2)])}
+  barplot(rep_sum[i:(i+2)], main = "protein amount per RNase replicate before normalization", cex.names = .7)}
 
 ## vector with mean for each fraction, each condition and each replicate (= 150 values)
 mean_frac_rep = apply(FullDat, 2, mean)
@@ -142,11 +142,11 @@ rep_sum_norm = apply(FullDat_fracnorm, 2, sum)
 
 ## Ctrl sum fraction-wise before normalization and visualize protein amount
 for (i in colRep1ctrl){
-  barplot(rep_sum_norm[i:(i+2)])}
+  barplot(rep_sum_norm[i:(i+2)], main = "protein amount per Ctrl replicate after normalization", cex.names = .7)}
 
 ## RNase sum fraction-wise before normalization and visualize protein amount
 for (i in colRep1rnase){
-  barplot(rep_sum_norm[i:(i+2)])
+  barplot(rep_sum_norm[i:(i+2)], main = "protein amount per RNase replicate after normalization", cex.names = .7)
 }
 
 ## Ctrl sum fraction-wise after normalization 
